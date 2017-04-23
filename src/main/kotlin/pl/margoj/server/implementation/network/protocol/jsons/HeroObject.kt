@@ -1,0 +1,75 @@
+package pl.margoj.server.implementation.network.protocol.jsons
+
+import com.google.gson.annotations.SerializedName
+
+data class HeroObject(
+        var id: Int = 0,
+        var blockade: Int = 0,
+        @SerializedName("uprawnienia")
+        var permissions: Int = 0,
+        var ap: Int = 0,
+        var bagi: Int = 0,
+        var bint: Int = 0,
+        var bstr: Int = 0,
+        var clan: Int = 0,
+        var clanrank: Int = 0,
+        var credits: Long = 0,
+        var runes: Int = 0,
+        var dir: Int = 0,
+        var exp: Long = 0,
+        var fgrp: Int = 0,
+        var gold: Long = 0,
+        var goldlim: Long = 0,
+        var healpower: Int = 0,
+        var honor: Int = 0,
+        var img: String? = null,
+        var lvl: Int = 0,
+        var mails: Int = 0,
+        @SerializedName("mails_all")
+        var mailsAll: Int = 0,
+        @SerializedName("mails_last")
+        var mailsLast: String? = null,
+        var mpath: String? = null,
+        var nick: String? = null,
+        var opt: Int = 0,
+        var prof: Char = ' ',
+        var pttl: String? = null,
+        var pvp: Int = 0,
+        var ttl: Int = 0,
+        var x: Int = 0,
+        var y: Int = 0,
+        var bag: Int = 0,
+        var party: Int = 0,
+        var trade: Int = 0,
+        var wanted: Int = 0,
+        var stamina: Int = 0,
+        @SerializedName("stamina_ts")
+        var staminaTimestamp: Int = 0,
+        @SerializedName("stamina_renew_sec")
+        var staminaRenew: Int = 0,
+        var st: Int = 0,
+        var ag: Int = 0,
+        var it: Int = 0,
+        var dmg: String? = null,
+        var ac: Int = 0,
+        var act: Int = 0,
+        var resis: String? = null,
+        var sa: Double = 0.toDouble(),
+        var hp: Int = 0,
+        var heal: Int = 0,
+        var maxhp: Int = 0,
+        var crit: Double = 0.toDouble(),
+        var critval: Double = 0.toDouble(),
+        var critmval: Double = 0.toDouble(),
+        var critmval2: String? = null,
+        @SerializedName("of_crit")
+        var ofCrit: Double = 0.toDouble(),
+        @SerializedName("of_critval")
+        var ofCritval: Double = 0.toDouble(),
+        var evade: Int = 0,
+        var absorb: Int = 0,
+        var absorbm: Int = 0,
+        var block: Int = 0,
+        var mana: Int = 0,
+        var energy: Int = 0
+)

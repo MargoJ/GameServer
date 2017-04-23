@@ -1,0 +1,25 @@
+# Opcje serwera gry
+server:
+  # Nazwa serwera
+  name: 'GameServer'
+
+# Opcje serwera http
+http:
+  # IP na ktore zbindowac
+  host: 'localhost'
+
+  # Port serwera
+  port: 8080
+
+# Opcje silnika
+engine:
+  # Ilosc tickow na sekunde
+  tps: 20
+
+  # Co ile wymagac pakietu?
+  keepalive: 5
+
+# Ustawienia gry
+game:
+  # Pole widzenia
+  tracking_range: 16
