@@ -5,7 +5,7 @@ import pl.margoj.mrf.map.MargoMap
 import pl.margoj.mrf.map.tileset.AutoTileset
 import pl.margoj.mrf.map.tileset.Tileset
 import pl.margoj.mrf.map.tileset.TilesetFile
-import pl.margoj.mrf.serialization.MapDeserializer
+import pl.margoj.mrf.map.serialization.MapDeserializer
 import pl.margoj.server.implementation.map.TownImpl
 import java.awt.Color
 import java.awt.image.BufferedImage
@@ -16,6 +16,7 @@ import javax.imageio.ImageIO
 class ResourceLoader(val resourceBundleManager: ResourceBundleManager)
 {
     private var mapDeserializer: MapDeserializer? = null
+    private var numericId: Int = 1
 
     init
     {
@@ -57,7 +58,7 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager)
 
         this.resourceBundleManager.server.logger.info("Załadowano mape: $name")
 
-        return TownImpl(map.id, map.name, map.width, map.height, map.collisions, bytes.toByteArray())
+        return TownImpl(numericId++, map.id, map.name, map.width, map.height, map.collisions, map, bytes.toByteArray())
     }
 
     fun reloadTilesets()

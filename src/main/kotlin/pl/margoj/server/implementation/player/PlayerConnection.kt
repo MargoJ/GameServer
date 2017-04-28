@@ -2,6 +2,10 @@ package pl.margoj.server.implementation.player
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
+import pl.margoj.mrf.map.Point
+import pl.margoj.mrf.map.objects.gateway.GatewayObject
+import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.utils.Parse
 import pl.margoj.server.api.utils.TimeUtils
 import pl.margoj.server.api.utils.splitByChar
@@ -99,10 +103,10 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
                     this.player!!.entityTracker.reset()
                 }
 
-                val town = this.player!!.location.town!!
+                val town = this.player!!.location.town!! as TownImpl
 
                 j.add("town", gson.toJsonTree(TownObject(
-                        mapId = 1,
+                        mapId = town.numericId,
                         mainMapId = 0,
                         width = town.width,
                         height = town.height,
@@ -114,8 +118,25 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
                         welcomeMessage = ""
                 )))
 
-                j.add("gw2", JsonArray())
-                j.add("townname", JsonObject())
+                val gw2 = JsonArray()
+                val townname = JsonObject()
+
+                for (mapObject in town.map.objects)
+                {
+                    val gateway = mapObject as? GatewayObject ?: continue
+                    val targetMap = player!!.server.getTownById(gateway.targetMap) ?: continue
+
+                    gw2.add(targetMap.numericId)
+                    gw2.add(gateway.position.x)
+                    gw2.add(gateway.position.y)
+                    gw2.add(0) // TODO needs key
+                    gw2.add(0) // TODO: min level & max level
+
+                    townname.add(targetMap.numericId.toString(), JsonPrimitive(targetMap.name))
+                }
+
+                j.add("gw2", gw2)
+                j.add("townname", townname)
                 j.addProperty("worldname", this.manager.server.config.serverConfig!!.name)
                 j.addProperty("time", TimeUtils.getTimestampLong())
                 j.addProperty("tutorial", -1)
@@ -189,23 +210,38 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
             }
         }
 
-        if(packet.type == "chat")
+        if (packet.type == "chat")
         {
             val c = packet.body["c"]
             this.checkForMaliciousData(c == null, "no chat message present")
             this.manager.server.chatManager.handle(player, c!!)
         }
 
-        if(packet.type == "console")
+        if (packet.type == "console")
         {
             val custom = query["custom"]
             this.checkForMaliciousData(custom == null, "no command provided")
             this.manager.server.commandsManager.dispatchCommand(player, custom!!)
         }
 
+        if(packet.type == "walk")
+        {
+            val gateway = (player.location.town as? TownImpl)?.map?.getObject(Point(player.location.x, player.location.y)) as? GatewayObject ?: return
+            val targetMap = player.server.getTownById(gateway.targetMap)
+
+            if(targetMap == null || !targetMap.map.inBounds(gateway.target))
+            {
+                player.logToConsole("unknown or invalid map: ${gateway.targetMap}")
+                logger.warn("unknown or invalid map: ${gateway.targetMap}")
+                return
+            }
+
+            player.teleport(Location(targetMap, gateway.target.x, gateway.target.y))
+        }
+
         val move = player.movementManager.processMove()
 
-        if(move != null)
+        if (move != null)
         {
             out.addMove(move.x, move.y)
         }

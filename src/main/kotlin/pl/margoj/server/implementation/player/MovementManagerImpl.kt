@@ -1,8 +1,10 @@
 package pl.margoj.server.implementation.player
 
+import pl.margoj.mrf.map.Point
 import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.player.MovementManager
 import pl.margoj.server.api.utils.TimeUtils
+import pl.margoj.server.implementation.map.TownImpl
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class MovementManagerImpl(val player: PlayerImpl) : MovementManager
@@ -37,8 +39,9 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
             }
 
             val newLocation = Location(this.location.town, current.x, current.y)
+            val town = this.location.town!! as TownImpl
 
-            if(!this.location.isNear(newLocation) || this.location.town!!.collisions[newLocation.x][newLocation.y])
+            if (!this.location.isNear(newLocation) || town.collisions[newLocation.x][newLocation.y] || !town.map.inBounds(Point(current.x, current.y)))
             {
                 this.queuedMoves.clear()
                 return QueuedMove(this.location.x, this.location.y, 0.0)

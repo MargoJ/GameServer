@@ -1,9 +1,9 @@
 package pl.margoj.server.implementation.map
 
+import pl.margoj.mrf.map.MargoMap
 import pl.margoj.server.api.map.Town
-import java.util.Arrays
 
-data class TownImpl(override val id: String, override val name: String, override val width: Int, override val height: Int, override val collisions: Array<BooleanArray>, val image: ByteArray) : Town
+data class TownImpl(override val numericId: Int, override val id: String, override val name: String, override val width: Int, override val height: Int, override val collisions: Array<BooleanArray>, val map: MargoMap, val image: ByteArray) : Town
 {
     @Suppress("LoopToCallChain")
     val margonemCollisionsString: String
@@ -58,9 +58,9 @@ data class TownImpl(override val id: String, override val name: String, override
                 {
                     var mask = 0
 
-                    for(p in 0..5)
+                    for (p in 0..5)
                     {
-                        mask = mask or if(collisionsIndex >= collisionsChain.size) 0 else (if(collisionsChain[collisionsIndex++]) (1 shl p) else 0)
+                        mask = mask or if (collisionsIndex >= collisionsChain.size) 0 else (if (collisionsChain[collisionsIndex++]) (1 shl p) else 0)
                     }
 
                     out.append((32 + mask).toChar())
