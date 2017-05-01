@@ -1,6 +1,8 @@
 package pl.margoj.server.implementation.map
 
 import pl.margoj.mrf.map.MargoMap
+import pl.margoj.mrf.map.metadata.pvp.MapPvP
+import pl.margoj.server.api.map.PvPStatus
 import pl.margoj.server.api.map.Town
 
 data class TownImpl(override val numericId: Int, override val id: String, override val name: String, override val width: Int, override val height: Int, override val collisions: Array<BooleanArray>, val map: MargoMap, val image: ByteArray) : Town
@@ -68,6 +70,16 @@ data class TownImpl(override val numericId: Int, override val id: String, overri
             }
 
             return out.toString()
+        }
+
+    override val pvp: PvPStatus
+        get() = when (this.map.getMetadata(MapPvP::class.java))
+        {
+            MapPvP.NO_PVP -> PvPStatus.NO_PVP
+            MapPvP.CONDITIONAL -> PvPStatus.CONDITIONAL
+            MapPvP.ARENAS -> PvPStatus.ARENAS
+            MapPvP.UNCONDITIONAL -> PvPStatus.UNCONDITIONAL
+            else -> PvPStatus.CONDITIONAL
         }
 
     override fun toString(): String

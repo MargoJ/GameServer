@@ -53,6 +53,7 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager)
             }
         }
 
+        // TODO: CACHING
         val bytes = ByteArrayOutputStream()
         ImageIO.write(image, "png", bytes)
 

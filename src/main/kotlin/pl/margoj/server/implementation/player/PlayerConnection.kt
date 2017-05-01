@@ -4,6 +4,8 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import pl.margoj.mrf.map.Point
+import pl.margoj.mrf.map.metadata.pvp.MapPvP
+import pl.margoj.mrf.map.metadata.welcome.WelcomeMessage
 import pl.margoj.mrf.map.objects.gateway.GatewayObject
 import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.utils.Parse
@@ -112,10 +114,10 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
                         height = town.height,
                         imageFileName = "${town.id}.png",
                         mapName = town.name,
-                        pvp = 2,
+                        pvp = town.map.getMetadata(MapPvP::class.java).margonemId,
                         water = "",
                         battleBackground = "aa1.jpg",
-                        welcomeMessage = ""
+                        welcomeMessage = town.map.getMetadata(WelcomeMessage::class.java).value
                 )))
 
                 val gw2 = JsonArray()
@@ -224,21 +226,6 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
             this.manager.server.commandsManager.dispatchCommand(player, custom!!)
         }
 
-        if(packet.type == "walk")
-        {
-            val gateway = (player.location.town as? TownImpl)?.map?.getObject(Point(player.location.x, player.location.y)) as? GatewayObject ?: return
-            val targetMap = player.server.getTownById(gateway.targetMap)
-
-            if(targetMap == null || !targetMap.map.inBounds(gateway.target))
-            {
-                player.logToConsole("unknown or invalid map: ${gateway.targetMap}")
-                logger.warn("unknown or invalid map: ${gateway.targetMap}")
-                return
-            }
-
-            player.teleport(Location(targetMap, gateway.target.x, gateway.target.y))
-        }
-
         val move = player.movementManager.processMove()
 
         if (move != null)
@@ -247,6 +234,21 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
         }
 
         player.entityTracker.handlePacket(out)
+
+        if(packet.type == "walk")
+        {
+            val gateway = (player.location.town as? TownImpl)?.map?.getObject(Point(player.location.x, player.location.y)) as? GatewayObject ?: return
+            val targetMap = player.server.getTownById(gateway.targetMap)
+
+            if(targetMap == null || !targetMap.map.inBounds(gateway.target))
+            {
+                player.logToConsole("unknown or invalid map: ${gateway.targetMap}")
+                logger.warn("unknown or invalid map: ${gateway.targetMap} at ${gateway.position}")
+                return
+            }
+
+            player.teleport(Location(targetMap, gateway.target.x, gateway.target.y))
+        }
 
         out.markAsOk()
     }
