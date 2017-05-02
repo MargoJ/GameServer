@@ -4,8 +4,9 @@ import pl.margoj.mrf.map.MargoMap
 import pl.margoj.mrf.map.metadata.pvp.MapPvP
 import pl.margoj.server.api.map.PvPStatus
 import pl.margoj.server.api.map.Town
+import java.io.File
 
-data class TownImpl(override val numericId: Int, override val id: String, override val name: String, override val width: Int, override val height: Int, override val collisions: Array<BooleanArray>, val map: MargoMap, val image: ByteArray) : Town
+data class TownImpl(override val numericId: Int, override val id: String, override val name: String, override val width: Int, override val height: Int, override val collisions: Array<BooleanArray>, val map: MargoMap, val image: File) : Town
 {
     @Suppress("LoopToCallChain")
     val margonemCollisionsString: String

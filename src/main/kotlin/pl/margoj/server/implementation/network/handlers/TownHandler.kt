@@ -5,6 +5,7 @@ import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.network.http.HttpHandler
 import pl.margoj.server.implementation.network.http.HttpRequest
 import pl.margoj.server.implementation.network.http.HttpResponse
+import java.nio.file.Files
 
 class TownHandler(private val server: ServerImpl) : HttpHandler
 {
@@ -24,7 +25,7 @@ class TownHandler(private val server: ServerImpl) : HttpHandler
 
     override fun handle(request: HttpRequest, response: HttpResponse)
     {
-        response.response = this.server.getTownById(this.extractMapId(request.path)!!)!!.image
+        response.response = Files.readAllBytes(this.server.getTownById(this.extractMapId(request.path)!!)!!.image.toPath())
         response.contentType = "image/png"
     }
 
