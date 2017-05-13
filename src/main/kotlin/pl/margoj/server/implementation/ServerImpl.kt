@@ -86,11 +86,12 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
         // load resources
         // TODO
         this.resourceBundleManager = ResourceBundleManager(this, File("resources"), File("mounts"))
-        this.resourceLoader = ResourceLoader(this.resourceBundleManager)
 
         logger.info("Dostępne zestawy zasobów: " + this.resourceBundleManager.resources)
 
         this.resourceBundleManager.loadBundle("testowe_zasoby")
+
+        this.resourceLoader = ResourceLoader(this.resourceBundleManager)
 
         for (view in this.resourceBundleManager.currentBundle!!.resources)
         {

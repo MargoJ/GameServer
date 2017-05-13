@@ -14,6 +14,7 @@ import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.*
 import java.security.MessageDigest
+import java.util.Collections
 import javax.imageio.ImageIO
 
 class ResourceLoader(val resourceBundleManager: ResourceBundleManager)
@@ -128,23 +129,22 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager)
 
     fun reloadTilesets()
     {
-        // TODO: Reload from bundle
+        val bundle = this.resourceBundleManager.currentBundle!!
+        val resources = bundle.getResourcesByCategory(MargoResource.Category.TILESETS)
 
-        val directory = File("temptilesets")
-        val files = directory.list()
+        val tilesetFiles = ArrayList<TilesetFile>(resources.size)
+        val tilesets = ArrayList<Tileset>(resources.size)
 
-        val tilesetFiles = ArrayList<TilesetFile>(files.size)
-        val tilesets = ArrayList<Tileset>(files.size)
+        resources.forEach {
+            resource ->
+            bundle.loadResource(resource) // make sure it will unpack and be avaialbe using getLocalFile
 
-        files.filter { it.endsWith(".png") }.forEach {
-            file ->
-            val name = file.substring(0, file.lastIndexOf('.'))
-            tilesetFiles.add(TilesetFile(File(directory, file), name, file.startsWith("auto-")))
+            tilesetFiles.add(TilesetFile(bundle.getLocalFile(resource), resource.id, resource.id.startsWith("auto-")))
         }
 
         val autoTileset = AutoTileset(AutoTileset.AUTO, tilesetFiles.filter(TilesetFile::auto))
         tilesets.add(autoTileset)
-        tilesets.addAll(tilesetFiles.filter { !it.auto }.map { Tileset(it.name, it.image) })
+        tilesets.addAll(tilesetFiles.filter { !it.auto }.map { Tileset(it.name, it.image, Collections.singletonList(it)) })
 
         this.mapDeserializer = MapDeserializer(tilesets)
     }
