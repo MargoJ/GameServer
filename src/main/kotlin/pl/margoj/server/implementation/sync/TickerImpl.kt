@@ -60,8 +60,7 @@ class TickerImpl(val server: ServerImpl, val mainThread: Thread) : Ticker
                 tickSection = curTime
             }
 
-            lastTick = currentTick
-
+            lastTick = curTime
 
             tickables.forEach {
                 try
