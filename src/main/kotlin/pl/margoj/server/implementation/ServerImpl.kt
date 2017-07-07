@@ -23,6 +23,9 @@ import pl.margoj.server.implementation.sync.SchedulerImpl
 import pl.margoj.server.implementation.sync.TickerImpl
 import pl.margoj.server.implementation.threads.PlayerKeepAlive
 import java.io.File
+import java.io.IOException
+import java.net.InetAddress
+import java.net.Socket
 
 class ServerImpl(override val config: MargoJConfig, override val logger: Logger) : Server
 {
@@ -65,6 +68,36 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
         logger.info("Uruchamiam serwer MargoJ v$version...")
         this.running = true
 
+        val webFolder = File("web")
+
+        try
+        {
+            val installer = GameInstaller(webFolder, logger)
+
+            if (!installer.isUpdated())
+            {
+                if (!installer.canUpdate())
+                {
+                    logger.warn("Nowa wersja clienta jest juz dostepna!")
+                    logger.warn("Aby zezwoic na aktualizacje usun plik '${GameInstaller.VERSION_FILE}' znajdujacy sie w folderze 'web'")
+                }
+                else
+                {
+                    logger.info("Przystepuje do aktualizacji clienta gry")
+                    installer.update()
+                }
+            }
+        }
+        catch (e: IOException)
+        {
+            logger.warn("Wystapil blad podczas aktualizacji clienta", e)
+
+            if(!webFolder.exists())
+            {
+                logger.error("Brak plikow clienta, wylaczam serwer...")
+                return
+            }
+        }
         // synchronization
         ticker.targetTps = config.engineConfig.targetTps
         ticker.registerTickable(this.scheduler)
@@ -76,7 +109,7 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
 
         httpServer.registerHandler(EngineHandler(this))
         httpServer.registerHandler(TownHandler(this))
-        httpServer.registerHandler(ResourceHandler("static", ServerImpl::class.java.classLoader))
+        httpServer.registerHandler(ResourceHandler(webFolder.absoluteFile))
 
         if (this.debugModeEnabled)
         {
