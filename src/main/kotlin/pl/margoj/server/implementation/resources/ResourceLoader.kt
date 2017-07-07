@@ -100,7 +100,8 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager)
 
         logger.info("Załadowano mape: $name")
 
-        return TownImpl(numericId++, map.id, map.name, map.width, map.height, map.collisions, map, imageFile)
+
+        return TownImpl(numericId++, map.id, map.name, map.width, map.height, map.collisions, map.metadata, map.objects, imageFile)
     }
 
     private fun getMD5FromCache(id: String): String?

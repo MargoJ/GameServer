@@ -114,16 +114,16 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
                         height = town.height,
                         imageFileName = "${town.id}.png",
                         mapName = town.name,
-                        pvp = town.map.getMetadata(MapPvP::class.java).margonemId,
+                        pvp = town.getMetadata(MapPvP::class.java).margonemId,
                         water = "",
                         battleBackground = "aa1.jpg",
-                        welcomeMessage = town.map.getMetadata(WelcomeMessage::class.java).value
+                        welcomeMessage = town.getMetadata(WelcomeMessage::class.java).value
                 )))
 
                 val gw2 = JsonArray()
                 val townname = JsonObject()
 
-                for (mapObject in town.map.objects)
+                for (mapObject in town.objects)
                 {
                     val gateway = mapObject as? GatewayObject ?: continue
                     val targetMap = player!!.server.getTownById(gateway.targetMap) ?: continue
@@ -237,10 +237,10 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
 
         if(packet.type == "walk")
         {
-            val gateway = (player.location.town as? TownImpl)?.map?.getObject(Point(player.location.x, player.location.y)) as? GatewayObject ?: return
+            val gateway = (player.location.town as? TownImpl)?.getObject(Point(player.location.x, player.location.y)) as? GatewayObject ?: return
             val targetMap = player.server.getTownById(gateway.targetMap)
 
-            if(targetMap == null || !targetMap.map.inBounds(gateway.target))
+            if(targetMap == null || !targetMap.inBounds(gateway.target))
             {
                 player.logToConsole("unknown or invalid map: ${gateway.targetMap}")
                 logger.warn("unknown or invalid map: ${gateway.targetMap} at ${gateway.position}")

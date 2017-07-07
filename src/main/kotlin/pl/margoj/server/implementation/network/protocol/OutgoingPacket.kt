@@ -3,6 +3,9 @@ package pl.margoj.server.implementation.network.protocol
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import pl.margoj.server.api.chat.ChatMessage
+import pl.margoj.server.api.utils.TimeUtils
+import pl.margoj.server.implementation.network.protocol.jsons.OtherObject
 import pl.margoj.server.implementation.utils.GsonUtils
 
 class OutgoingPacket
@@ -11,17 +14,17 @@ class OutgoingPacket
     var shouldStop = false
         private set
     var raw: String? = null
-    private val messages = mutableListOf<pl.margoj.server.api.chat.ChatMessage>()
-    private val others = mutableListOf<pl.margoj.server.implementation.network.protocol.jsons.OtherObject>()
+    private val messages = mutableListOf<ChatMessage>()
+    private val others = mutableListOf<OtherObject>()
 
     enum class EngineAction
     {
         STOP, RELOAD
     }
 
-    fun addEngineAction(action: pl.margoj.server.implementation.network.protocol.OutgoingPacket.EngineAction): pl.margoj.server.implementation.network.protocol.OutgoingPacket
+    fun addEngineAction(action: OutgoingPacket.EngineAction): OutgoingPacket
     {
-        if (action == pl.margoj.server.implementation.network.protocol.OutgoingPacket.EngineAction.STOP)
+        if (action == OutgoingPacket.EngineAction.STOP)
         {
             this.shouldStop = true
         }
@@ -29,25 +32,25 @@ class OutgoingPacket
         return this
     }
 
-    fun addAlert(alert: String): pl.margoj.server.implementation.network.protocol.OutgoingPacket
+    fun addAlert(alert: String): OutgoingPacket
     {
         this.putStringLine("alert", alert)
         return this
     }
 
-    fun addWarn(message: String): pl.margoj.server.implementation.network.protocol.OutgoingPacket
+    fun addWarn(message: String): OutgoingPacket
     {
         this.putStringLine("w", message)
         return this
     }
 
-    fun addEvent(): pl.margoj.server.implementation.network.protocol.OutgoingPacket
+    fun addEvent(): OutgoingPacket
     {
-        this.json.addProperty("ev", pl.margoj.server.api.utils.TimeUtils.getTimestampDouble())
+        this.json.addProperty("ev", TimeUtils.getTimestampDouble())
         return this
     }
 
-    fun addMove(x: Int, y: Int): pl.margoj.server.implementation.network.protocol.OutgoingPacket
+    fun addMove(x: Int, y: Int): OutgoingPacket
     {
         val h = getObject("h")
         h.addProperty("x", x)
@@ -55,19 +58,19 @@ class OutgoingPacket
         return this
     }
 
-    fun addJavascriptCode(js: String): pl.margoj.server.implementation.network.protocol.OutgoingPacket
+    fun addJavascriptCode(js: String): OutgoingPacket
     {
         this.json.addProperty("w", js)
         return this
     }
 
-    fun addChatMessage(chatMessage: pl.margoj.server.api.chat.ChatMessage): pl.margoj.server.implementation.network.protocol.OutgoingPacket
+    fun addChatMessage(chatMessage: ChatMessage): OutgoingPacket
     {
         this.messages.add(chatMessage)
         return this
     }
 
-    fun markAsOk(): pl.margoj.server.implementation.network.protocol.OutgoingPacket
+    fun markAsOk(): OutgoingPacket
     {
         this.json.addProperty("e", "ok")
         return this
@@ -78,7 +81,7 @@ class OutgoingPacket
         this.getArray("msg").add(message)
     }
 
-    fun addOther(other: pl.margoj.server.implementation.network.protocol.jsons.OtherObject): pl.margoj.server.implementation.network.protocol.OutgoingPacket
+    fun addOther(other: OtherObject): OutgoingPacket
     {
         this.others.add(other)
         return this

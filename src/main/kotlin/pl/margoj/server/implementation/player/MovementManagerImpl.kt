@@ -41,7 +41,7 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
             val newLocation = Location(this.location.town, current.x, current.y)
             val town = this.location.town!! as TownImpl
 
-            if (!this.location.isNear(newLocation) || town.collisions[newLocation.x][newLocation.y] || !town.map.inBounds(Point(current.x, current.y)))
+            if (!this.location.isNear(newLocation) || town.collisions[newLocation.x][newLocation.y] || !town.inBounds(Point(current.x, current.y)))
             {
                 this.queuedMoves.clear()
                 return QueuedMove(this.location.x, this.location.y, 0.0)

@@ -5,6 +5,8 @@ import pl.margoj.server.implementation.network.protocol.jsons.OtherObject
 import pl.margoj.server.implementation.player.PlayerImpl
 import java.util.LinkedList
 
+const val WINDOW_SIZE: Int = 16
+
 class EntityTracker(val owner: PlayerImpl)
 {
     private val trackedEntities_ = LinkedList<EntityImpl>()
@@ -19,7 +21,23 @@ class EntityTracker(val owner: PlayerImpl)
 
     fun shouldTrack(anotherEntity: EntityImpl): Boolean
     {
-        return anotherEntity.location.town == this.owner.location.town && anotherEntity.location.distance(this.owner.location) <= this.trackingRange
+        if (this.owner.location.town != anotherEntity.location.town)
+        {
+            return false
+        }
+
+        val town = this.owner.location.town!!
+        val our = this.owner.location
+        val their = anotherEntity.location
+
+        return Math.abs(our.x - their.x) <= this.getRequiredDistance(WINDOW_SIZE, our.x, town.width)
+                && Math.abs(our.y - their.y) <= this.getRequiredDistance(WINDOW_SIZE, our.y, town.height)
+    }
+
+    private fun getRequiredDistance(windowSize: Int, position: Int, width: Int): Int
+    {
+        val half = windowSize / 2
+        return half + 1 + maxOf(0, half - 1 - position, half - (width - position))
     }
 
     fun reset()
@@ -57,7 +75,7 @@ class EntityTracker(val owner: PlayerImpl)
 
         for (trackedEntity in ArrayList(this.trackedEntities_))
         {
-            if(!entities.contains(trackedEntity))
+            if (!entities.contains(trackedEntity))
             {
                 this.disposeEntity(trackedEntity, out)
             }

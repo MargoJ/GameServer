@@ -1,12 +1,15 @@
 package pl.margoj.server.implementation.map
 
-import pl.margoj.mrf.map.MargoMap
+import pl.margoj.mrf.map.Point
+import pl.margoj.mrf.map.metadata.MetadataElement
 import pl.margoj.mrf.map.metadata.pvp.MapPvP
+import pl.margoj.mrf.map.objects.MapObject
+import pl.margoj.mrf.map.serialization.MapData
 import pl.margoj.server.api.map.PvPStatus
 import pl.margoj.server.api.map.Town
 import java.io.File
 
-data class TownImpl(override val numericId: Int, override val id: String, override val name: String, override val width: Int, override val height: Int, override val collisions: Array<BooleanArray>, val map: MargoMap, val image: File) : Town
+data class TownImpl(override val numericId: Int, override val id: String, override val name: String, override val width: Int, override val height: Int, override val collisions: Array<BooleanArray>, val metadata: Collection<MetadataElement>, val objects: Collection<MapObject<*>>, val image: File) : Town
 {
     @Suppress("LoopToCallChain")
     val margonemCollisionsString: String
@@ -74,7 +77,7 @@ data class TownImpl(override val numericId: Int, override val id: String, overri
         }
 
     override val pvp: PvPStatus
-        get() = when (this.map.getMetadata(MapPvP::class.java))
+        get() = when (this.getMetadata(MapPvP::class.java))
         {
             MapPvP.NO_PVP -> PvPStatus.NO_PVP
             MapPvP.CONDITIONAL -> PvPStatus.CONDITIONAL
@@ -82,6 +85,29 @@ data class TownImpl(override val numericId: Int, override val id: String, overri
             MapPvP.UNCONDITIONAL -> PvPStatus.UNCONDITIONAL
             else -> PvPStatus.CONDITIONAL
         }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T: MetadataElement> getMetadata(clazz: Class<T>): T
+    {
+        val optional = this.metadata.stream().filter { clazz.isInstance(it) }.findAny()
+
+        if (optional.isPresent)
+        {
+            return optional.get() as T
+        }
+
+        return MapData.mapMetadata.values.stream().filter { clazz.isInstance(it.defaultValue) }.findAny().map { it.defaultValue  }.get() as T
+    }
+
+    fun inBounds(point: Point): Boolean
+    {
+        return point.x >= 0 && point.y >= 0 && point.x < this.width && point.y < this.height
+    }
+
+    fun getObject(point: Point): MapObject<*>
+    {
+        return this.objects.stream().filter { it.position == point }.findAny().get()
+    }
 
     override fun toString(): String
     {
