@@ -16,6 +16,7 @@ import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.NetworkManager
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.network.protocol.PacketHandler
+import pl.margoj.server.implementation.network.protocol.jsons.ItemObject
 import pl.margoj.server.implementation.network.protocol.jsons.TownObject
 import pl.margoj.server.implementation.utils.GsonUtils
 import java.util.concurrent.CopyOnWriteArrayList
@@ -152,7 +153,32 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
             }
             3 -> // items
             {
-                out.json.add("item", JsonObject())
+                out.addItem(ItemObject(
+                        id = 1,
+                        name = "Torba",
+                        own = this.player!!.id,
+                        location = "g",
+                        icon = "bag/torba12.gif",
+                        x = 0,
+                        y = 0,
+                        cl = 24,
+                        price = 0,
+                        st = 20,
+                        statistics = "bag=42;permbound;soulbound;legendary"
+                ))
+                out.addItem(ItemObject(
+                        id = 2,
+                        name = "Torba w torbie!!!",
+                        own = this.player!!.id,
+                        location = "g",
+                        icon = "bag/torba12.gif",
+                        x = 0,
+                        y = 0,
+                        cl = 15,
+                        price = 0,
+                        st = 0,
+                        statistics = "opis=Torba w torbie!;amount=10;capacity=64;artefact;resdmg=1"
+                ))
             }
             4 -> // finish
             {
@@ -235,12 +261,12 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
 
         player.entityTracker.handlePacket(out)
 
-        if(packet.type == "walk")
+        if (packet.type == "walk")
         {
             val gateway = (player.location.town as? TownImpl)?.getObject(Point(player.location.x, player.location.y)) as? GatewayObject ?: return
             val targetMap = player.server.getTownById(gateway.targetMap)
 
-            if(targetMap == null || !targetMap.inBounds(gateway.target))
+            if (targetMap == null || !targetMap.inBounds(gateway.target))
             {
                 player.logToConsole("unknown or invalid map: ${gateway.targetMap}")
                 logger.warn("unknown or invalid map: ${gateway.targetMap} at ${gateway.position}")

@@ -104,9 +104,9 @@ data class TownImpl(override val numericId: Int, override val id: String, overri
         return point.x >= 0 && point.y >= 0 && point.x < this.width && point.y < this.height
     }
 
-    fun getObject(point: Point): MapObject<*>
+    fun getObject(point: Point): MapObject<*>?
     {
-        return this.objects.stream().filter { it.position == point }.findAny().get()
+        return this.objects.stream().filter { it.position == point }.findAny().orElse(null)
     }
 
     override fun toString(): String

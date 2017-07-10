@@ -5,6 +5,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import pl.margoj.server.api.chat.ChatMessage
 import pl.margoj.server.api.utils.TimeUtils
+import pl.margoj.server.implementation.network.protocol.jsons.ItemObject
 import pl.margoj.server.implementation.network.protocol.jsons.OtherObject
 import pl.margoj.server.implementation.utils.GsonUtils
 
@@ -16,6 +17,7 @@ class OutgoingPacket
     var raw: String? = null
     private val messages = mutableListOf<ChatMessage>()
     private val others = mutableListOf<OtherObject>()
+    private val items = mutableListOf<ItemObject>()
 
     enum class EngineAction
     {
@@ -58,9 +60,15 @@ class OutgoingPacket
         return this
     }
 
+    fun addItem(item: ItemObject): OutgoingPacket
+    {
+        this.items.add(item)
+        return this
+    }
+
     fun addJavascriptCode(js: String): OutgoingPacket
     {
-        this.json.addProperty("w", js)
+        this.json.addProperty("js", js)
         return this
     }
 
@@ -87,7 +95,7 @@ class OutgoingPacket
         return this
     }
 
-    private fun <E : com.google.gson.JsonElement> getJsonElement(name: String, constructor: () -> E, tester: (com.google.gson.JsonElement) -> Boolean, transformer: (com.google.gson.JsonElement) -> E): E
+    private fun <E : JsonElement> getJsonElement(name: String, constructor: () -> E, tester: (JsonElement) -> Boolean, transformer: (JsonElement) -> E): E
     {
         val firstTry = json.get(name)
 
@@ -112,12 +120,12 @@ class OutgoingPacket
     {
         this.json.add("c", this.assembleListElement(this.messages, { i, _ -> i }, true))
         this.json.add("other", this.assembleListElement(this.others, { _, (id) -> id }))
+        this.json.add("item", this.assembleListElement(this.items, { _, (id) -> id }))
     }
-
 
     private fun getObject(name: String): com.google.gson.JsonObject
     {
-        return getJsonElement<com.google.gson.JsonObject>(name, ::JsonObject, JsonElement::isJsonObject, JsonElement::getAsJsonObject)
+        return getJsonElement<JsonObject>(name, ::JsonObject, JsonElement::isJsonObject, JsonElement::getAsJsonObject)
     }
 
     private fun getArray(name: String): JsonArray

@@ -3,7 +3,8 @@ package pl.margoj.server.implementation.network.protocol.jsons
 import com.google.gson.annotations.SerializedName
 
 data class ItemObject(
-        var hid: Int = 0,
+        var id: Int = 0,
+        var hid: Int? = null,
         var name: String? = null,
         var own: Int = 0,
         @SerializedName("loc")

@@ -24,8 +24,6 @@ import pl.margoj.server.implementation.sync.TickerImpl
 import pl.margoj.server.implementation.threads.PlayerKeepAlive
 import java.io.File
 import java.io.IOException
-import java.net.InetAddress
-import java.net.Socket
 
 class ServerImpl(override val config: MargoJConfig, override val logger: Logger) : Server
 {
@@ -78,7 +76,10 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
             {
                 if (!installer.canUpdate())
                 {
-                    logger.warn("Nowa wersja clienta jest juz dostepna!")
+                    for (i in 0..10)
+                    {
+                        logger.warn("Nowa wersja clienta jest juz dostepna!")
+                    }
                     logger.warn("Aby zezwoic na aktualizacje usun plik '${GameInstaller.VERSION_FILE}' znajdujacy sie w folderze 'web'")
                 }
                 else
@@ -92,7 +93,7 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
         {
             logger.warn("Wystapil blad podczas aktualizacji clienta", e)
 
-            if(!webFolder.exists())
+            if (!webFolder.exists())
             {
                 logger.error("Brak plikow clienta, wylaczam serwer...")
                 return
