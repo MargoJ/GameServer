@@ -8,6 +8,7 @@ import pl.margoj.server.api.utils.TimeUtils
 import pl.margoj.server.implementation.network.protocol.jsons.ItemObject
 import pl.margoj.server.implementation.network.protocol.jsons.OtherObject
 import pl.margoj.server.implementation.utils.GsonUtils
+import java.math.BigDecimal
 
 class OutgoingPacket
 {
@@ -46,9 +47,9 @@ class OutgoingPacket
         return this
     }
 
-    fun addEvent(): OutgoingPacket
+    fun addEvent(value: Double = TimeUtils.getTimestampDouble()): OutgoingPacket
     {
-        this.json.addProperty("ev", TimeUtils.getTimestampDouble())
+        this.json.addProperty("ev", BigDecimal.valueOf(value))
         return this
     }
 

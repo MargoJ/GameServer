@@ -8,7 +8,7 @@ import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.entity.EntityTracker
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 
-class PlayerImpl(override val id: Int, override val name: String, override val server: ServerImpl, val connection: PlayerConnection) : EntityImpl(id), Player
+class   PlayerImpl(override val id: Int, override val name: String, override val server: ServerImpl, val connection: PlayerConnection) : EntityImpl(id), Player
 {
     override val location: Location get() = this.movementManager.location
 

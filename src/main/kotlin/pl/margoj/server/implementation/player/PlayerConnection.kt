@@ -3,6 +3,9 @@ package pl.margoj.server.implementation.player
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
+import pl.margoj.mrf.item.ItemCategory
+import pl.margoj.mrf.item.ItemProperties
+import pl.margoj.mrf.item.MargoItem
 import pl.margoj.mrf.map.Point
 import pl.margoj.mrf.map.metadata.pvp.MapPvP
 import pl.margoj.mrf.map.metadata.welcome.WelcomeMessage
@@ -11,6 +14,7 @@ import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.utils.Parse
 import pl.margoj.server.api.utils.TimeUtils
 import pl.margoj.server.api.utils.splitByChar
+import pl.margoj.server.implementation.item.ItemLocation
 import pl.margoj.server.implementation.map.TownImpl
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.NetworkManager
@@ -27,6 +31,7 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
     private val packetModifiers = CopyOnWriteArrayList<(OutgoingPacket) -> Unit>()
     private var disconnectReason: String? = null
     private var disposed: Boolean = false
+    private var lastEvent: Double = 0.0
 
     var lastPacket: Long = 0
     var ip: String? = null
@@ -57,6 +62,27 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
             return
         }
 
+        val ev = packet.queryParams["ev"]
+
+        if (ev != null)
+        {
+            try
+            {
+                if (ev.toDouble() < this.lastEvent)
+                {
+                    out.addWarn("Odrzucono stare zapytanie - nowsze już zostało przetworzone")
+                    out.addEvent()
+                    out.markAsOk()
+                    return
+                }
+            }
+            catch(e: NumberFormatException)
+            {
+                this.checkForMaliciousData(true, "Invalid 'ev' received")
+                return
+            }
+        }
+
         if (packet.type == "init")
         {
             val initlvl = Parse.parseInt(query["initlvl"])
@@ -73,7 +99,8 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
 
         if (query.containsKey("ev"))
         {
-            out.addEvent()
+            this.lastEvent = TimeUtils.getTimestampDouble()
+            out.addEvent(this.lastEvent)
         }
 
         this.packetModifiers.forEach { it(out) }
@@ -153,31 +180,38 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
             }
             3 -> // items
             {
+                val testItem = MargoItem("torba", "TorbaZZZ")
+                testItem[ItemProperties.CATEGORY] = ItemCategory.BAGS
+
                 out.addItem(ItemObject(
                         id = 1,
-                        name = "Torba",
+                        name = testItem.name,
                         own = this.player!!.id,
-                        location = "g",
+                        location = ItemLocation.PLAYERS_INVENTORY.margoType,
                         icon = "bag/torba12.gif",
                         x = 0,
                         y = 0,
-                        cl = 24,
-                        price = 0,
-                        st = 20,
+                        itemType = testItem[ItemProperties.CATEGORY].margoId,
+                        price = 123456789,
+                        slot = 20,
                         statistics = "bag=42;permbound;soulbound;legendary"
                 ))
+
+                val testItem2 = MargoItem("torba", "Torba w torbie!!!")
+                testItem2[ItemProperties.CATEGORY] = ItemCategory.NEUTRAL
+
                 out.addItem(ItemObject(
                         id = 2,
-                        name = "Torba w torbie!!!",
+                        name = testItem2.name,
                         own = this.player!!.id,
-                        location = "g",
+                        location = ItemLocation.PLAYERS_INVENTORY.margoType,
                         icon = "bag/torba12.gif",
                         x = 0,
                         y = 0,
-                        cl = 15,
+                        itemType = testItem2[ItemProperties.CATEGORY].margoId,
                         price = 0,
-                        st = 0,
-                        statistics = "opis=Torba w torbie!;amount=10;capacity=64;artefact;resdmg=1"
+                        slot = 0,
+                        statistics = "opis=Torba w torbie!;amount=10;capacity=64;legendary;artefact;resdmg=1"
                 ))
             }
             4 -> // finish
@@ -240,7 +274,7 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
 
         if (packet.type == "chat")
         {
-            val c = packet.body["c"]
+            val c = packet.body["c"] ?: query["c"]
             this.checkForMaliciousData(c == null, "no chat message present")
             this.manager.server.chatManager.handle(player, c!!)
         }
@@ -287,6 +321,18 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
     fun addModifier(modifier: (OutgoingPacket) -> Unit)
     {
         this.packetModifiers.add(modifier)
+    }
+
+    fun noReturn(): Int
+    {
+        throw Exception("no")
+    }
+
+    fun abc()
+    {
+        noReturn()
+
+        val a = 5
     }
 
     fun dispose()

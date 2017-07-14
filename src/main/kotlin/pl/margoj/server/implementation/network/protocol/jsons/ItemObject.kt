@@ -12,10 +12,12 @@ data class ItemObject(
         var icon: String? = null,
         var x: Int = 0,
         var y: Int = 0,
-        var cl: Int = 0,
+        @SerializedName("cl")
+        var itemType: Int = 0,
         @SerializedName("pr")
         var price: Int = 0,
-        var st: Int = 0,
+        @SerializedName("st")
+        var slot: Int = 0,
         @SerializedName("stat")
         var statistics: String? = null
 )
