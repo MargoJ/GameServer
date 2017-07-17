@@ -1,11 +1,13 @@
 package pl.margoj.server.implementation.player
 
 import pl.margoj.server.api.chat.ChatMessage
+import pl.margoj.server.api.inventory.player.PlayerInventory
 import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.player.Player
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.entity.EntityTracker
+import pl.margoj.server.implementation.inventory.player.PlayerInventoryImpl
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 
 class PlayerImpl(override val id: Int, override val name: String, override val server: ServerImpl, val connection: PlayerConnection) : EntityImpl(id), Player
@@ -19,6 +21,8 @@ class PlayerImpl(override val id: Int, override val name: String, override val s
     override val currencyManager = CurrencyManagerImpl(this)
 
     override val data = PlayerDataImpl(this)
+
+    override val inventory = PlayerInventoryImpl(this)
 
     val entityTracker = EntityTracker(this)
 

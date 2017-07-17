@@ -1,7 +1,6 @@
 package pl.margoj.server.implementation.item
 
 import pl.margoj.mrf.item.ItemProperty
-import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.network.protocol.jsons.ItemObject
 
@@ -44,7 +43,7 @@ class ItemManager(val server: ServerImpl)
                 continue
             }
 
-            parser.apply(property as ItemProperty<Any?>, itemObject, item.margoItem[property], itemStack, item)
+            parser.apply(property as ItemProperty<Any?>, itemObject, itemStack.additionalProperties[property] ?: item.margoItem[property], itemStack, item)
         }
 
         return itemObject
