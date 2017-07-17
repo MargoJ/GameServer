@@ -8,7 +8,7 @@ import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.entity.EntityTracker
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 
-class   PlayerImpl(override val id: Int, override val name: String, override val server: ServerImpl, val connection: PlayerConnection) : EntityImpl(id), Player
+class PlayerImpl(override val id: Int, override val name: String, override val server: ServerImpl, val connection: PlayerConnection) : EntityImpl(id), Player
 {
     override val location: Location get() = this.movementManager.location
 
@@ -39,7 +39,7 @@ class   PlayerImpl(override val id: Int, override val name: String, override val
 
     override fun logToConsole(text: String, severity: Player.ConsoleMessageSeverity)
     {
-        this.connection.addModifier { it.json.addProperty(severity.packet, text) }
+        this.connection.addModifier { it.addLogMessage(text, severity) }
     }
 
     override fun teleport(location: Location)

@@ -4,11 +4,13 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import pl.margoj.server.api.chat.ChatMessage
+import pl.margoj.server.api.player.Player
 import pl.margoj.server.api.utils.TimeUtils
 import pl.margoj.server.implementation.network.protocol.jsons.ItemObject
 import pl.margoj.server.implementation.network.protocol.jsons.OtherObject
 import pl.margoj.server.implementation.utils.GsonUtils
 import java.math.BigDecimal
+import java.util.LinkedList
 
 class OutgoingPacket
 {
@@ -19,6 +21,7 @@ class OutgoingPacket
     private val messages = mutableListOf<ChatMessage>()
     private val others = mutableListOf<OtherObject>()
     private val items = mutableListOf<ItemObject>()
+    private val logMessages = hashMapOf<Player.ConsoleMessageSeverity, MutableList<String>>()
 
     enum class EngineAction
     {
@@ -79,15 +82,22 @@ class OutgoingPacket
         return this
     }
 
+    fun addLogMessage(text: String, severity: Player.ConsoleMessageSeverity): OutgoingPacket
+    {
+        this.logMessages.computeIfAbsent(severity, { LinkedList<String>() }).add(text)
+        return this
+    }
+
     fun markAsOk(): OutgoingPacket
     {
         this.json.addProperty("e", "ok")
         return this
     }
 
-    fun addScreenMessage(message: String)
+    fun addScreenMessage(message: String): OutgoingPacket
     {
         this.getArray("msg").add(message)
+        return this
     }
 
     fun addOther(other: OtherObject): OutgoingPacket
@@ -117,24 +127,37 @@ class OutgoingPacket
         }
     }
 
-    private fun assembleJson()
-    {
-        this.json.add("c", this.assembleListElement(this.messages, { i, _ -> i }, true))
-        this.json.add("other", this.assembleListElement(this.others, { _, (id) -> id }))
-        this.json.add("item", this.assembleListElement(this.items, { _, (id) -> id }))
-    }
 
-    private fun getObject(name: String): com.google.gson.JsonObject
+    fun getObject(name: String): com.google.gson.JsonObject
     {
         return getJsonElement<JsonObject>(name, ::JsonObject, JsonElement::isJsonObject, JsonElement::getAsJsonObject)
     }
 
-    private fun getArray(name: String): JsonArray
+    fun getArray(name: String): JsonArray
     {
         return getJsonElement<JsonArray>(name, ::JsonArray, JsonElement::isJsonArray, JsonElement::getAsJsonArray)
     }
 
-    private fun <T> assembleListElement(list: List<T>, indexer: (Int, T) -> Int = { index, _ -> index }, invert: Boolean = false): JsonObject?
+    private fun assembleJson()
+    {
+        this.json.add("c", this.assembleListElement(this.messages, { i, _ -> i.toLong() }, true))
+        this.json.add("other", this.assembleListElement(this.others, { _, (id) -> id.toLong() }))
+        this.json.add("item", this.assembleListElement(this.items, { _, (id) -> id!! }))
+
+        for ((severity, messages) in this.logMessages)
+        {
+            val output = StringBuilder()
+
+            for ((i, message) in messages.withIndex())
+            {
+                output.append(message).append(if(i != messages.size - 1) "<br>" else "")
+            }
+
+            this.json.addProperty(severity.packet, output.toString())
+        }
+    }
+
+    private fun <T> assembleListElement(list: List<T>, indexer: (Int, T) -> Long = { index, _ -> index.toLong() }, invert: Boolean = false): JsonObject?
     {
         if (list.isEmpty())
         {
@@ -145,7 +168,7 @@ class OutgoingPacket
 
         for ((i, o) in list.withIndex())
         {
-            objects.add(indexer(if (invert) (list.size - i - 1) else i, o).toString(), GsonUtils.gson.toJsonTree(o).asJsonObject)
+            objects.add(indexer(if (invert) (list.size - i - 1) else i, o).toString(), GsonUtils.gson.toJsonTree(o))
         }
 
         return objects

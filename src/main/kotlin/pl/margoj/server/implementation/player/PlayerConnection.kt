@@ -180,39 +180,6 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
             }
             3 -> // items
             {
-                val testItem = MargoItem("torba", "TorbaZZZ")
-                testItem[ItemProperties.CATEGORY] = ItemCategory.BAGS
-
-                out.addItem(ItemObject(
-                        id = 1,
-                        name = testItem.name,
-                        own = this.player!!.id,
-                        location = ItemLocation.PLAYERS_INVENTORY.margoType,
-                        icon = "bag/torba12.gif",
-                        x = 0,
-                        y = 0,
-                        itemType = testItem[ItemProperties.CATEGORY].margoId,
-                        price = 123456789,
-                        slot = 20,
-                        statistics = "bag=42;permbound;soulbound;legendary"
-                ))
-
-                val testItem2 = MargoItem("torba", "Torba w torbie!!!")
-                testItem2[ItemProperties.CATEGORY] = ItemCategory.NEUTRAL
-
-                out.addItem(ItemObject(
-                        id = 2,
-                        name = testItem2.name,
-                        own = this.player!!.id,
-                        location = ItemLocation.PLAYERS_INVENTORY.margoType,
-                        icon = "bag/torba12.gif",
-                        x = 0,
-                        y = 0,
-                        itemType = testItem2[ItemProperties.CATEGORY].margoId,
-                        price = 0,
-                        slot = 0,
-                        statistics = "opis=Torba w torbie!;amount=10;capacity=64;legendary;artefact;resdmg=1"
-                ))
             }
             4 -> // finish
             {
@@ -321,18 +288,6 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
     fun addModifier(modifier: (OutgoingPacket) -> Unit)
     {
         this.packetModifiers.add(modifier)
-    }
-
-    fun noReturn(): Int
-    {
-        throw Exception("no")
-    }
-
-    fun abc()
-    {
-        noReturn()
-
-        val a = 5
     }
 
     fun dispose()

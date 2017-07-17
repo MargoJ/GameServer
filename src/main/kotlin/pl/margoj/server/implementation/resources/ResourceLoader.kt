@@ -1,43 +1,43 @@
 package pl.margoj.server.implementation.resources
 
-import com.google.gson.JsonObject
 import org.apache.commons.io.IOUtils
 import pl.margoj.mrf.MargoResource
+import pl.margoj.mrf.item.ItemProperties
+import pl.margoj.mrf.item.serialization.ItemDeserializer
 import pl.margoj.mrf.map.MargoMap
 import pl.margoj.mrf.map.serialization.MapDeserializer
 import pl.margoj.mrf.map.tileset.AutoTileset
 import pl.margoj.mrf.map.tileset.Tileset
 import pl.margoj.mrf.map.tileset.TilesetFile
+import pl.margoj.server.implementation.item.ItemImpl
 import pl.margoj.server.implementation.map.TownImpl
-import pl.margoj.server.implementation.utils.GsonUtils
 import java.awt.Color
 import java.awt.image.BufferedImage
-import java.io.*
-import java.security.MessageDigest
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.util.Collections
 import javax.imageio.ImageIO
 
-class ResourceLoader(val resourceBundleManager: ResourceBundleManager)
+class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cacheDirectory: File)
 {
     private var mapDeserializer: MapDeserializer? = null
+    private var itemDeserializer = ItemDeserializer()
+
     private var numericId: Int = 1
-    private var cacheDirectory = File("mapcache")
-    private var indexFile = File(cacheDirectory, "index.json")
-    private var messageDigest: MessageDigest = MessageDigest.getInstance("MD5")
+    private val mapCacheDirectory = File(this.cacheDirectory, "maps")
+    private val itemCacheDirectory = File(this.cacheDirectory, "items")
+    private val mapIndexFile = File(mapCacheDirectory, "index.json")
 
     init
     {
         this.reloadTilesets()
 
-        if (!cacheDirectory.exists())
-        {
-            cacheDirectory.mkdirs()
-        }
-        if (!this.indexFile.exists())
-        {
-            this.indexFile.createNewFile()
-            FileWriter(this.indexFile).use { it.write("{}") }
-        }
+        MD5CacheUtils.ensureDirectoryExists(this.mapCacheDirectory)
+        MD5CacheUtils.ensureDirectoryExists(this.itemCacheDirectory)
+
+        MD5CacheUtils.ensureIndexFileExists(this.mapIndexFile)
     }
 
     fun loadMap(name: String): TownImpl?
@@ -53,22 +53,12 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager)
         IOUtils.copy(inputStream, byteOutput)
         val bytes = byteOutput.toByteArray()
 
-        messageDigest.reset()
-        messageDigest.update(bytes)
-        val digest = messageDigest.digest()
-        val result = StringBuilder()
-
-        for (byte in digest)
-        {
-            result.append(Integer.toString((byte.toInt() and 0xff) + 0x100, 16).substring(1))
-        }
-
-        val md5 = result.toString()
+        val md5 = MD5CacheUtils.getMD5(bytes)
         val map = mapDeserializer!!.deserialize(ByteArrayInputStream(bytes))
-        val currentMD5 = this.getMD5FromCache(map.id)
-        val imageFile = File(this.cacheDirectory, map.id + ".png")
+        val currentMD5 = MD5CacheUtils.getMD5FromCache(this.mapIndexFile, map.id)
+        val imageFile = File(this.mapCacheDirectory, map.id + ".png")
 
-        if(!imageFile.exists() || md5 != currentMD5)
+        if (!imageFile.exists() || md5 != currentMD5)
         {
             logger.trace("MD5: $md5, current: $currentMD5")
 
@@ -94,7 +84,7 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager)
             }
 
             ImageIO.write(image, "png", imageFile)
-            this.updateMD5Cache(map.id, md5)
+            MD5CacheUtils.updateMD5Cache(this.mapIndexFile, map.id, md5)
         }
 
 
@@ -104,28 +94,33 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager)
         return TownImpl(numericId++, map.id, map.name, map.width, map.height, map.collisions, map.metadata, map.objects, imageFile)
     }
 
-    private fun getMD5FromCache(id: String): String?
+    fun loadItem(id: String): ItemImpl?
     {
-        FileReader(this.indexFile).use {
-            val json = GsonUtils.parser.parse(it).asJsonObject
-            val element = json[id]
-            return if (element == null || !element.isJsonPrimitive || !element.asJsonPrimitive.isString) null else element.asJsonPrimitive.asString
+        val logger = this.resourceBundleManager.server.logger
+        logger.trace("Ładuje przedmiot: $id")
+
+        val bundle = this.resourceBundleManager.currentBundle
+        val view = bundle!!.getResource(MargoResource.Category.ITEMS, id) ?: return null
+        val resource = bundle.loadResource(view)
+        val margoItem = this.itemDeserializer.deserialize(resource!!)
+
+        val itemIcon = margoItem[ItemProperties.ICON]
+
+        var itemIconName: String = ""
+        var itemIconFile: File? = null
+
+        if (itemIcon != null)
+        {
+            itemIconName = "${margoItem.id}.${itemIcon.format.extension}"
+            itemIconFile = File(this.itemCacheDirectory, itemIconName)
+            itemIconFile.delete()
+
+            FileOutputStream(itemIconFile).use {
+                IOUtils.write(itemIcon.image, it)
+            }
         }
-    }
 
-    private fun updateMD5Cache(id: String, md5: String)
-    {
-        var json: JsonObject? = null
-
-        FileReader(this.indexFile).use {
-            json = GsonUtils.parser.parse(it).asJsonObject
-        }
-
-        json!!.addProperty(id, md5)
-
-        FileWriter(this.indexFile).use {
-            it.write(GsonUtils.gson.toJson(json))
-        }
+        return ItemImpl(margoItem, itemIconFile, itemIconName)
     }
 
     fun reloadTilesets()

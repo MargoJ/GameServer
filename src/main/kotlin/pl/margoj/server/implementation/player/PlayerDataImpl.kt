@@ -20,7 +20,7 @@ class PlayerDataImpl(val player: PlayerImpl) : PlayerData
         return HeroObject(
                 id = this.player.connection.aid,
                 blockade = 0,
-                permissions = 0,
+                permissions = 1,
                 ap = 0,
                 bagi = 3,
                 bint = 3,

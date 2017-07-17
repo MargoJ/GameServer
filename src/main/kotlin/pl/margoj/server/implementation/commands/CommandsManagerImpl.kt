@@ -3,10 +3,15 @@ package pl.margoj.server.implementation.commands
 import org.apache.commons.lang3.StringUtils
 import pl.margoj.server.api.commands.CommandSender
 import pl.margoj.server.api.commands.CommandsManager
+import pl.margoj.server.api.inventory.ItemSlot
 import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.player.Player
 import pl.margoj.server.api.utils.Parse
 import pl.margoj.server.implementation.ServerImpl
+import pl.margoj.server.implementation.item.ItemImpl
+import pl.margoj.server.implementation.item.ItemLocation
+import pl.margoj.server.implementation.player.PlayerImpl
+import java.util.Arrays
 import java.util.stream.Collectors
 
 class CommandsManagerImpl(val server: ServerImpl) : CommandsManager
@@ -28,6 +33,7 @@ class CommandsManagerImpl(val server: ServerImpl) : CommandsManager
     {
         // TODO: TEMP
         val player = sender as Player
+        sender.logToConsole("cmd: $command, args = ${Arrays.toString(args)}", Player.ConsoleMessageSeverity.WARN)
 
         when (command.toLowerCase())
         {
@@ -36,7 +42,8 @@ class CommandsManagerImpl(val server: ServerImpl) : CommandsManager
                 player.logToConsole("Dostępne komendy: <br>" +
                         " - .help - wyświetla help<br>" +
                         " - .towns - wyświetla dostępne mapy<br>" +
-                        " - .tp &lt;mapa> [x] [y] - teleportuje na wybraną mape"
+                        " - .tp &lt;mapa> [x] [y] - teleportuje na wybraną mape<br>" +
+                        " - .senditem [item] = wyswietla wszystkie przedmioty lub wysyla pakiet z przedmiotem"
                 )
             }
             "towns" ->
@@ -96,6 +103,35 @@ class CommandsManagerImpl(val server: ServerImpl) : CommandsManager
 
                 player.logToConsole("Teleportuje...")
                 player.teleport(Location(town, targetX, targetY))
+            }
+            "senditem" ->
+            {
+                if (args.isEmpty())
+                {
+                    player.logToConsole("Dostępne przedmioty: <br> " + this.server.items.stream().map { "${it.margoItem.id} [${it.margoItem.name}]<br>" }.collect(Collectors.joining()))
+                    return
+                }
+
+                val item = player.server.getItemById(args[0]) as? ItemImpl?
+                if (item == null)
+                {
+                    player.logToConsole("Nie znaleziono przedmiotu: " + args[0], Player.ConsoleMessageSeverity.ERROR)
+                    return
+                }
+
+                val itemStack = this.server.itemManager.newItemStack(item)
+                val packet = this.server.itemManager.createItemObject(itemStack)
+
+                packet.own = player.id
+                packet.location = ItemLocation.PLAYERS_INVENTORY.margoType
+                packet.x = 0
+                packet.y = 0
+                packet.slot = ItemSlot.DEFAULT.margoId
+
+                player as PlayerImpl
+                player.connection.addModifier { it.addItem(packet) }
+
+                player.logToConsole("Pakiet przedmiotu dodany do kolejki wyslania!", Player.ConsoleMessageSeverity.WARN)
             }
         }
     }

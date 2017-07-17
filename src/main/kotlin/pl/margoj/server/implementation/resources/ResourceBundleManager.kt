@@ -1,11 +1,15 @@
 package pl.margoj.server.implementation.resources
 
+import com.twmacinta.util.MD5
 import org.apache.commons.io.FileUtils
+import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.Validate
 import pl.margoj.mrf.bundle.MountResourceBundle
 import pl.margoj.mrf.bundle.local.MargoMRFResourceBundle
+import pl.margoj.mrf.bundle.local.MountedResourceBundle
 import pl.margoj.server.implementation.ServerImpl
 import java.io.File
+import java.io.FileOutputStream
 
 class ResourceBundleManager(val server: ServerImpl, val resourceDirectory: File, val mountDirectory: File)
 {
@@ -13,7 +17,8 @@ class ResourceBundleManager(val server: ServerImpl, val resourceDirectory: File,
     private var currentMountPoint: File? = null
     var currentBundle: MountResourceBundle? = null
         private set
-
+    var bundlesCacheIndex = File("cache/bundles_index.json")
+    var currentBundleName: String? = null
 
     init
     {
@@ -30,6 +35,8 @@ class ResourceBundleManager(val server: ServerImpl, val resourceDirectory: File,
         }
 
         Validate.isTrue(mountDirectory.isDirectory, "Mount directory is not a directory")
+
+        MD5CacheUtils.ensureIndexFileExists(this.bundlesCacheIndex)
     }
 
     val resources: Collection<String> get() = this.resources_
@@ -65,9 +72,29 @@ class ResourceBundleManager(val server: ServerImpl, val resourceDirectory: File,
             this.unloadBundle()
         }
 
-        this.currentMountPoint = File(this.mountDirectory, System.currentTimeMillis().toString())
-        currentMountPoint?.mkdirs()
+        this.currentBundleName = name
+        this.currentMountPoint = File(this.mountDirectory, this.currentBundleName)
+
+        val cached = MD5CacheUtils.getMD5FromCache(this.bundlesCacheIndex, name)
+        val current = MD5.asHex(MD5.getHash(file))
+
+        if (cached == current)
+        {
+            server.logger.info("Nie wykryto zmian w zestawie zasobow, uzywam tylko cache...")
+            this.currentBundle = MountedResourceBundle(this.currentMountPoint!!)
+            return
+        }
+
+        MD5CacheUtils.updateMD5Cache(this.bundlesCacheIndex, name, current)
+
+        FileUtils.deleteDirectory(currentMountPoint)
+        currentMountPoint!!.mkdirs()
+
         this.currentBundle = MargoMRFResourceBundle(file, this.currentMountPoint!!)
+
+        FileOutputStream(File(this.currentMountPoint, "index.json")).use {
+            IOUtils.copy(this.currentBundle!!.createIndex(this.currentBundle!!.resources), it)
+        }
 
         server.logger.debug("Załadowano zestaw zasobów $name, mrf=${file.absolutePath}, mountPoint=${currentMountPoint!!.absolutePath}")
     }

@@ -6,8 +6,8 @@ import pl.margoj.server.api.player.Profession
 
 internal object GsonUtils
 {
-    val gson = addSerializers(GsonBuilder()).create()!!
-    val prettyGson = addSerializers(GsonBuilder()).setPrettyPrinting().create()!!
+    val gson = addSerializers(GsonBuilder()).disableHtmlEscaping().create()!!
+    val prettyGson = addSerializers(GsonBuilder()).disableHtmlEscaping().setPrettyPrinting().create()!!
     val parser = JsonParser()
 
     fun addSerializers(builder: GsonBuilder): GsonBuilder

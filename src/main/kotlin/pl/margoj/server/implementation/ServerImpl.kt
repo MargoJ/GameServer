@@ -4,16 +4,16 @@ import org.apache.logging.log4j.Logger
 import pl.margoj.mrf.MargoResource
 import pl.margoj.server.api.MargoJConfig
 import pl.margoj.server.api.Server
-import pl.margoj.server.api.map.Town
+import pl.margoj.server.api.inventory.Item
+import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.implementation.auth.Authenticator
 import pl.margoj.server.implementation.chat.ChatManagerImpl
 import pl.margoj.server.implementation.commands.CommandsManagerImpl
 import pl.margoj.server.implementation.entity.EntityManagerImpl
+import pl.margoj.server.implementation.item.ItemImpl
+import pl.margoj.server.implementation.item.ItemManager
 import pl.margoj.server.implementation.map.TownImpl
-import pl.margoj.server.implementation.network.handlers.DebugHandler
-import pl.margoj.server.implementation.network.handlers.EngineHandler
-import pl.margoj.server.implementation.network.handlers.ResourceHandler
-import pl.margoj.server.implementation.network.handlers.TownHandler
+import pl.margoj.server.implementation.network.handlers.*
 import pl.margoj.server.implementation.network.http.HttpServer
 import pl.margoj.server.implementation.network.protocol.NetworkManager
 import pl.margoj.server.implementation.player.PlayerImpl
@@ -28,13 +28,15 @@ import java.io.IOException
 class ServerImpl(override val config: MargoJConfig, override val logger: Logger) : Server
 {
     private var towns_ = hashMapOf<String, TownImpl>()
+    private var items_ = hashMapOf<String, ItemImpl>()
 
     var debugModeEnabled: Boolean = false
     var useJLine: Boolean = true
 
     override val version get() = VERSION
     override val players: Collection<PlayerImpl> get() = this.entityManager.players
-    override val towns: Collection<Town> get() = this.towns_.values
+    override val towns: Collection<TownImpl> get() = this.towns_.values
+    override val items: Collection<ItemImpl> get() = this.items_.values
 
     override var running = false
     override val ticker = TickerImpl(this, Thread.currentThread())
@@ -45,6 +47,7 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
 
     val authenticator = Authenticator()
     val networkManager = NetworkManager(this)
+    val itemManager = ItemManager(this)
 
     lateinit var httpServer: HttpServer
         private set
@@ -110,6 +113,7 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
 
         httpServer.registerHandler(EngineHandler(this))
         httpServer.registerHandler(TownHandler(this))
+        httpServer.registerHandler(ItemsHandler(this))
         httpServer.registerHandler(ResourceHandler(webFolder.absoluteFile))
 
         if (this.debugModeEnabled)
@@ -125,7 +129,7 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
 
         this.resourceBundleManager.loadBundle("testowe_zasoby")
 
-        this.resourceLoader = ResourceLoader(this.resourceBundleManager)
+        this.resourceLoader = ResourceLoader(this.resourceBundleManager, File("cache/${this.resourceBundleManager.currentBundleName}"))
 
         for (view in this.resourceBundleManager.currentBundle!!.resources)
         {
@@ -137,6 +141,11 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
                 }
                 MargoResource.Category.ITEMS ->
                 {
+                    this.items_.put(view.id, this.resourceLoader.loadItem(view.id)!!)
+                }
+                MargoResource.Category.TILESETS ->
+                {
+                    logger.trace("Załadowano tileset: ${view.fileName}")
                 }
             }
         }
@@ -164,9 +173,19 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
     {
     }
 
+    override fun getItemById(id: String): Item?
+    {
+        return this.items_[id]
+    }
+
     override fun getTownById(id: String): TownImpl?
     {
         return this.towns_[id]
+    }
+
+    override fun newItemStack(item: Item): ItemStack
+    {
+        return this.itemManager.newItemStack(item as ItemImpl)
     }
 
     companion object
