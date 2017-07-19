@@ -8,7 +8,6 @@ import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.player.Player
 import pl.margoj.server.api.utils.Parse
 import pl.margoj.server.implementation.ServerImpl
-import pl.margoj.server.implementation.inventory.player.PlayerInventoryImpl
 import pl.margoj.server.implementation.item.ItemImpl
 import pl.margoj.server.implementation.item.ItemLocation
 import pl.margoj.server.implementation.item.ItemStackImpl
@@ -184,20 +183,41 @@ class CommandsManagerImpl(val server: ServerImpl) : CommandsManager
                 inventory.getBagInventory(3).setItemAt(0, 5, prepareTest("torba klucze lewe dol"))
                 inventory.getBagInventory(3).setItemAt(6, 5, prepareTest("torba klucze prawo dol"))
 
-                player as PlayerImpl
-                inventory as PlayerInventoryImpl
-
-                for (i in 0..inventory.size - 1)
+                player.logToConsole("Ekwipunek przygotowany!", Player.ConsoleMessageSeverity.WARN)
+            }
+            "testitem" ->
+            {
+                if (args.isEmpty())
                 {
-                    val itemObject = inventory.createPacketFor(i)
-
-                    if (itemObject != null)
-                    {
-                        player.connection.addModifier { it.addItem(itemObject) }
-                    }
+                    player.logToConsole(".testitem [1/2]", Player.ConsoleMessageSeverity.ERROR)
+                    return
                 }
 
-                player.logToConsole("Ekwipunek wysłany!", Player.ConsoleMessageSeverity.WARN)
+                val itemStack = server.newItemStack(server.getItemById("animowane")!!)
+                player.inventory.getBagInventory(0).setItemAt(2, 2, itemStack)
+            }
+            "moveitem" ->
+            {
+                if (args.size < 2)
+                {
+                    player.logToConsole(".moveitem <from> <to>")
+                }
+
+                val from: Int
+                val to: Int
+
+                try
+                {
+                    from = args[0].toInt()
+                    to = args[1].toInt()
+                }
+                catch (e: NumberFormatException)
+                {
+                    player.logToConsole("zly index", Player.ConsoleMessageSeverity.ERROR)
+                    return
+                }
+
+                player.inventory[to] = player.inventory[from]
             }
         }
     }

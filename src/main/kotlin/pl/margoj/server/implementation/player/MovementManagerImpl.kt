@@ -11,6 +11,7 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
 {
     private val queuedMoves = ConcurrentLinkedQueue<QueuedMove>()
     private var lastMove: QueuedMove? = null
+    private var nextMove: QueuedMove? = null
     override var location: Location = Location(null)
     override var playerDirection: Int = 0
 
@@ -19,7 +20,7 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
         this.queuedMoves.add(QueuedMove(x, y, timestamp))
     }
 
-    fun processMove(): QueuedMove?
+    fun processMove()
     {
         var last: QueuedMove? = null
 
@@ -35,7 +36,8 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
             if (this.lastMove != null && this.lastMove != current && this.lastMove!!.timestamp + ANTISPEEDHACK_TRIGGER > current.timestamp)
             {
                 this.queuedMoves.clear()
-                return QueuedMove(this.location.x, this.location.y, 0.0)
+                this.nextMove = QueuedMove(this.location.x, this.location.y, 0.0)
+                return
             }
 
             val newLocation = Location(this.location.town, current.x, current.y)
@@ -44,7 +46,7 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
             if (!this.location.isNear(newLocation) || town.collisions[newLocation.x][newLocation.y] || !town.inBounds(Point(current.x, current.y)))
             {
                 this.queuedMoves.clear()
-                return QueuedMove(this.location.x, this.location.y, 0.0)
+                this.nextMove = QueuedMove(this.location.x, this.location.y, 0.0)
             }
 
             newLocation.copyValuesTo(this.location)
@@ -53,7 +55,7 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
             this.lastMove = current
         }
 
-        return last
+        this.nextMove = last
     }
 
     fun updatePosition()
@@ -64,6 +66,17 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
     fun clearQueue()
     {
         this.queuedMoves.clear()
+    }
+
+    fun getNextMoveAndClear(): QueuedMove?
+    {
+        if(this.nextMove == null)
+        {
+            return null
+        }
+        val nextMove = this.nextMove
+        this.nextMove = null
+        return nextMove
     }
 
     companion object

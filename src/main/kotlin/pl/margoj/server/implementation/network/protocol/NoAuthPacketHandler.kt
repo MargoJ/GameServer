@@ -1,8 +1,10 @@
 package pl.margoj.server.implementation.network.protocol
 
+import pl.margoj.server.implementation.network.http.HttpResponse
+
 class NoAuthPacketHandler(private val manager: NetworkManager) : PacketHandler
 {
-    override fun handle(packet: IncomingPacket, out: OutgoingPacket)
+    override fun handle(response: HttpResponse, packet: IncomingPacket, out: OutgoingPacket, callback: (OutgoingPacket) -> Unit)
     {
         if("getvar_addon" == packet.type && packet.queryParams.containsKey("callback"))
         {
@@ -12,6 +14,8 @@ class NoAuthPacketHandler(private val manager: NetworkManager) : PacketHandler
         {
             out.addAlert("<a href=\"generateauth.html\">Generuj ID</a>").addEngineAction(OutgoingPacket.EngineAction.STOP)
         }
+
+        callback(out)
     }
 
     override fun disconnect(reason: String)

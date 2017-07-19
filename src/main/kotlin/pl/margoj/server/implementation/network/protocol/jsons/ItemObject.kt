@@ -19,5 +19,7 @@ data class ItemObject(
         @SerializedName("st")
         var slot: Int? = null, // TODO
         @SerializedName("stat")
-        var statistics: String? = null
+        var statistics: String? = null,
+        @SerializedName("del")
+        var delete: Int? = null
 )

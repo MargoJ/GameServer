@@ -3,19 +3,41 @@ package pl.margoj.server.implementation.item
 import pl.margoj.mrf.item.ItemProperty
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.network.protocol.jsons.ItemObject
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
 class ItemManager(val server: ServerImpl)
 {
-    private var TODO_itemCounter: Long = 0 // TODO
+    private var TODO_itemCounter: AtomicLong = AtomicLong(2_000_000L) // TODO
+    private var creating = AtomicBoolean()
 
     fun getNextItemId(): Long
     {
-        return TODO_itemCounter++
+        return TODO_itemCounter.get()
     }
 
+    fun increaseItemId()
+    {
+        TODO_itemCounter.incrementAndGet()
+    }
+
+    @Synchronized
     fun newItemStack(item: ItemImpl): ItemStackImpl
     {
-        return ItemStackImpl(item, this.getNextItemId())
+        this.creating.set(true)
+        val itemStack = ItemStackImpl(this, item, this.getNextItemId())
+        this.creating.set(false)
+
+        this.increaseItemId()
+        return itemStack
+    }
+
+    fun validate(id: Long)
+    {
+        if (!this.creating.get() || id != this.TODO_itemCounter.get())
+        {
+            throw IllegalStateException("Illegal itemstack creation")
+        }
     }
 
     @Suppress("UNCHECKED_CAST")

@@ -6,5 +6,5 @@ class CurrencyManagerImpl(val player: PlayerImpl): CurrencyManager
 {
     override val goldLimit: Long = 0
 
-    override val gold: Long = 0
+    override var gold: Long = 0
 }

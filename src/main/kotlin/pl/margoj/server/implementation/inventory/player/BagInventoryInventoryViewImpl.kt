@@ -2,11 +2,15 @@ package pl.margoj.server.implementation.inventory.player
 
 import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.api.inventory.player.PlayerBagInventory
+import pl.margoj.server.implementation.inventory.WrappedInventory
+import pl.margoj.server.implementation.item.ItemStackImpl
 
-class BagInventoryInventoryViewImpl(val owner: PlayerInventoryImpl, val startingY: Int) : PlayerBagInventory
+class BagInventoryInventoryViewImpl(override val owner: PlayerInventoryImpl, val startingY: Int) : PlayerBagInventory, WrappedInventory
 {
     /** 7 * 6 */
     override val size: Int = 42
+
+    override val allItems: List<ItemStackImpl?> by lazy { this.owner.allItems.subList(this.indexToRealIndex(0), this.indexToRealIndex(0) + size - 1) }
 
     override fun getItemAt(x: Int, y: Int): ItemStack?
     {
@@ -27,14 +31,6 @@ class BagInventoryInventoryViewImpl(val owner: PlayerInventoryImpl, val starting
     {
         return owner.set(this.indexToRealIndex(index), item)
     }
-
-    override val allItems: Array<ItemStack?>
-        get()
-        {
-            val all = arrayOfNulls<ItemStack?>(this.size)
-            System.arraycopy(this.owner.bagInventories, this.indexToRealIndex(0), all, 0, this.size)
-            return all
-        }
 
     private fun indexToRealIndex(index: Int): Int
     {

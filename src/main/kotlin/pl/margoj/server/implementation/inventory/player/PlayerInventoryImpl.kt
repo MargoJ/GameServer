@@ -21,13 +21,35 @@ class PlayerInventoryImpl(override val player: PlayerImpl) : AbstractInventoryIm
 {
     override val equipment: PlayerEquipment = PlayerEquipmentViewImpl(this)
 
-    override val bagInventories: Array<PlayerBagInventory> = Array(4, { id -> BagInventoryInventoryViewImpl(this, id * 6) })
+    override val bagInventories: ArrayList<PlayerBagInventory> = ArrayList(4)
 
-    fun createPacketFor(index: Int): ItemObject?
+    init
     {
-        val item = this[index] ?: return null
+        this.bagInventories.add(BagInventoryInventoryViewImpl(this, 0 * 6))
+        this.bagInventories.add(BagInventoryInventoryViewImpl(this, 1 * 6))
+        this.bagInventories.add(BagInventoryInventoryViewImpl(this, 2 * 6))
+        this.bagInventories.add(BagInventoryInventoryViewImpl(this, 3 * 6))
+    }
 
-        val packet = this.player.server.itemManager.createItemObject(item as ItemStackImpl)
+    fun margoYToRealYAndBagId(margoY: Int): Pair<Int, Int>
+    {
+        var index = margoY / 6
+        if (index == 6)
+        {
+            index = 3
+        }
+        return Pair(margoY % 6, index)
+    }
+
+    override fun createPacketFor(item: ItemStackImpl): ItemObject?
+    {
+        if (item.owner != this)
+        {
+            throw IllegalStateException("Can't create a packet for non-owned itemstack")
+        }
+
+        val index = item.ownerIndex!!
+        val packet = this.player.server.itemManager.createItemObject(item)
 
         packet.own = player.id
         packet.location = ItemLocation.PLAYERS_INVENTORY.margoType
@@ -51,7 +73,7 @@ class PlayerInventoryImpl(override val player: PlayerImpl) : AbstractInventoryIm
                 packet.slot = 0
                 val realIndex = index - 13
                 var y = realIndex / 7
-                if(y >= 18)
+                if (y >= 18)
                 {
                     y += 18
                 }

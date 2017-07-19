@@ -80,7 +80,7 @@ class DebugHandler(private val server: ServerImpl) : HttpHandler
             }
             else ->
             {
-                response.responseString = "Unknown request"
+                response.responseString = "Unknown response"
                 response.status = HttpResponseStatus.NOT_FOUND
             }
         }

@@ -2,18 +2,14 @@ package pl.margoj.server.implementation.inventory.player
 
 import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.api.inventory.player.PlayerEquipment
+import pl.margoj.server.implementation.inventory.WrappedInventory
+import pl.margoj.server.implementation.item.ItemStackImpl
 
-class PlayerEquipmentViewImpl(val owner: PlayerInventoryImpl) : PlayerEquipment
+class PlayerEquipmentViewImpl(override val owner: PlayerInventoryImpl) : PlayerEquipment, WrappedInventory
 {
-    override val allItems: Array<ItemStack?>
-        get()
-        {
-            val all = arrayOfNulls<ItemStack?>(this.size)
-            System.arraycopy(this.owner.allItems, 0, all, 0, this.size)
-            return all
-        }
-
     override val size: Int = 9
+
+    override val allItems: List<ItemStackImpl?> by lazy { this.owner.allItems.subList(0, this.size - 1) }
 
     override var helmet: ItemStack?
         get() = this.owner[0]

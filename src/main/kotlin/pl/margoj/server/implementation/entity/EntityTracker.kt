@@ -65,27 +65,30 @@ class EntityTracker(val owner: PlayerImpl)
                 else
                 {
                     this.disposeEntity(entity, out)
+                    this.trackedEntities_.remove(entity)
                 }
             }
             else if (this.shouldTrack(entity))
             {
                 this.annouceEntity(entity, out)
+                this.trackedEntities_.add(entity)
             }
         }
 
-        for (trackedEntity in ArrayList(this.trackedEntities_))
+        val iterator = this.trackedEntities_.iterator()
+        while (iterator.hasNext())
         {
+            val trackedEntity = iterator.next()
             if (!entities.contains(trackedEntity))
             {
                 this.disposeEntity(trackedEntity, out)
+                iterator.remove()
             }
         }
     }
 
-    fun annouceEntity(entity: EntityImpl, out: OutgoingPacket)
+    private fun annouceEntity(entity: EntityImpl, out: OutgoingPacket)
     {
-        this.trackedEntities_.add(entity)
-
         val other = OtherObject()
         other.id = entity.id
 
@@ -113,9 +116,8 @@ class EntityTracker(val owner: PlayerImpl)
         out.addOther(other)
     }
 
-    fun disposeEntity(entity: EntityImpl, out: OutgoingPacket)
+    private fun disposeEntity(entity: EntityImpl, out: OutgoingPacket)
     {
-        this.trackedEntities_.remove(entity)
         entity.setTrackingData(this, null)
 
         val other = OtherObject()
@@ -125,7 +127,7 @@ class EntityTracker(val owner: PlayerImpl)
         out.addOther(other)
     }
 
-    fun updateEntity(entity: EntityImpl, out: OutgoingPacket)
+    private fun updateEntity(entity: EntityImpl, out: OutgoingPacket)
     {
         val trackingData = entity.getTrackingData(this)
         var updated = false

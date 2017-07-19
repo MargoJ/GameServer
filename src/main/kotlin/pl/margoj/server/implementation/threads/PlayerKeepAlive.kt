@@ -23,6 +23,7 @@ class PlayerKeepAlive(val server: ServerImpl, keepAliveSeconds: Int) : Tickable
 
             if (player.connection.lastPacket != 0L && player.connection.lastPacket + keepAlive < System.currentTimeMillis())
             {
+                player.disconnected()
                 player.connection.dispose()
                 player.server.networkManager.resetPlayerConnection(player.connection)
                 iterator.remove()

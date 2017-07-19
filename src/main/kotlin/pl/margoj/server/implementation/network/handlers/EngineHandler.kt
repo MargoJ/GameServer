@@ -3,14 +3,14 @@ package pl.margoj.server.implementation.network.handlers
 import org.apache.commons.lang3.exception.ExceptionUtils
 import pl.margoj.server.api.utils.Parse
 import pl.margoj.server.implementation.ServerImpl
-import pl.margoj.server.implementation.network.protocol.IncomingPacket
-import pl.margoj.server.implementation.network.protocol.OutgoingPacket
-import pl.margoj.server.implementation.network.protocol.PacketHandler
-import pl.margoj.server.implementation.player.PlayerConnection
 import pl.margoj.server.implementation.network.http.HttpHandler
 import pl.margoj.server.implementation.network.http.HttpRequest
 import pl.margoj.server.implementation.network.http.HttpResponse
 import pl.margoj.server.implementation.network.http.NoSemicolonSingleValueQueryStringDecoder
+import pl.margoj.server.implementation.network.protocol.IncomingPacket
+import pl.margoj.server.implementation.network.protocol.OutgoingPacket
+import pl.margoj.server.implementation.network.protocol.PacketHandler
+import pl.margoj.server.implementation.player.PlayerConnection
 
 class EngineHandler(private val server: ServerImpl) : HttpHandler
 {
@@ -32,6 +32,15 @@ class EngineHandler(private val server: ServerImpl) : HttpHandler
         val aid = Parse.parseInt(packet.queryParams["aid"])
         val handler = this.server.networkManager.getHandler(aid)
 
+        val callback: (OutgoingPacket) -> Unit = { out ->
+            if (out.shouldStop)
+            {
+                response.keepAlive = false
+            }
+
+            response.responseString = out.toString()
+        }
+
         if (handler == null)
         {
             response.delayed = true
@@ -42,45 +51,31 @@ class EngineHandler(private val server: ServerImpl) : HttpHandler
                 {
                     val connection = server.networkManager.createPlayerConnection(aid!!)
                     connection.ip = request.ipAddress
-                    val out = OutgoingPacket()
-                    this.handle(connection, packet, out)
-
-                    if (out.shouldStop)
-                    {
-                        response.keepAlive = false
-                    }
-
-                    response.responseString = out.toString()
+                    this.handle(response, connection, packet, OutgoingPacket(), callback)
                 }
                 else
                 {
                     response.responseString = OutgoingPacket().addEngineAction(OutgoingPacket.EngineAction.STOP).addAlert("Błąd autoryzacji").toString()
                     response.keepAlive = false
+                    response.sendDelayed()
                 }
-                response.sendDelayed()
             }
         }
         else
         {
-            val out = OutgoingPacket()
-            if(handler is PlayerConnection && handler.ip != request.ipAddress)
+            if (handler is PlayerConnection && handler.ip != request.ipAddress)
             {
                 handler.ip = request.ipAddress
             }
-            this.handle(handler, packet, out)
-            if(out.shouldStop)
-            {
-                response.keepAlive = false
-            }
-            response.responseString = out.toString()
+            this.handle(response, handler, packet, OutgoingPacket(), callback)
         }
     }
 
-    private fun handle(handler: PacketHandler, packet: IncomingPacket, out: OutgoingPacket)
+    private fun handle(response: HttpResponse, handler: PacketHandler, packet: IncomingPacket, out: OutgoingPacket, callback: (OutgoingPacket) -> Unit)
     {
         try
         {
-            handler.handle(packet, out)
+            handler.handle(response, packet, out, callback)
         }
         catch (e: Exception)
         {

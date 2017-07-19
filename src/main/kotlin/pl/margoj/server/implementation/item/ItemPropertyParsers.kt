@@ -41,7 +41,7 @@ class StringPropertyParser : ItemPropertyParser<String, StringProperty>
         {
             return
         }
-        itemObject.statistics += "${property.propertyName}=${StringEscapeUtils.escapeHtml4(value)};";
+        itemObject.statistics += "${property.propertyName}=$value;";
     }
 }
 
