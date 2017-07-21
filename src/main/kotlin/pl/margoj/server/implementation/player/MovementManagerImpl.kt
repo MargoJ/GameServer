@@ -1,6 +1,7 @@
 package pl.margoj.server.implementation.player
 
 import pl.margoj.mrf.map.Point
+import pl.margoj.server.api.events.player.PlayerMoveEvent
 import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.player.MovementManager
 import pl.margoj.server.api.utils.TimeUtils
@@ -35,9 +36,7 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
 
             if (this.lastMove != null && this.lastMove != current && this.lastMove!!.timestamp + ANTISPEEDHACK_TRIGGER > current.timestamp)
             {
-                this.queuedMoves.clear()
-                this.nextMove = QueuedMove(this.location.x, this.location.y, 0.0)
-                return
+                return this.resetPosition()
             }
 
             val newLocation = Location(this.location.town, current.x, current.y)
@@ -45,8 +44,15 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
 
             if (!this.location.isNear(newLocation) || town.collisions[newLocation.x][newLocation.y] || !town.inBounds(Point(current.x, current.y)))
             {
-                this.queuedMoves.clear()
-                this.nextMove = QueuedMove(this.location.x, this.location.y, 0.0)
+                return this.resetPosition()
+            }
+
+            val event = PlayerMoveEvent(this.player, this.location, newLocation)
+            this.player.server.eventManager.call(event)
+
+            if (event.cancelled)
+            {
+                return this.resetPosition()
             }
 
             newLocation.copyValuesTo(this.location)
@@ -56,6 +62,12 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
         }
 
         this.nextMove = last
+    }
+
+    private fun resetPosition()
+    {
+        this.queuedMoves.clear()
+        this.nextMove = QueuedMove(this.location.x, this.location.y, 0.0)
     }
 
     fun updatePosition()
@@ -70,7 +82,7 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
 
     fun getNextMoveAndClear(): QueuedMove?
     {
-        if(this.nextMove == null)
+        if (this.nextMove == null)
         {
             return null
         }

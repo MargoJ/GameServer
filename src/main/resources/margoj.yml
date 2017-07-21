@@ -14,12 +14,7 @@ http:
 # Opcje silnika
 engine:
   # Ilosc tickow na sekunde
-  tps: 20
+  tps: 100
 
   # Co ile wymagac pakietu?
   keepalive: 5
-
-# Ustawienia gry
-game:
-  # Pole widzenia
-  tracking_range: 16

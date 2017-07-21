@@ -1,6 +1,8 @@
 package pl.margoj.server.implementation.player
 
 import pl.margoj.server.api.chat.ChatMessage
+import pl.margoj.server.api.commands.CommandSender
+import pl.margoj.server.api.events.player.PlayerQuitEvent
 import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.player.Player
 import pl.margoj.server.implementation.ServerImpl
@@ -31,7 +33,12 @@ class PlayerImpl(override val id: Int, override val name: String, override val s
 
     val itemTracker = ItemTracker(this)
 
-    override fun sendMessage(message: ChatMessage)
+    override fun sendMessage(message: String, messageSeverity: CommandSender.MessageSeverity)
+    {
+        this.logToConsole(message, messageSeverity)
+    }
+
+    override fun sendChatMessage(message: ChatMessage)
     {
         this.connection.addModifier { it.addChatMessage(message) }
     }
@@ -46,7 +53,7 @@ class PlayerImpl(override val id: Int, override val name: String, override val s
         this.connection.addModifier { it.addScreenMessage(message) }
     }
 
-    override fun logToConsole(text: String, severity: Player.ConsoleMessageSeverity)
+    override fun logToConsole(text: String, severity: CommandSender.MessageSeverity)
     {
         this.connection.addModifier { it.addLogMessage(text, severity) }
     }
@@ -73,8 +80,17 @@ class PlayerImpl(override val id: Int, override val name: String, override val s
         this.server.ticker.registerTickable(this.itemTracker)
     }
 
-    fun disconnected()
+    fun disconnect()
     {
         this.server.ticker.unregisterTickable(this.itemTracker)
+        this.connection.dispose()
+        this.server.networkManager.resetPlayerConnection(this.connection)
+        this.server.entityManager.unregisterEntity(this)
+        this.server.eventManager.call(PlayerQuitEvent(this))
+    }
+
+    override fun toString(): String
+    {
+        return "PlayerImpl(id=$id, name='$name')"
     }
 }

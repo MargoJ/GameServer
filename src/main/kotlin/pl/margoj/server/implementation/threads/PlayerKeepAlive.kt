@@ -17,17 +17,14 @@ class PlayerKeepAlive(val server: ServerImpl, keepAliveSeconds: Int) : Tickable
 
         val iterator = this.server.players.iterator() as MutableIterator<PlayerImpl>
 
-        while(iterator.hasNext())
+        while (iterator.hasNext())
         {
             val player = iterator.next()
 
             if (player.connection.lastPacket != 0L && player.connection.lastPacket + keepAlive < System.currentTimeMillis())
             {
-                player.disconnected()
-                player.connection.dispose()
-                player.server.networkManager.resetPlayerConnection(player.connection)
                 iterator.remove()
-                player.server.entityManager.unregisterEntity(player)
+                player.disconnect()
                 server.logger.debug("Timed out: ${player.name}")
             }
         }

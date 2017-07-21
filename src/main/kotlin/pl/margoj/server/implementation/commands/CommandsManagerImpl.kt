@@ -1,23 +1,20 @@
 package pl.margoj.server.implementation.commands
 
 import org.apache.commons.lang3.StringUtils
-import pl.margoj.mrf.item.ItemProperties
+import pl.margoj.server.api.commands.CommandException
+import pl.margoj.server.api.commands.CommandListener
 import pl.margoj.server.api.commands.CommandSender
 import pl.margoj.server.api.commands.CommandsManager
-import pl.margoj.server.api.map.Location
-import pl.margoj.server.api.player.Player
-import pl.margoj.server.api.utils.Parse
+import pl.margoj.server.api.plugin.MargoJPlugin
 import pl.margoj.server.implementation.ServerImpl
-import pl.margoj.server.implementation.item.ItemImpl
-import pl.margoj.server.implementation.item.ItemLocation
-import pl.margoj.server.implementation.item.ItemStackImpl
-import pl.margoj.server.implementation.player.PlayerImpl
 import java.util.Arrays
-import java.util.stream.Collectors
+import java.util.TreeSet
 
 class CommandsManagerImpl(val server: ServerImpl) : CommandsManager
 {
-    override fun dispatchCommand(sender: CommandSender, string: String)
+    private var allListeners = TreeSet<RegisteredListener>()
+
+    override fun dispatchCommand(sender: CommandSender, string: String): Boolean
     {
         var input = string.trim()
         if (input.first() == '.' || input.first() == '/')
@@ -27,198 +24,97 @@ class CommandsManagerImpl(val server: ServerImpl) : CommandsManager
         val parts = StringUtils.split(input, ' ')
         val command = parts[0]
         val args = parts.copyOfRange(1, parts.size)
-        commandDispatched(sender, command, args)
+
+        return commandDispatched(sender, command, args)
     }
 
-    private fun commandDispatched(sender: CommandSender, command: String, args: Array<String>)
+    private fun commandDispatched(sender: CommandSender, command: String, args: Array<String>): Boolean
     {
-        // TODO: TEMP
-        val player = sender as Player
-        sender.logToConsole("cmd: $command, args = ${Arrays.toString(args)}", Player.ConsoleMessageSeverity.WARN)
+        val listener = this.allListeners.filter { it.commands.contains(command) }.firstOrNull() ?: return false
 
-        when (command.toLowerCase())
+        try
         {
-            "help" ->
+            listener.listener.commandPerformed(command, sender, StringArrayArguments(args))
+
+        }
+        catch (e: CommandException)
+        {
+            sender.sendMessage(e.message!!, CommandSender.MessageSeverity.ERROR)
+        }
+
+        return true
+    }
+
+    override fun registerListener(plugin: MargoJPlugin<*>, listener: CommandListener, vararg commands: String)
+    {
+        this.allListeners.add(RegisteredListener(commands, listener, plugin))
+    }
+
+    fun registerCoreListener(listener: CommandListener, vararg commands: String)
+    {
+        this.allListeners.add(RegisteredListener(commands, listener, null))
+    }
+
+    override fun unregisterAll(owner: MargoJPlugin<*>): Boolean
+    {
+        return this.unregisterByCriteria { it.owner == owner }
+    }
+
+    override fun unregisterListener(listener: CommandListener): Boolean
+    {
+        return this.unregisterByCriteria { it.listener == listener }
+    }
+
+    private fun unregisterByCriteria(criteria: (RegisteredListener) -> Boolean): Boolean
+    {
+        var anyChanged = false
+        val iterator = this.allListeners.iterator()
+
+        while (iterator.hasNext())
+        {
+            if (criteria(iterator.next()))
             {
-                player.logToConsole("Dostępne komendy: <br>" +
-                        " - .help - wyświetla help<br>" +
-                        " - .towns - wyświetla dostępne mapy<br>" +
-                        " - .tp &lt;mapa> [x] [y] - teleportuje na wybraną mape<br>" +
-                        " - .senditem [item] = wyswietla wszystkie przedmioty lub wysyla pakiet z przedmiotem<br>" +
-                        " - .testinventory - test przedmiotow"
-                )
-            }
-            "towns" ->
-            {
-                player.logToConsole("Dostępne mapy: <br>" + server.towns.stream().map { " - ${it.id} <br>" }.collect(Collectors.joining()))
-            }
-            "tp" ->
-            {
-                if (args.isEmpty())
-                {
-                    player.logToConsole("Prawidłowe użycie: .tp &lt;mapa> [x] [y] - teleportuje na wybraną mape", Player.ConsoleMessageSeverity.ERROR)
-                    return
-                }
-
-                val town = player.server.getTownById(args[0])
-                if (town == null)
-                {
-                    player.logToConsole("Nie znaleziono mapy: " + args[0], Player.ConsoleMessageSeverity.ERROR)
-                    return
-                }
-
-                var targetX: Int? = null
-                var targetY: Int? = null
-
-                if (args.size >= 3)
-                {
-                    targetX = Parse.parseInt(args[1])
-                    targetY = Parse.parseInt(args[2])
-                }
-
-                if (targetX == null || targetY == null)
-                {
-                    var x = 0
-                    var y = 0
-                    loop@
-                    while (x < town.width)
-                    {
-                        while (y < town.height)
-                        {
-                            if (!town.collisions[x][y])
-                            {
-                                targetX = x
-                                targetY = y
-                                break@loop
-                            }
-                            y++
-                        }
-                        x++
-                    }
-                }
-
-                if (targetX == null || targetY == null)
-                {
-                    player.logToConsole("Nie znaleziono miejsca do teleportacji na mapie " + args[0], Player.ConsoleMessageSeverity.ERROR)
-                    return
-                }
-
-                player.logToConsole("Teleportuje...")
-                player.teleport(Location(town, targetX, targetY))
-            }
-            "senditem" ->
-            {
-                if (args.isEmpty())
-                {
-                    player.logToConsole("Dostępne przedmioty: <br> " + this.server.items.stream().map { "${it.margoItem.id} [${it.margoItem.name}]<br>" }.collect(Collectors.joining()))
-                    return
-                }
-
-                val item = player.server.getItemById(args[0]) as? ItemImpl?
-                if (item == null)
-                {
-                    player.logToConsole("Nie znaleziono przedmiotu: " + args[0], Player.ConsoleMessageSeverity.ERROR)
-                    return
-                }
-
-                val itemStack = this.server.itemManager.newItemStack(item)
-                val packet = this.server.itemManager.createItemObject(itemStack)
-
-                packet.own = player.id
-                packet.location = ItemLocation.PLAYERS_INVENTORY.margoType
-                packet.x = 0
-                packet.y = 0
-                packet.slot = 0
-
-                player as PlayerImpl
-                player.connection.addModifier { it.addItem(packet) }
-
-                player.logToConsole("Pakiet przedmiotu dodany do kolejki wyslania!", Player.ConsoleMessageSeverity.WARN)
-            }
-            "testinventory" ->
-            {
-                val someItem = server.items.iterator().next()
-
-                fun prepareTest(desc: String): ItemStackImpl
-                {
-                    val itemStack = server.newItemStack(someItem) as ItemStackImpl
-                    itemStack.additionalProperties.put(ItemProperties.DESCRIPTION, desc)
-                    return itemStack
-                }
-
-                val inventory = player.inventory
-
-                inventory.equipment.helmet = prepareTest("helm")
-                inventory.equipment.ring = prepareTest("pierscien")
-                inventory.equipment.neckless = prepareTest("naszyjnik")
-                inventory.equipment.gloves = prepareTest("rekawice")
-                inventory.equipment.weapon = prepareTest("bron")
-                inventory.equipment.armor = prepareTest("armor")
-                inventory.equipment.helper = prepareTest("pomocnicze")
-                inventory.equipment.boots = prepareTest("buty")
-                inventory.equipment.purse = prepareTest("sakwa")
-
-                inventory.setBag(0, prepareTest("torba 1"))
-                inventory.setBag(1, prepareTest("torba 2"))
-                inventory.setBag(2, prepareTest("torba 3"))
-                inventory.setBag(3, prepareTest("torba na klucze"))
-
-                inventory.getBagInventory(0).setItemAt(0, 0, prepareTest("torba 1 lewe gora"))
-                inventory.getBagInventory(0).setItemAt(6, 0, prepareTest("torba 1 prawo gora"))
-                inventory.getBagInventory(0).setItemAt(0, 5, prepareTest("torba 1 lewe dol"))
-                inventory.getBagInventory(0).setItemAt(6, 5, prepareTest("torba 1 prawo dol"))
-
-                inventory.getBagInventory(1).setItemAt(0, 0, prepareTest("torba 2 lewe gora"))
-                inventory.getBagInventory(1).setItemAt(6, 0, prepareTest("torba 2 prawo gora"))
-                inventory.getBagInventory(1).setItemAt(0, 5, prepareTest("torba 2 lewe dol"))
-                inventory.getBagInventory(1).setItemAt(6, 5, prepareTest("torba 2 prawo dol"))
-
-                inventory.getBagInventory(2).setItemAt(0, 0, prepareTest("torba 3 lewe gora"))
-                inventory.getBagInventory(2).setItemAt(6, 0, prepareTest("torba 3 prawo gora"))
-                inventory.getBagInventory(2).setItemAt(0, 5, prepareTest("torba 3 lewe dol"))
-                inventory.getBagInventory(2).setItemAt(6, 5, prepareTest("torba 3 prawo dol"))
-
-                inventory.getBagInventory(3).setItemAt(0, 0, prepareTest("torba klucze lewe gora"))
-                inventory.getBagInventory(3).setItemAt(6, 0, prepareTest("torba klucze prawo gora"))
-                inventory.getBagInventory(3).setItemAt(0, 5, prepareTest("torba klucze lewe dol"))
-                inventory.getBagInventory(3).setItemAt(6, 5, prepareTest("torba klucze prawo dol"))
-
-                player.logToConsole("Ekwipunek przygotowany!", Player.ConsoleMessageSeverity.WARN)
-            }
-            "testitem" ->
-            {
-                if (args.isEmpty())
-                {
-                    player.logToConsole(".testitem [1/2]", Player.ConsoleMessageSeverity.ERROR)
-                    return
-                }
-
-                val itemStack = server.newItemStack(server.getItemById("animowane")!!)
-                player.inventory.getBagInventory(0).setItemAt(2, 2, itemStack)
-            }
-            "moveitem" ->
-            {
-                if (args.size < 2)
-                {
-                    player.logToConsole(".moveitem <from> <to>")
-                }
-
-                val from: Int
-                val to: Int
-
-                try
-                {
-                    from = args[0].toInt()
-                    to = args[1].toInt()
-                }
-                catch (e: NumberFormatException)
-                {
-                    player.logToConsole("zly index", Player.ConsoleMessageSeverity.ERROR)
-                    return
-                }
-
-                player.inventory[to] = player.inventory[from]
+                iterator.remove()
+                anyChanged = true
             }
         }
+
+        return anyChanged
     }
+}
+
+data class RegisteredListener(
+        var commands: Array<out String>,
+        val listener: CommandListener,
+        var owner: MargoJPlugin<*>?
+) : Comparable<RegisteredListener>
+{
+    override fun compareTo(other: RegisteredListener): Int
+    {
+        return if (this.owner == null) 1 else -1
+    }
+
+    override fun equals(other: Any?): Boolean
+    {
+        if (this === other) return true
+        if (other?.javaClass != javaClass) return false
+
+        other as RegisteredListener
+
+        if (!Arrays.equals(commands, other.commands)) return false
+        if (listener != other.listener) return false
+        if (owner != other.owner) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int
+    {
+        var result = Arrays.hashCode(commands)
+        result = 31 * result + listener.hashCode()
+        result = 31 * result + (owner?.hashCode() ?: 0)
+        return result
+    }
+
+
 }

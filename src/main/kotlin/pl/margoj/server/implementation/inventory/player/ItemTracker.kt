@@ -9,10 +9,14 @@ class ItemTracker(val player: PlayerImpl) : Tickable
 {
     private val trackedItems = LinkedList<ItemStackImpl>()
     val forceUpdate = HashSet<ItemStackImpl>()
+    var enabled: Boolean = false
 
     override fun tick(currentTick: Long)
     {
-        this.doTrack()
+        if (this.enabled)
+        {
+            this.doTrack()
+        }
     }
 
     override fun toString(): String

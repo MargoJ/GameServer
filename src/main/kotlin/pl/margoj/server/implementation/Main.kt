@@ -18,7 +18,7 @@ import java.util.Collections
 
 fun main(args: Array<String>)
 {
-    val logger = LogManager.getLogger() as Logger
+    val logger = LogManager.getLogger("MargoJ") as Logger
     val nettyLogger = LogManager.getLogger("Netty") as Logger
 
     logger.trace("Inicjalizuje logi")

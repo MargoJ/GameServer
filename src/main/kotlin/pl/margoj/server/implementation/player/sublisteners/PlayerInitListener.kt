@@ -6,6 +6,7 @@ import com.google.gson.JsonPrimitive
 import pl.margoj.mrf.map.metadata.pvp.MapPvP
 import pl.margoj.mrf.map.metadata.welcome.WelcomeMessage
 import pl.margoj.mrf.map.objects.gateway.GatewayObject
+import pl.margoj.server.api.events.player.PlayerJoinEvent
 import pl.margoj.server.api.utils.Parse
 import pl.margoj.server.api.utils.TimeUtils
 import pl.margoj.server.implementation.map.TownImpl
@@ -45,12 +46,16 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
                     location.x = 8
                     location.y = 13
 
+                    player.server.eventManager.call(PlayerJoinEvent(player))
                     player.connected()
                 }
                 else
                 {
                     this.player!!.entityTracker.reset()
-                    this.player!!.itemTracker.reset()
+
+                    val tracker = this.player!!.itemTracker
+                    tracker.enabled = false
+                    tracker.reset()
                 }
 
                 val town = this.player!!.location.town!! as TownImpl
@@ -100,8 +105,10 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
             }
             3 -> // items
             {
-                this.player!!.itemTracker.doTrack()
-                this.connection.packetModifiers.forEach { it(out) }
+                val tracker = this.player!!.itemTracker
+                tracker.enabled = true
+                tracker.reset()
+                tracker.doTrack()
             }
             4 -> // finish
             {

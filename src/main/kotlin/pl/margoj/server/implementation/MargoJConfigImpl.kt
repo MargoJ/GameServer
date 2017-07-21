@@ -5,8 +5,7 @@ import pl.margoj.server.api.MargoJConfig
 data class MargoJConfigImpl(
         var server: MargoJConfigImpl.ServerConfigImpl = MargoJConfigImpl.ServerConfigImpl(),
         var http: MargoJConfigImpl.HttpConfigImpl = MargoJConfigImpl.HttpConfigImpl(),
-        var engine: MargoJConfigImpl.EngineConfigImpl = MargoJConfigImpl.EngineConfigImpl(),
-        var game: MargoJConfigImpl.GameConfigImpl = MargoJConfigImpl.GameConfigImpl()
+        var engine: MargoJConfigImpl.EngineConfigImpl = MargoJConfigImpl.EngineConfigImpl()
 ) : MargoJConfig
 {
     data class ServerConfigImpl(override var name: String = "") : MargoJConfig.ServerConfig
@@ -30,13 +29,4 @@ data class MargoJConfigImpl(
 
     override val engineConfig: MargoJConfig.EngineConfig
         get() = this.engine
-
-    data class GameConfigImpl(var tracking_range: Int = 0) : MargoJConfig.GameConfig
-    {
-        override val trackingRange: Int
-            get() = this.tracking_range
-    }
-
-    override val gameConfig: MargoJConfig.GameConfig
-        get() = this.game
 }

@@ -4,12 +4,15 @@ import org.apache.logging.log4j.Logger
 import pl.margoj.mrf.MargoResource
 import pl.margoj.server.api.MargoJConfig
 import pl.margoj.server.api.Server
+import pl.margoj.server.api.events.ServerReadyEvent
 import pl.margoj.server.api.inventory.Item
 import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.implementation.auth.Authenticator
 import pl.margoj.server.implementation.chat.ChatManagerImpl
 import pl.margoj.server.implementation.commands.CommandsManagerImpl
+import pl.margoj.server.implementation.commands.defaults.DefaultCommands
 import pl.margoj.server.implementation.entity.EntityManagerImpl
+import pl.margoj.server.implementation.event.EventManagerImpl
 import pl.margoj.server.implementation.item.ItemImpl
 import pl.margoj.server.implementation.item.ItemManager
 import pl.margoj.server.implementation.map.TownImpl
@@ -17,6 +20,7 @@ import pl.margoj.server.implementation.network.handlers.*
 import pl.margoj.server.implementation.network.http.HttpServer
 import pl.margoj.server.implementation.network.protocol.NetworkManager
 import pl.margoj.server.implementation.player.PlayerImpl
+import pl.margoj.server.implementation.plugin.PluginManagerImpl
 import pl.margoj.server.implementation.resources.ResourceBundleManager
 import pl.margoj.server.implementation.resources.ResourceLoader
 import pl.margoj.server.implementation.sync.SchedulerImpl
@@ -41,6 +45,8 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
     override var running = false
     override val ticker = TickerImpl(this, Thread.currentThread())
     override val scheduler = SchedulerImpl()
+    override val pluginManager = PluginManagerImpl(this)
+    override val eventManager = EventManagerImpl(this)
     override val commandsManager = CommandsManagerImpl(this)
     override val entityManager = EntityManagerImpl(this)
     override val chatManager = ChatManagerImpl(this)
@@ -68,6 +74,9 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
 
         logger.info("Uruchamiam serwer MargoJ v$version...")
         this.running = true
+
+        logger.info("Ładuje pluginy...")
+        this.pluginManager.loadAll(File("plugins"))
 
         val webFolder = File("web")
 
@@ -102,6 +111,7 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
                 return
             }
         }
+
         // synchronization
         ticker.targetTps = config.engineConfig.targetTps
         ticker.registerTickable(this.scheduler)
@@ -153,11 +163,16 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
         // tickables
         this.ticker.registerTickable(PlayerKeepAlive(this, config.engineConfig.keepAliveSeconds))
 
+        // register core commands
+        DefaultCommands.registerDefaults(this.commandsManager)
+
         // init ticker
         this.ticker.init()
 
         // start http server
         httpServer.start()
+
+        this.eventManager.call(ServerReadyEvent(this))
 
         // main game loop
         while (this.running)

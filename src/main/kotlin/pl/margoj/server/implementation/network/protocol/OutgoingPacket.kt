@@ -4,7 +4,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import pl.margoj.server.api.chat.ChatMessage
-import pl.margoj.server.api.player.Player
+import pl.margoj.server.api.commands.CommandSender
 import pl.margoj.server.api.utils.TimeUtils
 import pl.margoj.server.implementation.network.protocol.jsons.ItemObject
 import pl.margoj.server.implementation.network.protocol.jsons.OtherObject
@@ -21,7 +21,7 @@ class OutgoingPacket
     private val messages = mutableListOf<ChatMessage>()
     private val others = mutableListOf<OtherObject>()
     private val items = mutableListOf<ItemObject>()
-    private val logMessages = hashMapOf<Player.ConsoleMessageSeverity, MutableList<String>>()
+    private val logMessages = hashMapOf<CommandSender.MessageSeverity, MutableList<String>>()
 
     enum class EngineAction
     {
@@ -82,7 +82,7 @@ class OutgoingPacket
         return this
     }
 
-    fun addLogMessage(text: String, severity: Player.ConsoleMessageSeverity): OutgoingPacket
+    fun addLogMessage(text: String, severity: CommandSender.MessageSeverity): OutgoingPacket
     {
         this.logMessages.computeIfAbsent(severity, { LinkedList<String>() }).add(text)
         return this
@@ -150,7 +150,7 @@ class OutgoingPacket
 
             for ((i, message) in messages.withIndex())
             {
-                output.append(message).append(if(i != messages.size - 1) "<br>" else "")
+                output.append(message).append(if (i != messages.size - 1) "<br>" else "")
             }
 
             this.json.addProperty(severity.packet, output.toString())

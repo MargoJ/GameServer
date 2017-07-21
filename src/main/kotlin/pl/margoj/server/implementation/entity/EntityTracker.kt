@@ -11,7 +11,6 @@ class EntityTracker(val owner: PlayerImpl)
 {
     private val trackedEntities_ = LinkedList<EntityImpl>()
     val trackingData = HashMap<EntityImpl, TrackingData>()
-    var trackingRange = owner.server.config.gameConfig.trackingRange
     val trackedEntities: List<EntityImpl> get() = this.trackedEntities_
 
     fun isTracking(entity: EntityImpl): Boolean

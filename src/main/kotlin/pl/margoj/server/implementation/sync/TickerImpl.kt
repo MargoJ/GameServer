@@ -2,12 +2,12 @@ package pl.margoj.server.implementation.sync
 
 import pl.margoj.server.api.sync.Tickable
 import pl.margoj.server.api.sync.Ticker
+import pl.margoj.server.api.sync.Waitable
 import pl.margoj.server.implementation.ServerImpl
 import java.util.LinkedList
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 class TickerImpl(val server: ServerImpl, val mainThread: Thread) : Ticker
 {
     private val lock = ReentrantLock()
@@ -77,7 +77,7 @@ class TickerImpl(val server: ServerImpl, val mainThread: Thread) : Ticker
             {
                 queueElement = this.registerQueue.poll()
 
-                if(queueElement == null)
+                if (queueElement == null)
                 {
                     break
                 }
@@ -128,6 +128,13 @@ class TickerImpl(val server: ServerImpl, val mainThread: Thread) : Ticker
         this.registerTickable(OneTimeTickable(tickable))
     }
 
+    override fun <T> registerWaitable(runnable: () -> T): Waitable<T>
+    {
+        val waitable = WaitableImpl(runnable)
+        this.tickOnce(waitable)
+        return waitable
+    }
+
     private fun calcTps(avg: Double, exp: Double, tps: Double): Double
     {
         return avg * exp + tps * (1.0 - exp)
@@ -149,8 +156,14 @@ class TickerImpl(val server: ServerImpl, val mainThread: Thread) : Ticker
     {
         override fun tick(currentTick: Long)
         {
-            parent.tick(currentTick)
-            this@TickerImpl.currentIterator!!.remove()
+            try
+            {
+                parent.tick(currentTick)
+            }
+            finally
+            {
+                this@TickerImpl.currentIterator!!.remove()
+            }
         }
     }
 }

@@ -68,6 +68,11 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
         this.player = null
         this.disposed = true
     }
+
+    override fun toString(): String
+    {
+        return "PlayerConnection(aid=$aid, ip=$ip, player=$player)"
+    }
 }
 
 private class ConnectionTickable(val playerConnection: PlayerConnection, val response: HttpResponse, val packet: IncomingPacket, val out: OutgoingPacket, val callback: (OutgoingPacket) -> Unit) : Tickable
@@ -76,6 +81,11 @@ private class ConnectionTickable(val playerConnection: PlayerConnection, val res
     {
         private val counter = AtomicInteger()
         val delayedSenderExecutor: ExecutorService = Executors.newCachedThreadPool { Thread(it, "DelayedSenderThread-${counter.getAndIncrement()}") }
+    }
+
+    override fun toString(): String
+    {
+        return "ConnectionTickable(connection=$playerConnection)"
     }
 
     private fun processListener(listener: PlayerPacketSubListener): Boolean
