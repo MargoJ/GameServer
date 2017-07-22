@@ -1,5 +1,6 @@
 package pl.margoj.server.implementation.player
 
+import org.apache.commons.lang3.exception.ExceptionUtils
 import pl.margoj.server.api.sync.Tickable
 import pl.margoj.server.implementation.network.http.HttpResponse
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
@@ -100,7 +101,17 @@ private class ConnectionTickable(val playerConnection: PlayerConnection, val res
             return true
         }
 
-        return listener.handle(packet, out, packet.queryParams)
+        try
+        {
+            return listener.handle(packet, out, packet.queryParams)
+        }
+        catch (e: Exception)
+        {
+            playerConnection.manager.server.logger.error("Exception while player packet, listener=$listener, player=${playerConnection.player!!.name}")
+            e.printStackTrace()
+            playerConnection.disconnect(ExceptionUtils.getStackTrace(e))
+            return false
+        }
     }
 
     @Suppress("LoopToCallChain")

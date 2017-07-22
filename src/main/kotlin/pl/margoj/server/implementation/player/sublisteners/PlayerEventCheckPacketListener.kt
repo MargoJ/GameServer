@@ -1,6 +1,5 @@
 package pl.margoj.server.implementation.player.sublisteners
 
-import pl.margoj.server.api.utils.TimeUtils
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.player.PlayerConnection
@@ -23,7 +22,7 @@ class PlayerEventCheckPacketListener(connection: PlayerConnection) : PlayerPacke
                     out.markAsOk()
                     return false
                 }
-                this.connection.lastEvent = TimeUtils.getTimestampDouble()
+                this.connection.lastEvent = evDouble
             }
             catch(e: NumberFormatException)
             {

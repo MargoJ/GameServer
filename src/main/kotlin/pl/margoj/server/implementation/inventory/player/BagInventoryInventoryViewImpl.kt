@@ -10,7 +10,10 @@ class BagInventoryInventoryViewImpl(override val owner: PlayerInventoryImpl, val
     /** 7 * 6 */
     override val size: Int = 42
 
-    override val allItems: List<ItemStackImpl?> by lazy { this.owner.allItems.subList(this.indexToRealIndex(0), this.indexToRealIndex(0) + size - 1) }
+    private val firstIndex = this.indexToRealIndex(0)
+    private val lastIndex = firstIndex + size - 1
+
+    override val allItems: List<ItemStackImpl?> by lazy { this.owner.allItems.subList(firstIndex, lastIndex) }
 
     override fun getItemAt(x: Int, y: Int): ItemStack?
     {
@@ -30,6 +33,33 @@ class BagInventoryInventoryViewImpl(override val owner: PlayerInventoryImpl, val
     override fun set(index: Int, item: ItemStack?): ItemStack?
     {
         return owner.set(this.indexToRealIndex(index), item)
+    }
+
+    override fun isEmpty(): Boolean
+    {
+        for (i in firstIndex..lastIndex)
+        {
+            if (this.owner[i] != null)
+            {
+                return false
+            }
+        }
+
+        return true
+    }
+
+    override fun tryToPut(item: ItemStack): Boolean
+    {
+        for (i in firstIndex..lastIndex)
+        {
+            if (this.owner[i] == null)
+            {
+                this.owner[i] = item
+                return true
+            }
+        }
+
+        return false
     }
 
     private fun indexToRealIndex(index: Int): Int

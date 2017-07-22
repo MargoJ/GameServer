@@ -1,5 +1,6 @@
 package pl.margoj.server.implementation.inventory.player
 
+import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.api.inventory.player.PlayerBagInventory
 import pl.margoj.server.api.inventory.player.PlayerEquipment
 import pl.margoj.server.api.inventory.player.PlayerInventory
@@ -29,6 +30,40 @@ class PlayerInventoryImpl(override val player: PlayerImpl) : AbstractInventoryIm
         this.bagInventories.add(BagInventoryInventoryViewImpl(this, 1 * 6))
         this.bagInventories.add(BagInventoryInventoryViewImpl(this, 2 * 6))
         this.bagInventories.add(BagInventoryInventoryViewImpl(this, 3 * 6))
+    }
+
+    override fun tryToPut(item: ItemStack): Boolean
+    {
+        for(i in 0..3)
+        {
+            if(this.getBag(i) != null)
+            {
+                if(this.getBagInventory(i).tryToPut(item))
+                {
+                    return true
+                }
+            }
+        }
+
+        if (this.equipment.purse == null)
+        {
+            this.equipment.purse = item
+            return true
+        }
+
+        return false
+    }
+
+    override fun isEquipedBag(item: ItemStack): Int?
+    {
+        for(i in 0..3)
+        {
+            if(this.getBag(i) === item)
+            {
+                return i
+            }
+        }
+        return null
     }
 
     fun margoYToRealYAndBagId(margoY: Int): Pair<Int, Int>

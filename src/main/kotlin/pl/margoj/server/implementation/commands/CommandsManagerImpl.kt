@@ -34,8 +34,7 @@ class CommandsManagerImpl(val server: ServerImpl) : CommandsManager
 
         try
         {
-            listener.listener.commandPerformed(command, sender, StringArrayArguments(args))
-
+            listener.listener.commandPerformed(command, sender, StringArrayArguments(sender.server as ServerImpl, args))
         }
         catch (e: CommandException)
         {

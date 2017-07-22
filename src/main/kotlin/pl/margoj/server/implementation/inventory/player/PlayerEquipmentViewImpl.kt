@@ -1,5 +1,6 @@
 package pl.margoj.server.implementation.inventory.player
 
+import pl.margoj.mrf.item.ItemCategory
 import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.api.inventory.player.PlayerEquipment
 import pl.margoj.server.implementation.inventory.WrappedInventory
@@ -10,6 +11,48 @@ class PlayerEquipmentViewImpl(override val owner: PlayerInventoryImpl) : PlayerE
     override val size: Int = 9
 
     override val allItems: List<ItemStackImpl?> by lazy { this.owner.allItems.subList(0, this.size - 1) }
+
+    override fun tryEquip(item: ItemStack): ItemStack?
+    {
+        item as ItemStackImpl
+
+        return when (item.item.margoItem.itemCategory)
+        {
+            ItemCategory.HELMET -> this.equipTo({ this.helmet }, { this.helmet = item })
+            ItemCategory.RINGS -> this.equipTo({ this.ring }, { this.ring = item })
+            ItemCategory.NECKLACES -> this.equipTo({ this.neckless }, { this.neckless = item })
+            ItemCategory.GLOVES -> this.equipTo({ this.gloves }, { this.gloves = item })
+
+            ItemCategory.ONE_HANDED_WEAPONS -> this.equipTo({ this.weapon }, { this.weapon = item })
+            ItemCategory.TWO_HANDED_WEAPONS -> this.equipTo({ this.weapon }, { this.weapon = item })
+            ItemCategory.HAND_AND_A_HALF_WEAPONS -> this.equipTo({ this.weapon }, { this.weapon = item })
+            ItemCategory.RANGE_WEAPON -> this.equipTo({ this.weapon }, { this.weapon = item })
+            ItemCategory.STAFF -> this.equipTo({ this.weapon }, { this.weapon = item })
+            ItemCategory.WANDS -> this.equipTo({ this.weapon }, { this.weapon = item })
+            ItemCategory.ARMOR -> this.equipTo({ this.armor }, { this.armor = item })
+
+            ItemCategory.HELPERS -> this.equipTo({ this.helper }, { this.helper = item })
+            ItemCategory.ARROWS -> this.equipTo({ this.helper }, { this.helper = item })
+            ItemCategory.SHIELDS -> this.equipTo({ this.helper }, { this.helper = item })
+
+            ItemCategory.BOOTS -> this.equipTo({ this.boots }, { this.boots = item })
+            else -> null
+        }
+    }
+
+    override fun tryToPut(item: ItemStack): Boolean
+    {
+        val old = tryEquip(item) ?: return true
+        this.tryEquip(old)
+        return false
+    }
+
+    private fun equipTo(get: () -> ItemStack?, set: () -> Unit): ItemStack?
+    {
+        val previous = get()
+        set()
+        return previous
+    }
 
     override var helmet: ItemStack?
         get() = this.owner[0]

@@ -81,7 +81,7 @@ class BooleanPropertyParser : ItemPropertyParser<Boolean, BooleanProperty>
     {
         if (value)
         {
-            itemObject.statistics += property.propertyName;
+            itemObject.statistics += property.propertyName + ";"
         }
     }
 }

@@ -106,6 +106,13 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
             3 -> // items
             {
                 val tracker = this.player!!.itemTracker
+
+                // TODO: TEMP!!
+                if (!tracker.enabled)
+                {
+                    this.player!!.server.commandsManager.dispatchCommand(this.player!!, "testinv")
+                }
+
                 tracker.enabled = true
                 tracker.reset()
                 tracker.doTrack()

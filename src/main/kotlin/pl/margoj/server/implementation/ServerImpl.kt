@@ -61,9 +61,6 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
     lateinit var resourceBundleManager: ResourceBundleManager
         private set
 
-    lateinit var resourceLoader: ResourceLoader
-        private set
-
 
     fun start()
     {
@@ -76,7 +73,12 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
         this.running = true
 
         logger.info("Ładuje pluginy...")
-        this.pluginManager.loadAll(File("plugins"))
+        val pluginsDirectory = File("plugins")
+        if(!pluginsDirectory.exists())
+        {
+            pluginsDirectory.mkdir()
+        }
+        this.pluginManager.loadAll(pluginsDirectory)
 
         val webFolder = File("web")
 
@@ -139,7 +141,9 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
 
         this.resourceBundleManager.loadBundle("testowe_zasoby")
 
-        this.resourceLoader = ResourceLoader(this.resourceBundleManager, File("cache/${this.resourceBundleManager.currentBundleName}"))
+
+        var resourceLoader: ResourceLoader? = ResourceLoader(this.resourceBundleManager, File("cache/${this.resourceBundleManager.currentBundleName}"))
+        resourceLoader!!
 
         for (view in this.resourceBundleManager.currentBundle!!.resources)
         {
@@ -147,11 +151,11 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
             {
                 MargoResource.Category.MAPS ->
                 {
-                    this.towns_.put(view.id, this.resourceLoader.loadMap(view.id)!!)
+                    this.towns_.put(view.id, resourceLoader.loadMap(view.id)!!)
                 }
                 MargoResource.Category.ITEMS ->
                 {
-                    this.items_.put(view.id, this.resourceLoader.loadItem(view.id)!!)
+                    this.items_.put(view.id, resourceLoader.loadItem(view.id)!!)
                 }
                 MargoResource.Category.TILESETS ->
                 {
@@ -159,6 +163,8 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
                 }
             }
         }
+
+        resourceLoader = null
 
         // tickables
         this.ticker.registerTickable(PlayerKeepAlive(this, config.engineConfig.keepAliveSeconds))
