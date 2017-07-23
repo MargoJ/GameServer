@@ -51,6 +51,7 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
 
         response.delayed = true
 
+        out.player = this.player
         this.manager.server.ticker.tickOnce(ConnectionTickable(this, response, packet, out, callback))
     }
 

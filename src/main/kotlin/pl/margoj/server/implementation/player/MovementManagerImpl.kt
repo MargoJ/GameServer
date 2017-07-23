@@ -72,7 +72,7 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
 
     fun updatePosition()
     {
-        this.player.connection.addModifier { it.addMove(this.location.x, this.location.y) }
+        this.player.connection.addModifier { it.addStatisticRecalculation(StatisticType.POSITION) }
     }
 
     fun clearQueue()

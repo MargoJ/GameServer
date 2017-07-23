@@ -1,85 +1,267 @@
 package pl.margoj.server.implementation.player
 
+import pl.margoj.mrf.item.ItemProperties
+import pl.margoj.server.api.events.player.PlayerLevelUpEvent
 import pl.margoj.server.api.player.PlayerData
 import pl.margoj.server.api.player.Profession
+import pl.margoj.server.api.utils.floor
+import pl.margoj.server.api.utils.pow
+import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.network.protocol.jsons.HeroObject
 
 // TODO
 class PlayerDataImpl(val player: PlayerImpl) : PlayerData
 {
-    override var level: Int = 500
-
-    override var xp: Long = (Math.pow((this.level - 1).toDouble(), 4.toDouble())).toLong() + 10L
-
     override var icon: String = "/vip/3599584.gif"
+    override val profession: Profession = Profession.MAGE
 
-    override val profession: Profession = Profession.PALADIN
+    override var level: Int = 1
+    override var xp: Long = 0
 
-    fun createHeroObject(): HeroObject
+    override var statPoints: Int = 0
+    override var baseStrength: Int = 4
+    override var baseAgility: Int = 3
+    override var baseIntellect: Int = 3
+
+    override var strength: Int = 4
+    override var agility: Int = 3
+    override var intellect: Int = 3
+    override var attackSpeed: Double = 1.00
+
+    override var maxHp: Int = 0
+
+    override fun addExp(xp: Long)
     {
-        return HeroObject(
-                id = this.player.connection.aid,
-                blockade = 0,
-                permissions = 1,
-                ap = 0,
-                bagi = 3,
-                bint = 3,
-                bstr = 4,
-                clan = 0,
-                clanrank = 0,
-                credits = 0,
-                runes = 0,
-                dir = this.player.movementManager.playerDirection,
-                exp = this.xp,
-                fgrp = 0,
-                gold = this.player.currencyManager.gold,
-                goldlim = this.player.currencyManager.goldLimit,
-                healpower = 0,
-                honor = 0,
-                img = this.icon,
-                lvl = this.level,
-                mails = 0,
-                mailsAll = 0,
-                mailsLast = "",
-                mpath = "",
-                nick = this.player.name,
-                opt = 0,
-                prof = this.profession.id,
-                pttl = "Limit 6h/dzień",
-                pvp = 0,
-                ttl = 275,
-                x = this.player.location.x,
-                y = this.player.location.y,
-                bag = 0,
-                party = 0,
-                trade = 0,
-                wanted = 0,
-                stamina = 50,
-                staminaTimestamp = 0,
-                staminaRenew = 0,
-                st = 4,
-                ag = 3,
-                it = 3,
-                dmg = "3",
-                ac = 0,
-                act = 0,
-                resis = "0/0/0",
-                sa = 1.06,
-                hp = 40,
-                heal = 0,
-                maxhp = 40,
-                crit = 1.02,
-                critval = 1.20,
-                critmval = 1.20,
-                critmval2 = "1.2,1.2,1.2",
-                ofCrit = 0.00,
-                ofCritval = 1.20,
-                evade = 0,
-                absorb =  0,
-                absorbm = 0,
-                block = 0,
-                mana = 0,
-                energy = 50
-        )
+        this.xp += xp
+
+        while (true)
+        {
+            val expToNextLevel = (this.level pow 4) + 10
+
+            if (this.xp < expToNextLevel)
+            {
+                break
+            }
+
+            val oldLevel = this.level
+            this.level++
+            val newLevel = this.level
+
+            this.onLevelUp(oldLevel, newLevel)
+        }
+
+        this.player.connection.addModifier { it.addStatisticRecalculation(StatisticType.WARRIOR) }
+    }
+
+    private fun onLevelUp(oldLevel: Int, newLevel: Int)
+    {
+        val connection = this.player.connection
+        connection.addModifier { it.addScreenMessage("Awansowałeś na poziom $newLevel") }
+
+        if (newLevel < 25)
+        {
+            val (bonusStrength, bonusAgility, bonusIntellect) = when (this.profession)
+            {
+                Profession.WARRIOR -> Triple(4, 1, 0)
+                Profession.PALADIN -> if (newLevel % 2 == 0) Triple(2, 1, 2) else Triple(3, 0, 2)
+                Profession.MAGE -> Triple(1, 1, 3)
+                Profession.TRACKER -> Triple(1, 2, 2)
+                Profession.HUNTER -> Triple(1, 4, 0)
+                Profession.BLADE_DANCER -> Triple(3, 2, 0)
+            }
+
+            if (bonusStrength != 0)
+            {
+                connection.addModifier { it.addScreenMessage("+$bonusStrength siły") }
+                this.baseStrength += bonusStrength
+            }
+
+            if (bonusAgility != 0)
+            {
+                connection.addModifier { it.addScreenMessage("+$bonusAgility zręcznośći") }
+                this.baseAgility += bonusAgility
+            }
+
+            if (bonusIntellect != 0)
+            {
+                connection.addModifier { it.addScreenMessage("+$bonusIntellect intelektu") }
+                this.baseIntellect += bonusIntellect
+            }
+        }
+        else
+        {
+            statPoints++
+        }
+
+        connection.addModifier { it.addStatisticRecalculation(StatisticType.WARRIOR) }
+
+        this.player.server.eventManager.call(PlayerLevelUpEvent(this.player, oldLevel, newLevel))
+    }
+
+    fun recalculateStatistics(type: StatisticType): HeroObject
+    {
+        val out = HeroObject()
+
+        if (StatisticType.WARRIOR in type)
+        {
+            out.id = this.player.connection.aid
+            out.blockade = 0
+            out.permissions = 1
+            out.nick = this.player.name
+            out.prof = this.profession.id
+            out.opt = 0
+
+            // base
+            this.strength = this.baseStrength
+            this.agility = this.baseAgility
+            this.intellect = this.baseIntellect
+
+            // items base
+            this.player.inventory.equipment.allItems.stream().filter { it != null }.forEach {
+                val item = (it as ItemStackImpl).item.margoItem
+                val all = item[ItemProperties.ALL_ATTRIBUTES]
+
+                this.strength += item[ItemProperties.STRENGTH] + all
+                this.agility += item[ItemProperties.AGILITY] + all
+                this.intellect += item[ItemProperties.INTELLECT] + all
+            }
+
+            // max xp
+            this.maxHp = (20 * (this.level.toDouble() pow 1.25) + this.strength * 5).floor()
+
+            // attack speed
+            this.attackSpeed = 1.00
+            val baseASAgilityMultiplier = Math.min(this.agility, 100)
+            val additionalSAAgilityMultiplier = Math.max(0, this.agility - 100) / 10
+            this.attackSpeed += (baseASAgilityMultiplier + additionalSAAgilityMultiplier).toDouble() * 0.02
+
+            // items rest
+            this.player.inventory.equipment.allItems.stream().filter { it != null }.forEach {
+                val item = (it as ItemStackImpl).item.margoItem
+                this.maxHp += item[ItemProperties.HEALTH]
+                this.attackSpeed += (item[ItemProperties.ATTACK_SPEED].toDouble() / 100.0)
+                this.maxHp += (this.strength * item[ItemProperties.HEALTH_FOR_STRENGTH]).toInt()
+            }
+
+            out.exp = this.xp
+            out.lvl = this.level
+
+            out.bagi = this.baseAgility
+            out.bint = this.baseIntellect
+            out.bstr = this.baseStrength
+
+            out.warriorStats.st = this.strength
+            out.warriorStats.ag = this.agility
+            out.warriorStats.it = this.intellect
+
+            out.warriorStats.maxhp = this.maxHp
+            out.warriorStats.hp = this.maxHp
+            out.warriorStats.sa = this.attackSpeed
+
+            out.warriorStats.crit = 1.04
+            out.warriorStats.ac = 0
+            out.warriorStats.resfire = 0
+            out.warriorStats.resfrost = 0
+            out.warriorStats.reslight = 0
+            out.warriorStats.act = 0
+            out.warriorStats.dmg = 5
+            out.warriorStats.critmval = 1.20
+            out.warriorStats.critmval_f = 1.20
+            out.warriorStats.critmval_c = 1.20
+            out.warriorStats.critmval_l = 1.20
+            out.warriorStats.mana = 0
+            out.warriorStats.block = 0
+        }
+
+        if (StatisticType.POSITION in type)
+        {
+            out.dir = this.player.movementManager.playerDirection
+            out.x = this.player.location.x
+            out.y = this.player.location.y
+        }
+
+        if (StatisticType.CURRENCY in type)
+        {
+            out.credits = 0
+            out.runes = 0
+            out.honor = 0
+            out.gold = this.player.currencyManager.gold
+            out.goldlim = this.player.currencyManager.goldLimit
+        }
+
+        // TODO
+        if (StatisticType.ALL in type)
+        {
+            out.ap = 0
+            out.clan = 0
+            out.clanrank = 0
+            out.fgrp = 0
+            out.healpower = 0
+            out.img = this.icon
+            out.mails = 0
+            out.mailsAll = 0
+            out.mailsLast = ""
+            out.mpath = ""
+            out.pttl = "Limit 6h/dzień"
+            out.pvp = 0
+            out.ttl = 275
+            out.bag = 0
+            out.party = 0
+            out.trade = 0
+            out.wanted = 0
+            out.stamina = 50
+            out.staminaTimestamp = 0
+            out.staminaRenew = 0
+        }
+
+        return out
+    }
+}
+
+class StatisticType private constructor(val flag: Int)
+{
+    companion object
+    {
+        val NONE = StatisticType(0)
+        val INFO = StatisticType(1 shl 1)
+        val WARRIOR = StatisticType(1 shl 2)
+        val POSITION = StatisticType(1 shl 3)
+        val CURRENCY = StatisticType(1 shl 4)
+
+        // all
+        val ALL = StatisticType(-1)
+    }
+
+    fun and(statisticType: StatisticType): StatisticType
+    {
+        return StatisticType(this.flag or statisticType.flag)
+    }
+
+    operator fun contains(what: StatisticType): Boolean
+    {
+        if (this == ALL)
+        {
+            return true
+        }
+        if (what == ALL)
+        {
+            return false
+        }
+        return (this.flag and what.flag) != 0
+    }
+
+    operator fun plus(other: StatisticType): StatisticType
+    {
+        return this.and(other)
+    }
+
+    override fun equals(other: Any?): Boolean
+    {
+        return other is StatisticType && other.flag == this.flag
+    }
+
+    override fun hashCode(): Int
+    {
+        return this.flag
     }
 }

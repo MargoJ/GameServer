@@ -9,6 +9,7 @@ import pl.margoj.server.implementation.item.ItemLocation
 import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.network.protocol.jsons.ItemObject
 import pl.margoj.server.implementation.player.PlayerImpl
+import pl.margoj.server.implementation.player.StatisticType
 
 /**
  * BAG is (6 * 7) = 42
@@ -34,11 +35,11 @@ class PlayerInventoryImpl(override val player: PlayerImpl) : AbstractInventoryIm
 
     override fun tryToPut(item: ItemStack): Boolean
     {
-        for(i in 0..3)
+        for (i in 0..3)
         {
-            if(this.getBag(i) != null)
+            if (this.getBag(i) != null)
             {
-                if(this.getBagInventory(i).tryToPut(item))
+                if (this.getBagInventory(i).tryToPut(item))
                 {
                     return true
                 }
@@ -56,9 +57,9 @@ class PlayerInventoryImpl(override val player: PlayerImpl) : AbstractInventoryIm
 
     override fun isEquipedBag(item: ItemStack): Int?
     {
-        for(i in 0..3)
+        for (i in 0..3)
         {
-            if(this.getBag(i) === item)
+            if (this.getBag(i) === item)
             {
                 return i
             }
@@ -74,6 +75,18 @@ class PlayerInventoryImpl(override val player: PlayerImpl) : AbstractInventoryIm
             index = 3
         }
         return Pair(margoY % 6, index)
+    }
+
+    override operator fun set(index: Int, item: ItemStack?): ItemStack?
+    {
+        val value = super.set(index, item)
+
+        if(index in 0..7)
+        {
+            this.player.connection.addModifier { it.addStatisticRecalculation(StatisticType.WARRIOR) }
+        }
+
+        return value
     }
 
     override fun createPacketFor(item: ItemStackImpl): ItemObject?

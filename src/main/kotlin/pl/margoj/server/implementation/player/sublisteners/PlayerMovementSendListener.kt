@@ -12,7 +12,7 @@ class PlayerMovementSendListener(connection: PlayerConnection) : PlayerPacketSub
 
         if (move != null)
         {
-            out.addMove(move.x, move.y)
+            player!!.movementManager.updatePosition()
         }
 
         out.markAsOk()

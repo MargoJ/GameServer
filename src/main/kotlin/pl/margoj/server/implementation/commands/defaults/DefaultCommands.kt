@@ -10,5 +10,6 @@ object DefaultCommands
         commandsManagerImpl.registerCoreListener(TeleportCommand(), "teleport", "tp")
         commandsManagerImpl.registerCoreListener(TownsCommand(), "towns")
         commandsManagerImpl.registerCoreListener(TestInventoryCommand(), "testinventory", "testinv")
+        commandsManagerImpl.registerCoreListener(AddXPCommand(), "addxp")
     }
 }

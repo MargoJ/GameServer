@@ -14,7 +14,7 @@ class TestInventoryCommand : CommandListener
         args.ensureTrue({ sender is Player }, "Tylko gracz moze wykonać tą komende")
         sender as Player
 
-        if(sender.inventory.getBag(0) == null)
+        if (sender.inventory.getBag(0) == null)
         {
             val item = sender.server.items.map { it as ItemImpl }.filter { it.margoItem.itemCategory == ItemCategory.BAGS }.first()
 
@@ -23,7 +23,9 @@ class TestInventoryCommand : CommandListener
 
         for (item in sender.server.items)
         {
-            sender.inventory.tryToPut(sender.server.newItemStack(item))
+            val itemStack = sender.server.newItemStack(item)
+            sender.inventory.tryToPut(itemStack)
+            sender.inventory.equipment.tryEquip(itemStack)
         }
 
         sender.sendMessage("Ekwipunek przygotowany!")

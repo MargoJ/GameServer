@@ -20,6 +20,7 @@ interface ItemPropertyParser<T, P : ItemProperty<T>>
         val ALL = listOf<ItemPropertyParser<*, *>>(
                 StringPropertyParser(),
                 IntPropertyParser(),
+                DoublePropertyParser(),
                 LongPropertyParser(),
                 BooleanPropertyParser(),
                 NamePropertyParser(),
@@ -37,10 +38,11 @@ class StringPropertyParser : ItemPropertyParser<String, StringProperty>
 
     override fun apply(property: StringProperty, itemObject: ItemObject, value: String, itemStack: ItemStack, item: ItemImpl)
     {
-        if(value == property.default)
+        if (value == property.default)
         {
             return
         }
+
         itemObject.statistics += "${property.propertyName}=$value;";
     }
 }
@@ -51,10 +53,25 @@ class IntPropertyParser : ItemPropertyParser<Int, IntProperty>
 
     override fun apply(property: IntProperty, itemObject: ItemObject, value: Int, itemStack: ItemStack, item: ItemImpl)
     {
-        if(value == property.default)
+        if (value == property.default)
         {
             return
         }
+        itemObject.statistics += "${property.propertyName}=$value;";
+    }
+}
+
+class DoublePropertyParser : ItemPropertyParser<Double, DoubleProperty>
+{
+    override val propertyType: Class<DoubleProperty> = DoubleProperty::class.java
+
+    override fun apply(property: DoubleProperty, itemObject: ItemObject, value: Double, itemStack: ItemStack, item: ItemImpl)
+    {
+        if (value == property.default)
+        {
+            return
+        }
+
         itemObject.statistics += "${property.propertyName}=$value;";
     }
 }
@@ -65,7 +82,7 @@ class LongPropertyParser : ItemPropertyParser<Long, LongProperty>
 
     override fun apply(property: LongProperty, itemObject: ItemObject, value: Long, itemStack: ItemStack, item: ItemImpl)
     {
-        if(value == property.default)
+        if (value == property.default)
         {
             return
         }
@@ -86,7 +103,7 @@ class BooleanPropertyParser : ItemPropertyParser<Boolean, BooleanProperty>
     }
 }
 
-class NamePropertyParser: ItemPropertyParser<String, NameProperty>
+class NamePropertyParser : ItemPropertyParser<String, NameProperty>
 {
     override val propertyType: Class<NameProperty> = NameProperty::class.java
 
@@ -96,7 +113,7 @@ class NamePropertyParser: ItemPropertyParser<String, NameProperty>
     }
 }
 
-class CategoryPropertyParser: ItemPropertyParser<ItemCategory, CategoryProperty>
+class CategoryPropertyParser : ItemPropertyParser<ItemCategory, CategoryProperty>
 {
     override val propertyType: Class<CategoryProperty> = CategoryProperty::class.java
 
@@ -106,7 +123,7 @@ class CategoryPropertyParser: ItemPropertyParser<ItemCategory, CategoryProperty>
     }
 }
 
-class RarityPropertyParser: ItemPropertyParser<ItemRarity, RarityProperty>
+class RarityPropertyParser : ItemPropertyParser<ItemRarity, RarityProperty>
 {
     override val propertyType: Class<RarityProperty> = RarityProperty::class.java
 
@@ -116,13 +133,13 @@ class RarityPropertyParser: ItemPropertyParser<ItemRarity, RarityProperty>
     }
 }
 
-class IconPropertyParser: ItemPropertyParser<ItemIcon?, IconProperty>
+class IconPropertyParser : ItemPropertyParser<ItemIcon?, IconProperty>
 {
     override val propertyType: Class<IconProperty> = IconProperty::class.java
 
     override fun apply(property: IconProperty, itemObject: ItemObject, value: ItemIcon?, itemStack: ItemStack, item: ItemImpl)
     {
-        if(value == null)
+        if (value == null)
         {
             return
         }
@@ -131,7 +148,7 @@ class IconPropertyParser: ItemPropertyParser<ItemIcon?, IconProperty>
     }
 }
 
-class PricePropertyParser: ItemPropertyParser<Long, PriceProperty>
+class PricePropertyParser : ItemPropertyParser<Long, PriceProperty>
 {
     override val propertyType: Class<PriceProperty> = PriceProperty::class.java
 

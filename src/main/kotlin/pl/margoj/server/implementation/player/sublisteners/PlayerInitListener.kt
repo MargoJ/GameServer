@@ -15,6 +15,7 @@ import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.network.protocol.jsons.TownObject
 import pl.margoj.server.implementation.player.PlayerConnection
 import pl.margoj.server.implementation.player.PlayerImpl
+import pl.margoj.server.implementation.player.StatisticType
 import pl.margoj.server.implementation.utils.GsonUtils
 
 class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener(connection, onlyWithType = "init")
@@ -97,7 +98,7 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
                 j.addProperty("tutorial", -1)
                 j.addProperty("clientver", 1461248638)
 
-                j.add("h", gson.toJsonTree(this.player!!.data.createHeroObject()))
+                j.add("h", gson.toJsonTree(this.player!!.data.recalculateStatistics(StatisticType.ALL)))
             }
             2 -> // collisions
             {

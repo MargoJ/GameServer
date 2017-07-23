@@ -8,6 +8,8 @@ import pl.margoj.server.api.commands.CommandSender
 import pl.margoj.server.api.utils.TimeUtils
 import pl.margoj.server.implementation.network.protocol.jsons.ItemObject
 import pl.margoj.server.implementation.network.protocol.jsons.OtherObject
+import pl.margoj.server.implementation.player.PlayerImpl
+import pl.margoj.server.implementation.player.StatisticType
 import pl.margoj.server.implementation.utils.GsonUtils
 import java.math.BigDecimal
 import java.util.LinkedList
@@ -18,10 +20,13 @@ class OutgoingPacket
     var shouldStop = false
         private set
     var raw: String? = null
+    var player: PlayerImpl? = null
     private val messages = mutableListOf<ChatMessage>()
     private val others = mutableListOf<OtherObject>()
     private val items = mutableListOf<ItemObject>()
     private val logMessages = hashMapOf<CommandSender.MessageSeverity, MutableList<String>>()
+
+    private var recalculations: StatisticType = StatisticType.NONE
 
     enum class EngineAction
     {
@@ -53,14 +58,6 @@ class OutgoingPacket
     fun addEvent(value: Double = TimeUtils.getTimestampDouble()): OutgoingPacket
     {
         this.json.addProperty("ev", BigDecimal.valueOf(value))
-        return this
-    }
-
-    fun addMove(x: Int, y: Int): OutgoingPacket
-    {
-        val h = getObject("h")
-        h.addProperty("x", x)
-        h.addProperty("y", y)
         return this
     }
 
@@ -104,6 +101,11 @@ class OutgoingPacket
     {
         this.others.add(other)
         return this
+    }
+
+    fun addStatisticRecalculation(statisticType: StatisticType)
+    {
+        this.recalculations += statisticType
     }
 
     private fun <E : JsonElement> getJsonElement(name: String, constructor: () -> E, tester: (JsonElement) -> Boolean, transformer: (JsonElement) -> E): E
@@ -154,6 +156,11 @@ class OutgoingPacket
             }
 
             this.json.addProperty(severity.packet, output.toString())
+        }
+
+        if (this.player != null && this.recalculations != StatisticType.NONE)
+        {
+            this.json.add("h", GsonUtils.gson.toJsonTree(this.player!!.data.recalculateStatistics(this.recalculations)))
         }
     }
 

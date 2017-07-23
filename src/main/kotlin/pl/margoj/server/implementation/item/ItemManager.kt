@@ -1,5 +1,6 @@
 package pl.margoj.server.implementation.item
 
+import pl.margoj.mrf.item.ItemProperties
 import pl.margoj.mrf.item.ItemProperty
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.network.protocol.jsons.ItemObject
@@ -47,8 +48,15 @@ class ItemManager(val server: ServerImpl)
 
         val item = itemStack.item
 
+        val restricted = item.margoItem[ItemProperties.NO_DESCRIPTION]
+
         for (property in ItemProperty.properties)
         {
+            if(restricted && !property.showWhenRestricted)
+            {
+                continue
+            }
+
             var parser: ItemPropertyParser<Any?, ItemProperty<Any?>>? = null
 
             for (propertyParser in ItemPropertyParser.ALL)

@@ -24,6 +24,11 @@ class StringArrayArguments(val server: ServerImpl, val array: Array<String>) : A
         return Parse.parseInt(this.asString(i))
     }
 
+    override fun asLong(i: Int): Long?
+    {
+        return Parse.parseLong(this.asString(i))
+    }
+
     override fun asPlayer(i: Int): Player?
     {
         val string = this.asString(i)
