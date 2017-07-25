@@ -8,7 +8,7 @@ import java.util.LinkedList
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-class TickerImpl(val server: ServerImpl, val mainThread: Thread) : Ticker
+class TickerImpl(val server: ServerImpl, var mainThread: Thread?) : Ticker
 {
     private val lock = ReentrantLock()
     private val condition = lock.newCondition()
@@ -43,7 +43,6 @@ class TickerImpl(val server: ServerImpl, val mainThread: Thread) : Ticker
         currentTick = 0L
         recentTps.fill(this.targetTps.toDouble())
     }
-
 
     fun tick()
     {
@@ -149,6 +148,14 @@ class TickerImpl(val server: ServerImpl, val mainThread: Thread) : Ticker
             lock.withLock {
                 condition.await()
             }
+        }
+    }
+
+    fun stop()
+    {
+        this.currentTick = Long.MAX_VALUE
+        lock.withLock {
+            condition.signalAll()
         }
     }
 

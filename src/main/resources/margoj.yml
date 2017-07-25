@@ -18,3 +18,23 @@ engine:
 
   # Co ile wymagac pakietu?
   keepalive: 5
+
+# Baza danych MySQL
+mysql:
+  # IP bazy danych
+  ip: '127.0.0.1:3306'
+
+  # Baza
+  database: 'margoj'
+
+  # Użytkownik
+  username: 'margoj'
+
+  # Hasło
+  password: ''
+
+  # Maksymalna ilosc polaczen w connection pool
+  maxConnectionPoolSize: 8
+
+  # Co ile zapisywac dane do bazy automatycznie (w sekundach)
+  saveInterval: 300

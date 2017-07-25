@@ -11,6 +11,8 @@ import pl.margoj.server.implementation.auth.Authenticator
 import pl.margoj.server.implementation.chat.ChatManagerImpl
 import pl.margoj.server.implementation.commands.CommandsManagerImpl
 import pl.margoj.server.implementation.commands.defaults.DefaultCommands
+import pl.margoj.server.implementation.database.DatabaseManager
+import pl.margoj.server.implementation.database.DatabaseSaveThread
 import pl.margoj.server.implementation.entity.EntityManagerImpl
 import pl.margoj.server.implementation.event.EventManagerImpl
 import pl.margoj.server.implementation.item.ItemImpl
@@ -28,6 +30,7 @@ import pl.margoj.server.implementation.sync.TickerImpl
 import pl.margoj.server.implementation.threads.PlayerKeepAlive
 import java.io.File
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 class ServerImpl(override val config: MargoJConfig, override val logger: Logger) : Server
 {
@@ -54,13 +57,13 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
     val authenticator = Authenticator()
     val networkManager = NetworkManager(this)
     val itemManager = ItemManager(this)
+    val databaseManager = DatabaseManager(this)
 
     lateinit var httpServer: HttpServer
         private set
 
     lateinit var resourceBundleManager: ResourceBundleManager
         private set
-
 
     fun start()
     {
@@ -74,7 +77,7 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
 
         logger.info("Ładuje pluginy...")
         val pluginsDirectory = File("plugins")
-        if(!pluginsDirectory.exists())
+        if (!pluginsDirectory.exists())
         {
             pluginsDirectory.mkdir()
         }
@@ -114,6 +117,11 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
             }
         }
 
+        // database
+        this.databaseManager.start()
+        DatabaseSaveThread(this.databaseManager, this.config.mySQLConfig.saveIntervalSeconds).start()
+        this.itemManager.initCounter()
+
         // synchronization
         ticker.targetTps = config.engineConfig.targetTps
         ticker.registerTickable(this.scheduler)
@@ -123,7 +131,8 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
 
         httpServer = HttpServer(this.logger, httpConfig.host, httpConfig.port)
 
-        httpServer.registerHandler(EngineHandler(this))
+        val engineHandler = EngineHandler(this)
+        httpServer.registerHandler(engineHandler)
         httpServer.registerHandler(TownHandler(this))
         httpServer.registerHandler(ItemsHandler(this))
         httpServer.registerHandler(ResourceHandler(webFolder.absoluteFile))
@@ -140,7 +149,6 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
         logger.info("Dostępne zestawy zasobów: " + this.resourceBundleManager.resources)
 
         this.resourceBundleManager.loadBundle("testowe_zasoby")
-
 
         var resourceLoader: ResourceLoader? = ResourceLoader(this.resourceBundleManager, File("cache/${this.resourceBundleManager.currentBundleName}"))
         resourceLoader!!
@@ -183,15 +191,31 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
         // main game loop
         while (this.running)
         {
-            this.ticker.tick()
+            try
+            {
+                this.ticker.tick()
+            }
+            catch(e: Exception)
+            {
+                e.printStackTrace()
+            }
         }
 
-        // shutdown task
+        logger.warn("Serwer zostanie wyłączony w ciągu 10 sekund!")
+        this.httpServer.unregisterHandler(engineHandler)
+        this.httpServer.registerHandler(ShutdownHandler(this))
+        this.ticker.stop()
+        this.ticker.mainThread = null
+        this.databaseManager.stop()
+
+        Thread.sleep(TimeUnit.SECONDS.toMillis(10L))
+
         this.httpServer.shutdown()
     }
 
     override fun shutdown()
     {
+        this.running = false
     }
 
     override fun getItemById(id: String): Item?

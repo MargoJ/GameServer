@@ -2,18 +2,24 @@ package pl.margoj.server.implementation.player
 
 import pl.margoj.mrf.item.ItemProperties
 import pl.margoj.server.api.events.player.PlayerLevelUpEvent
+import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.player.PlayerData
 import pl.margoj.server.api.player.Profession
+import pl.margoj.server.api.utils.fastPow4
 import pl.margoj.server.api.utils.floor
 import pl.margoj.server.api.utils.pow
+import pl.margoj.server.implementation.inventory.player.PlayerInventoryImpl
 import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.network.protocol.jsons.HeroObject
 
 // TODO
-class PlayerDataImpl(val player: PlayerImpl) : PlayerData
+class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
 {
+    var player_: PlayerImpl? = null
+    val player: PlayerImpl get() = this.player_!!
+
     override var icon: String = "/vip/3599584.gif"
-    override val profession: Profession = Profession.MAGE
+    override var profession: Profession = Profession.WARRIOR
 
     override var level: Int = 1
     override var xp: Long = 0
@@ -30,15 +36,18 @@ class PlayerDataImpl(val player: PlayerImpl) : PlayerData
 
     override var maxHp: Int = 0
 
+    var location: Location = Location(null)
+    var inventory: PlayerInventoryImpl? = null
+
     override fun addExp(xp: Long)
     {
         this.xp += xp
 
         while (true)
         {
-            val expToNextLevel = (this.level pow 4) + 10
+            val expToNextLevel = this.level.toLong().fastPow4() + 10
 
-            if (this.xp < expToNextLevel)
+            if (this.xp < expToNextLevel || expToNextLevel < 0)
             {
                 break
             }
@@ -149,6 +158,7 @@ class PlayerDataImpl(val player: PlayerImpl) : PlayerData
             out.bagi = this.baseAgility
             out.bint = this.baseIntellect
             out.bstr = this.baseStrength
+            out.ap = this.statPoints
 
             out.warriorStats.st = this.strength
             out.warriorStats.ag = this.agility
@@ -192,7 +202,6 @@ class PlayerDataImpl(val player: PlayerImpl) : PlayerData
         // TODO
         if (StatisticType.ALL in type)
         {
-            out.ap = 0
             out.clan = 0
             out.clanrank = 0
             out.fgrp = 0

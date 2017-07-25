@@ -82,7 +82,11 @@ private class ConnectionTickable(val playerConnection: PlayerConnection, val res
     private companion object
     {
         private val counter = AtomicInteger()
-        val delayedSenderExecutor: ExecutorService = Executors.newCachedThreadPool { Thread(it, "DelayedSenderThread-${counter.getAndIncrement()}") }
+        val delayedSenderExecutor: ExecutorService = Executors.newCachedThreadPool {
+            val thread = Thread(it, "DelayedSenderThread-${counter.getAndIncrement()}")
+            thread.isDaemon = true
+            thread
+        }
     }
 
     override fun toString(): String
@@ -108,7 +112,7 @@ private class ConnectionTickable(val playerConnection: PlayerConnection, val res
         }
         catch (e: Exception)
         {
-            playerConnection.manager.server.logger.error("Exception while player packet, listener=$listener, player=${playerConnection.player!!.name}")
+            playerConnection.manager.server.logger.error("Exception while player packet, listener=$listener, player=${playerConnection.player?.name}")
             e.printStackTrace()
             playerConnection.disconnect(ExceptionUtils.getStackTrace(e))
             return false

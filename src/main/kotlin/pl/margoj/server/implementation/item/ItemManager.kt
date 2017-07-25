@@ -9,17 +9,41 @@ import java.util.concurrent.atomic.AtomicLong
 
 class ItemManager(val server: ServerImpl)
 {
-    private var TODO_itemCounter: AtomicLong = AtomicLong(2_000_000L) // TODO
+    private var itemCounter: AtomicLong? = null
     private var creating = AtomicBoolean()
+
+    fun initCounter()
+    {
+        this.server.databaseManager.withConnectionUnsafe {
+            it.createStatement().executeQuery("SELECT `id` FROM `items` ORDER BY `id` DESC LIMIT 1").use {
+                if (!it.next())
+                {
+                    itemCounter = AtomicLong(2_000_000L)
+                }
+                else
+                {
+                    itemCounter = AtomicLong(it.getLong("id") + 1)
+                }
+            }
+        }
+    }
 
     fun getNextItemId(): Long
     {
-        return TODO_itemCounter.get()
+        return itemCounter!!.get()
     }
 
     fun increaseItemId()
     {
-        TODO_itemCounter.incrementAndGet()
+        itemCounter!!.incrementAndGet()
+    }
+
+    @Synchronized
+    fun loadNewItem(loader: () -> Unit)
+    {
+        this.creating.set(true)
+        loader()
+        this.creating.set(false)
     }
 
     @Synchronized
@@ -27,6 +51,7 @@ class ItemManager(val server: ServerImpl)
     {
         this.creating.set(true)
         val itemStack = ItemStackImpl(this, item, this.getNextItemId())
+        this.server.databaseManager.itemDataCache.saveOne(itemStack)
         this.creating.set(false)
 
         this.increaseItemId()
@@ -35,7 +60,7 @@ class ItemManager(val server: ServerImpl)
 
     fun validate(id: Long)
     {
-        if (!this.creating.get() || id != this.TODO_itemCounter.get())
+        if (!this.creating.get())
         {
             throw IllegalStateException("Illegal itemstack creation")
         }
@@ -52,7 +77,7 @@ class ItemManager(val server: ServerImpl)
 
         for (property in ItemProperty.properties)
         {
-            if(restricted && !property.showWhenRestricted)
+            if (restricted && !property.showWhenRestricted)
             {
                 continue
             }

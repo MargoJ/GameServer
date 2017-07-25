@@ -4,6 +4,7 @@ import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.api.inventory.player.PlayerBagInventory
 import pl.margoj.server.api.inventory.player.PlayerEquipment
 import pl.margoj.server.api.inventory.player.PlayerInventory
+import pl.margoj.server.api.player.Player
 import pl.margoj.server.implementation.inventory.AbstractInventoryImpl
 import pl.margoj.server.implementation.item.ItemLocation
 import pl.margoj.server.implementation.item.ItemStackImpl
@@ -19,8 +20,15 @@ import pl.margoj.server.implementation.player.StatisticType
  */
 const val PLAYER_INVENTORY_SIZE: Int = 181
 
-class PlayerInventoryImpl(override val player: PlayerImpl) : AbstractInventoryImpl(PLAYER_INVENTORY_SIZE), PlayerInventory
+class PlayerInventoryImpl : AbstractInventoryImpl(PLAYER_INVENTORY_SIZE), PlayerInventory
 {
+    var id: Int? = null
+
+    var player_: PlayerImpl? = null
+
+    override val player: PlayerImpl
+        get() = this.player_!!
+
     override val equipment: PlayerEquipment = PlayerEquipmentViewImpl(this)
 
     override val bagInventories: ArrayList<PlayerBagInventory> = ArrayList(4)
@@ -81,9 +89,12 @@ class PlayerInventoryImpl(override val player: PlayerImpl) : AbstractInventoryIm
     {
         val value = super.set(index, item)
 
-        if(index in 0..7)
+        if(this.player_ != null)
         {
-            this.player.connection.addModifier { it.addStatisticRecalculation(StatisticType.WARRIOR) }
+            if (index in 0..7)
+            {
+                this.player.connection.addModifier { it.addStatisticRecalculation(StatisticType.WARRIOR) }
+            }
         }
 
         return value

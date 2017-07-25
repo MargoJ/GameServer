@@ -13,7 +13,7 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
     private val queuedMoves = ConcurrentLinkedQueue<QueuedMove>()
     private var lastMove: QueuedMove? = null
     private var nextMove: QueuedMove? = null
-    override var location: Location = Location(null)
+    override val location: Location get() = this.player.data.location
     override var playerDirection: Int = 0
 
     fun queueMove(x: Int, y: Int, timestamp: Double)

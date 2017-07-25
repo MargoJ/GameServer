@@ -14,11 +14,12 @@ import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.network.protocol.jsons.TownObject
 import pl.margoj.server.implementation.player.PlayerConnection
+import pl.margoj.server.implementation.player.PlayerDataImpl
 import pl.margoj.server.implementation.player.PlayerImpl
 import pl.margoj.server.implementation.player.StatisticType
 import pl.margoj.server.implementation.utils.GsonUtils
 
-class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener(connection, onlyWithType = "init")
+class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener(connection, onlyWithType = "init", async = true)
 {
     override fun handle(packet: IncomingPacket, out: OutgoingPacket, query: Map<String, String>): Boolean
     {
@@ -27,96 +28,44 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
 
         connection.manager.server.logger.trace("handleInit, initlvl=$initlvl, aid=${connection.aid}")
 
-        val gson = GsonUtils.gson
+        if (initlvl != 1 && player == null)
+        {
+            out.addAlert("Nie jesteś zalogowany!")
+            out.addEngineAction(OutgoingPacket.EngineAction.STOP)
+            return false
+        }
 
         when (initlvl)
         {
             1 ->
             {
-                val j = out.json
-
                 if (this.player == null)
                 {
-                    val player = PlayerImpl(this.connection.aid, "aid${this.connection.aid}", this.server, this.connection)
-                    this.connection.player = player
+                    val data = server.databaseManager.playerDataCache.loadOne(connection.aid.toLong())
 
-                    this.server.entityManager.registerEntity(this.connection.player!!)
+                    if (data == null)
+                    {
+                        out.addAlert("Nie jesteś zalogowany!")
+                        out.addEngineAction(OutgoingPacket.EngineAction.STOP)
+                        return false
+                    }
 
-                    val location = player.location
-                    location.town = this.server.getTownById("pierwsza_mapa") // TODO
-                    location.x = 8
-                    location.y = 13
-
-                    player.server.eventManager.call(PlayerJoinEvent(player))
-                    player.connected()
+                    server.ticker.registerWaitable { this.handleNewPlayer(data) }.wait()
                 }
                 else
                 {
-                    this.player!!.entityTracker.reset()
-
-                    val tracker = this.player!!.itemTracker
-                    tracker.enabled = false
-                    tracker.reset()
+                    server.ticker.registerWaitable { this.handleOnlinePlayer() }.wait()
                 }
 
-                val town = this.player!!.location.town!! as TownImpl
-
-                j.add("town", gson.toJsonTree(TownObject(
-                        mapId = town.numericId,
-                        mainMapId = 0,
-                        width = town.width,
-                        height = town.height,
-                        imageFileName = "${town.id}.png",
-                        mapName = town.name,
-                        pvp = town.getMetadata(MapPvP::class.java).margonemId,
-                        water = "",
-                        battleBackground = "aa1.jpg",
-                        welcomeMessage = town.getMetadata(WelcomeMessage::class.java).value
-                )))
-
-                val gw2 = JsonArray()
-                val townname = JsonObject()
-
-                for (mapObject in town.objects)
-                {
-                    val gateway = mapObject as? GatewayObject ?: continue
-                    val targetMap = player!!.server.getTownById(gateway.targetMap) ?: continue
-
-                    gw2.add(targetMap.numericId)
-                    gw2.add(gateway.position.x)
-                    gw2.add(gateway.position.y)
-                    gw2.add(0) // TODO needs key
-                    gw2.add(0) // TODO: min level & max level
-
-                    townname.add(targetMap.numericId.toString(), JsonPrimitive(targetMap.name))
-                }
-
-                j.add("gw2", gw2)
-                j.add("townname", townname)
-                j.addProperty("worldname", this.server.config.serverConfig!!.name)
-                j.addProperty("time", TimeUtils.getTimestampLong())
-                j.addProperty("tutorial", -1)
-                j.addProperty("clientver", 1461248638)
-
-                j.add("h", gson.toJsonTree(this.player!!.data.recalculateStatistics(StatisticType.ALL)))
+                server.ticker.registerWaitable { this.handleInit(out) }.wait()
             }
             2 -> // collisions
             {
-                out.json.addProperty("cl", (this.player!!.location.town!! as TownImpl).margonemCollisionsString)
+                server.ticker.registerWaitable { out.json.addProperty("cl", (this.player!!.location.town!! as TownImpl).margonemCollisionsString) }.wait()
             }
             3 -> // items
             {
-                val tracker = this.player!!.itemTracker
-
-                // TODO: TEMP!!
-                if (!tracker.enabled)
-                {
-                    this.player!!.server.commandsManager.dispatchCommand(this.player!!, "testinv")
-                }
-
-                tracker.enabled = true
-                tracker.reset()
-                tracker.doTrack()
+                server.ticker.registerWaitable { this.initItems() }.wait()
             }
             4 -> // finish
             {
@@ -126,5 +75,89 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
 
         out.markAsOk()
         return true
+    }
+
+    private fun handleNewPlayer(data: PlayerDataImpl)
+    {
+        val player = PlayerImpl(data, this.server, this.connection)
+        data.player_ = player
+        data.inventory!!.player_ = player
+        this.connection.player = player
+
+        this.server.entityManager.registerEntity(this.connection.player!!)
+
+        val location = player.location
+        if(location.town == null)
+        {
+            location.town = this.server.getTownById("pierwsza_mapa") // TODO
+            location.x = 8
+            location.y = 13
+        }
+
+        player.server.eventManager.call(PlayerJoinEvent(player))
+        player.connected()
+    }
+
+    private fun handleOnlinePlayer()
+    {
+        this.player!!.entityTracker.reset()
+
+        val tracker = this.player!!.itemTracker
+        tracker.enabled = false
+        tracker.reset()
+    }
+
+    private fun handleInit(out: OutgoingPacket)
+    {
+        val j = out.json
+
+        val town = this.player!!.location.town!! as TownImpl
+
+        j.add("town", GsonUtils.gson.toJsonTree(TownObject(
+                mapId = town.numericId,
+                mainMapId = 0,
+                width = town.width,
+                height = town.height,
+                imageFileName = "${town.id}.png",
+                mapName = town.name,
+                pvp = town.getMetadata(MapPvP::class.java).margonemId,
+                water = "",
+                battleBackground = "aa1.jpg",
+                welcomeMessage = town.getMetadata(WelcomeMessage::class.java).value
+        )))
+
+        val gw2 = JsonArray()
+        val townname = JsonObject()
+
+        for (mapObject in town.objects)
+        {
+            val gateway = mapObject as? GatewayObject ?: continue
+            val targetMap = player!!.server.getTownById(gateway.targetMap) ?: continue
+
+            gw2.add(targetMap.numericId)
+            gw2.add(gateway.position.x)
+            gw2.add(gateway.position.y)
+            gw2.add(0) // TODO needs key
+            gw2.add(0) // TODO: min level & max level
+
+            townname.add(targetMap.numericId.toString(), JsonPrimitive(targetMap.name))
+        }
+
+        j.add("gw2", gw2)
+        j.add("townname", townname)
+        j.addProperty("worldname", this.server.config.serverConfig!!.name)
+        j.addProperty("time", TimeUtils.getTimestampLong())
+        j.addProperty("tutorial", -1)
+        j.addProperty("clientver", 1461248638)
+
+        j.add("h", GsonUtils.gson.toJsonTree(this.player!!.data.recalculateStatistics(StatisticType.ALL)))
+    }
+
+    private fun initItems()
+    {
+        val tracker = this.player!!.itemTracker
+        tracker.enabled = true
+        tracker.reset()
+        tracker.doTrack()
     }
 }

@@ -11,5 +11,6 @@ object DefaultCommands
         commandsManagerImpl.registerCoreListener(TownsCommand(), "towns")
         commandsManagerImpl.registerCoreListener(TestInventoryCommand(), "testinventory", "testinv")
         commandsManagerImpl.registerCoreListener(AddXPCommand(), "addxp")
+        commandsManagerImpl.registerCoreListener(StopCommand(), "stop")
     }
 }

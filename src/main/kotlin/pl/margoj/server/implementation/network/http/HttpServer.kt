@@ -38,11 +38,14 @@ class HttpServer(private val logger: Logger, private val host: String, private v
 
     fun shutdown()
     {
-        this.channel?.closeFuture()!!.syncUninterruptibly()
         this.bossGroup?.shutdownGracefully()
         this.workerGroup?.shutdownGracefully()
     }
 
+    fun unregisterAllHandlers()
+    {
+        this.handlers.clear()
+    }
 
     fun registerHandler(handler: HttpHandler): Boolean
     {

@@ -37,13 +37,13 @@ abstract class PlayerPacketSubListener(
         val DEFAULTS = mutableListOf<(PlayerConnection) -> PlayerPacketSubListener>(
                 // sync
                 ::PlayerEventCheckPacketListener,
-                ::PlayerInitListener,
                 ::PlayerPreMovementPacketListener,
                 ::PlayerInventoryPacketListener,
                 ::PlayerChatAndConsolePacketListener,
                 ::AdditionalPlayerPacketListener,
 
                 // async
+                ::PlayerInitListener,
                 ::PlayerMovementSendListener,
                 ::PlayerEventPacketListener,
                 ::PlayerModifierPacketListener

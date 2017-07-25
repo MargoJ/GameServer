@@ -13,19 +13,24 @@ import pl.margoj.server.implementation.inventory.player.ItemTracker
 import pl.margoj.server.implementation.inventory.player.PlayerInventoryImpl
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 
-class PlayerImpl(override val id: Int, override val name: String, override val server: ServerImpl, val connection: PlayerConnection) : EntityImpl(id), Player
+class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerImpl, val connection: PlayerConnection) : EntityImpl(data.id.toInt()), Player
 {
+    override val id: Int = this.data.id.toInt()
+
+    override val name: String = this.data.characterName
+
     override val location: Location get() = this.movementManager.location
 
     override val direction: Int get() = this.movementManager.playerDirection
 
+    override val inventory: PlayerInventoryImpl get() = this.data.inventory!!
+
+    override var online: Boolean = false
+        private set
+
     override val movementManager = MovementManagerImpl(this)
 
     override val currencyManager = CurrencyManagerImpl(this)
-
-    override val data = PlayerDataImpl(this)
-
-    override val inventory = PlayerInventoryImpl(this)
 
     val possibleInventorySources = arrayListOf<AbstractInventoryImpl>(this.inventory)
 
@@ -78,6 +83,7 @@ class PlayerImpl(override val id: Int, override val name: String, override val s
     fun connected()
     {
         this.server.ticker.registerTickable(this.itemTracker)
+        this.online = true
     }
 
     fun disconnect()
@@ -86,6 +92,7 @@ class PlayerImpl(override val id: Int, override val name: String, override val s
         this.connection.dispose()
         this.server.networkManager.resetPlayerConnection(this.connection)
         this.server.entityManager.unregisterEntity(this)
+        this.online = false
         this.server.eventManager.call(PlayerQuitEvent(this))
     }
 
