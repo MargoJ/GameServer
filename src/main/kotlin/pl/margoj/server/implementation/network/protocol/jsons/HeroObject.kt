@@ -1,6 +1,7 @@
 package pl.margoj.server.implementation.network.protocol.jsons
 
 import com.google.gson.annotations.SerializedName
+import java.math.BigDecimal
 
 data class HeroObject(
         var id: Int? = null,
@@ -69,8 +70,8 @@ data class WarriorStats(
         var st: Int? = null,
         var ag: Int? = null,
         var it: Int? = null,
-        var sa: Double? = null,
-        var crit: Double? = null,
+        var sa: BigDecimal? = null,
+        var crit: BigDecimal? = null,
         var ac: Int? = null,
         var resfire: Int? = null,
         var resfrost: Int? = null,
@@ -78,10 +79,10 @@ data class WarriorStats(
         var act: Int? = null,
         var dmg: Int? = null,
         var dmgc: Int? = null,
-        var critmval: Double? = null,
-        var critmval_f: Double? = null,
-        var critmval_c: Double? = null,
-        var critmval_l: Double? = null,
+        var critmval: BigDecimal? = null,
+        var critmval_f: BigDecimal? = null,
+        var critmval_c: BigDecimal? = null,
+        var critmval_l: BigDecimal? = null,
         var evade: Int? = null,
         var lowcrit: Int? = null,
         @SerializedName("blok")

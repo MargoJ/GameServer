@@ -8,6 +8,7 @@ import pl.margoj.server.api.player.Profession
 import pl.margoj.server.api.utils.fastPow4
 import pl.margoj.server.api.utils.floor
 import pl.margoj.server.api.utils.pow
+import pl.margoj.server.api.utils.toBigDecimal
 import pl.margoj.server.implementation.inventory.player.PlayerInventoryImpl
 import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.network.protocol.jsons.HeroObject
@@ -166,19 +167,19 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
 
             out.warriorStats.maxhp = this.maxHp
             out.warriorStats.hp = this.maxHp
-            out.warriorStats.sa = this.attackSpeed
+            out.warriorStats.sa = this.attackSpeed.toBigDecimal()
 
-            out.warriorStats.crit = 1.04
+            out.warriorStats.crit = 1.04.toBigDecimal()
             out.warriorStats.ac = 0
             out.warriorStats.resfire = 0
             out.warriorStats.resfrost = 0
             out.warriorStats.reslight = 0
             out.warriorStats.act = 0
             out.warriorStats.dmg = 5
-            out.warriorStats.critmval = 1.20
-            out.warriorStats.critmval_f = 1.20
-            out.warriorStats.critmval_c = 1.20
-            out.warriorStats.critmval_l = 1.20
+            out.warriorStats.critmval = 1.20.toBigDecimal()
+            out.warriorStats.critmval_f = 1.20.toBigDecimal()
+            out.warriorStats.critmval_c = 1.20.toBigDecimal()
+            out.warriorStats.critmval_l = 1.20.toBigDecimal()
             out.warriorStats.mana = 0
             out.warriorStats.block = 0
         }
@@ -232,10 +233,9 @@ class StatisticType private constructor(val flag: Int)
     companion object
     {
         val NONE = StatisticType(0)
-        val INFO = StatisticType(1 shl 1)
-        val WARRIOR = StatisticType(1 shl 2)
-        val POSITION = StatisticType(1 shl 3)
-        val CURRENCY = StatisticType(1 shl 4)
+        val WARRIOR = StatisticType(1 shl 1)
+        val POSITION = StatisticType(1 shl 2)
+        val CURRENCY = StatisticType(1 shl 3)
 
         // all
         val ALL = StatisticType(-1)
