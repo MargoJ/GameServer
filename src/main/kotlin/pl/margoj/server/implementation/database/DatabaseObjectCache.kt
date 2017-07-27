@@ -1,9 +1,11 @@
 package pl.margoj.server.implementation.database
 
 import org.apache.commons.lang3.StringUtils
+import org.apache.logging.log4j.LogManager
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.util.Arrays
 import java.util.Collections
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -17,11 +19,28 @@ abstract class DatabaseObjectCache<T>
         vararg val rawColumns: String
 )
 {
+    private companion object
+    {
+        val logger = LogManager.getLogger("Cache")
+    }
+
+    init
+    {
+        logger.trace("Creating new cache ${this.javaClass}")
+    }
+
+    private val logPrefix = this.javaClass.name
     private val lock = ReentrantLock()
     private val cache = LinkedHashMap<Long, T?>()
 
+    var lastSave: Long = 0
+        private set
+
+    val cached: Int get() = this.cache.size
+
     fun loadOne(id: Long): T?
     {
+        logger.trace("$logPrefix.loadOne($id)")
         val ids = LongArray(1)
         ids[0] = id
         val out = this.load(ids)
@@ -30,6 +49,8 @@ abstract class DatabaseObjectCache<T>
 
     fun load(ids: LongArray): List<T?>
     {
+        logger.trace("$logPrefix.loadOne(${Arrays.toString(ids)})")
+
         val out = ArrayList<T?>(ids.size)
 
         if (!this.multipleLoad && ids.size != 1)
@@ -44,7 +65,7 @@ abstract class DatabaseObjectCache<T>
                 if (cache.containsKey(id))
                 {
                     out.add(cache[id])
-                    databaseManager.server.logger.trace("$this.loadFromCache - $id")
+                    logger.info("$logPrefix $id loaded from cache")
                 }
                 else
                 {
@@ -57,7 +78,7 @@ abstract class DatabaseObjectCache<T>
                 val idsFromDb = LongArray(fromDb.size, { fromDb[it] })
 
                 this.databaseManager.withConnection {
-                    databaseManager.server.logger.trace("$this.loadFromDatabase - size ${idsFromDb.size}")
+                    logger.info("$logPrefix - loading from database (${Arrays.toString(idsFromDb)})")
                     this.loadFromDatabase(it, idsFromDb).mapTo(out) { it }
                 }
             }
@@ -68,14 +89,18 @@ abstract class DatabaseObjectCache<T>
 
     fun saveOne(data: T)
     {
+        logger.trace("$logPrefix.saveOne($data)")
         this.save(Collections.singleton(data))
     }
 
     fun save(data: Collection<T>)
     {
+        logger.trace("$logPrefix.save($data)")
+
         this.lock.withLock {
             for (element in data)
             {
+                logger.info("$logPrefix - putting to cache $element")
                 this.cache.put(this.getIdOf(element), element)
             }
         }
@@ -83,10 +108,13 @@ abstract class DatabaseObjectCache<T>
 
     fun saveToDatabase(): Int
     {
+        logger.trace("$logPrefix.saveToDatabase()")
         val saved = this.cache.values.filter { it != null }.size
+        logger.debug("saved - $saved")
+
         this.lock.withLock {
             this.databaseManager.withConnection {
-                if(this.multipleLoad)
+                if (this.multipleLoad)
                 {
                     this.saveToDatabase(it, this.cache.values)
                 }
@@ -97,28 +125,41 @@ abstract class DatabaseObjectCache<T>
                 {
                     val data = iterator.next()
 
-                    if(!this.multipleLoad && data != null)
+                    if (!this.multipleLoad && data != null)
                     {
                         this.saveToDatabase(it, Collections.singletonList(data))
                     }
 
                     if (data == null || this.canWipe(data))
                     {
+                        logger.info("$logPrefix - wiped $data")
                         iterator.remove()
                     }
                 }
             }
+
+            this.lastSave = System.currentTimeMillis()
         }
         return saved
     }
 
-    protected abstract fun getIdOf(data: T): Long
+    internal fun getOnlyFromCache(id: Long): T?
+    {
+        return this.cache[id]
+    }
+
+    internal fun remove(id: Long)
+    {
+        this.cache.remove(id)
+    }
+
+    abstract fun getIdOf(data: T): Long
+
+    abstract fun canWipe(data: T): Boolean
 
     protected abstract fun loadFromDatabase(connection: Connection, id: LongArray): List<T?>
 
     protected abstract fun saveToDatabase(connection: Connection, data: Collection<T?>)
-
-    protected abstract fun canWipe(data: T): Boolean
 
     protected fun trySave(connection: Connection, data: Collection<T?>, populator: (data: T, statement: PreparedStatement, indexer: () -> Int, Boolean) -> Unit)
     {

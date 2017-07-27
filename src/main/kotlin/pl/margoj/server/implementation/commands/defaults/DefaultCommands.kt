@@ -12,5 +12,6 @@ object DefaultCommands
         commandsManagerImpl.registerCoreListener(TestInventoryCommand(), "testinventory", "testinv")
         commandsManagerImpl.registerCoreListener(AddXPCommand(), "addxp")
         commandsManagerImpl.registerCoreListener(StopCommand(), "stop")
+        commandsManagerImpl.registerCoreListener(CacheCommand(), "cache")
     }
 }

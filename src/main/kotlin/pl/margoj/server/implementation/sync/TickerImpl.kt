@@ -5,6 +5,8 @@ import pl.margoj.server.api.sync.Ticker
 import pl.margoj.server.api.sync.Waitable
 import pl.margoj.server.implementation.ServerImpl
 import java.util.LinkedList
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -18,6 +20,8 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?) : Ticker
     private var tickSection = 0L
     private var catchupTime = 0L
     private var currentIterator: MutableIterator<Tickable>? = null
+    private val asyncCounter = AtomicInteger()
+    private val asyncRunner = Executors.newCachedThreadPool { Thread(it, "MargoJ-Async-${asyncCounter.incrementAndGet()}") }
 
     override var currentTick = 0L
         private set
@@ -132,6 +136,11 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?) : Ticker
         val waitable = WaitableImpl(runnable)
         this.tickOnce(waitable)
         return waitable
+    }
+
+    override fun runAsync(runnable: Runnable)
+    {
+        asyncRunner.submit(runnable)
     }
 
     private fun calcTps(avg: Double, exp: Double, tps: Double): Double

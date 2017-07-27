@@ -12,6 +12,13 @@
                 <OnStartupTriggeringPolicy/>
             </Policies>
         </RollingRandomAccessFile>
+        <RollingRandomAccessFile name="GameFile" fileName="logs/game.log" filePattern="logs/game-%d{yyyy-MM-dd}-%i.log">
+            <PatternLayout pattern="[%d[HH:mm:ss}] %5level: %msg%n"/>
+            <Policies>
+                <OnStartupTriggeringPolicy/>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+        </RollingRandomAccessFile>
     </Appenders>
     <Loggers>
         <Root level="info">
@@ -21,6 +28,10 @@
         <Logger name="Netty" level="info">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="File"/>
+        </Logger>
+        <Logger name="Cache" level="info"/>
+        <Logger name="Game" level="info">
+            <AppenderRef ref="GameFile"/>
         </Logger>
     </Loggers>
 </Configuration>
