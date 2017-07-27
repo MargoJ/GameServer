@@ -69,6 +69,7 @@ class HttpServer(private val logger: Logger, private val host: String, private v
                 return@forEach
             }
         }
+        httpRequest.content.release()
 
         if (!foundAny)
         {

@@ -29,7 +29,7 @@ class NettyLog4j2Logger(private val logger: Logger) : InternalLogger
 
     override fun trace(format: String, argA: Any, argB: Any)
     {
-        logger.trace(format, argA, argA)
+        logger.trace(format, argA, argB)
     }
 
     override fun trace(format: String, vararg arguments: Any)
@@ -64,7 +64,7 @@ class NettyLog4j2Logger(private val logger: Logger) : InternalLogger
 
     override fun debug(format: String, argA: Any, argB: Any)
     {
-        logger.debug(format, argA, argA)
+        logger.debug(format, argA, argB)
     }
 
     override fun debug(format: String, vararg arguments: Any)
@@ -99,7 +99,7 @@ class NettyLog4j2Logger(private val logger: Logger) : InternalLogger
 
     override fun info(format: String, argA: Any, argB: Any)
     {
-        logger.info(format, argA, argA)
+        logger.info(format, argA, argB)
     }
 
     override fun info(format: String, vararg arguments: Any)
@@ -139,7 +139,7 @@ class NettyLog4j2Logger(private val logger: Logger) : InternalLogger
 
     override fun warn(format: String, argA: Any, argB: Any)
     {
-        logger.warn(format, argA, argA)
+        logger.warn(format, argA, argB)
     }
 
     override fun warn(msg: String, t: Throwable)
@@ -169,7 +169,7 @@ class NettyLog4j2Logger(private val logger: Logger) : InternalLogger
 
     override fun error(format: String, argA: Any, argB: Any)
     {
-        logger.error(format, argA, argA)
+        logger.error(format, argA, argB)
     }
 
     override fun error(format: String, vararg arguments: Any)
