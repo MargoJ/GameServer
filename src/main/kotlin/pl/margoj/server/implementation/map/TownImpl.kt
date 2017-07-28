@@ -7,10 +7,14 @@ import pl.margoj.mrf.map.objects.MapObject
 import pl.margoj.mrf.map.serialization.MapData
 import pl.margoj.server.api.map.PvPStatus
 import pl.margoj.server.api.map.Town
+import pl.margoj.server.implementation.ServerImpl
+import pl.margoj.server.implementation.inventory.map.MapInventoryImpl
 import java.io.File
 
-data class TownImpl(override val numericId: Int, override val id: String, override val name: String, override val width: Int, override val height: Int, override val collisions: Array<BooleanArray>, val metadata: Collection<MetadataElement>, val objects: Collection<MapObject<*>>, val image: File) : Town
+data class TownImpl(val server: ServerImpl, override val numericId: Int, override val id: String, override val name: String, override val width: Int, override val height: Int, override val collisions: Array<BooleanArray>, val metadata: Collection<MetadataElement>, val objects: Collection<MapObject<*>>, val image: File) : Town
 {
+    override lateinit var inventory: MapInventoryImpl
+
     @Suppress("LoopToCallChain")
     val margonemCollisionsString: String
         get()
@@ -87,7 +91,7 @@ data class TownImpl(override val numericId: Int, override val id: String, overri
         }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T: MetadataElement> getMetadata(clazz: Class<T>): T
+    fun <T : MetadataElement> getMetadata(clazz: Class<T>): T
     {
         val optional = this.metadata.stream().filter { clazz.isInstance(it) }.findAny()
 
@@ -96,7 +100,7 @@ data class TownImpl(override val numericId: Int, override val id: String, overri
             return optional.get() as T
         }
 
-        return MapData.mapMetadata.values.stream().filter { clazz.isInstance(it.defaultValue) }.findAny().map { it.defaultValue  }.get() as T
+        return MapData.mapMetadata.values.stream().filter { clazz.isInstance(it.defaultValue) }.findAny().map { it.defaultValue }.get() as T
     }
 
     fun inBounds(point: Point): Boolean

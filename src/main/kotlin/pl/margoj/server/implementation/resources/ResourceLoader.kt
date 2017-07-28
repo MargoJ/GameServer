@@ -91,7 +91,7 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
         logger.info("Załadowano mape: $name")
 
 
-        return TownImpl(numericId++, map.id, map.name, map.width, map.height, map.collisions, map.metadata, map.objects, imageFile)
+        return TownImpl(this.resourceBundleManager.server, numericId++, map.id, map.name, map.width, map.height, map.collisions, map.metadata, map.objects, imageFile)
     }
 
     fun loadItem(id: String): ItemImpl?

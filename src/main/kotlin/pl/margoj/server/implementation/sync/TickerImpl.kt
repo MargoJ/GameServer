@@ -6,6 +6,7 @@ import pl.margoj.server.api.sync.Waitable
 import pl.margoj.server.implementation.ServerImpl
 import java.util.LinkedList
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -15,6 +16,8 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?) : Ticker
     private val lock = ReentrantLock()
     private val condition = lock.newCondition()
     private val registerQueue = LinkedList<Tickable>()
+    private val unregisterQueue = LinkedList<Tickable>()
+    private val iteratingNow = AtomicBoolean()
     private var waitTime = 0L
     private var lastTick = 0L
     private var tickSection = 0L
@@ -74,20 +77,33 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?) : Ticker
 
             lastTick = curTime
 
-            var queueElement: Tickable?
+            var registerElement: Tickable?
+            var unregisterElement: Tickable?
 
             while (true)
             {
-                queueElement = this.registerQueue.poll()
+                registerElement = this.registerQueue.poll()
+                unregisterElement = this.unregisterQueue.poll()
 
-                if (queueElement == null)
+                var any = false
+                if (registerElement != null)
+                {
+                    this.tickables.add(registerElement)
+                    any = true
+                }
+                if (unregisterElement != null)
+                {
+                    this.tickables.remove(unregisterElement)
+                    any = true
+                }
+
+                if(!any)
                 {
                     break
                 }
-
-                this.tickables.add(queueElement)
             }
 
+            this.iteratingNow.set(true)
             this.currentIterator = this.tickables.iterator()
 
             while (this.currentIterator!!.hasNext())
@@ -108,6 +124,7 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?) : Ticker
             }
 
             this.currentIterator = null
+            this.iteratingNow.set(false)
         }
 
         lock.withLock {
@@ -118,12 +135,32 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?) : Ticker
 
     override fun registerTickable(tickable: Tickable)
     {
-        this.registerQueue.add(tickable)
+        if (this.iteratingNow.get())
+        {
+            this.registerQueue.add(tickable)
+        }
+        else
+        {
+            this.tickables.add(tickable)
+        }
     }
 
     override fun unregisterTickable(tickable: Tickable): Boolean
     {
-        return this.tickables.remove(tickable)
+        if (this.iteratingNow.get())
+        {
+            if(!this.tickables.contains(tickable))
+            {
+                return false
+            }
+
+            this.unregisterQueue.add(tickable)
+            return true
+        }
+        else
+        {
+            return this.tickables.remove(tickable)
+        }
     }
 
     override fun tickOnce(tickable: Tickable)

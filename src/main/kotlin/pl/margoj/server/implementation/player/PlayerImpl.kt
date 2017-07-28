@@ -9,6 +9,7 @@ import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.entity.EntityTracker
 import pl.margoj.server.implementation.inventory.AbstractInventoryImpl
+import pl.margoj.server.implementation.inventory.map.MapInventoryImpl
 import pl.margoj.server.implementation.inventory.player.ItemTracker
 import pl.margoj.server.implementation.inventory.player.PlayerInventoryImpl
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
@@ -32,7 +33,7 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
 
     override val currencyManager = CurrencyManagerImpl(this)
 
-    val possibleInventorySources = arrayListOf<AbstractInventoryImpl>(this.inventory)
+    val possibleInventorySources by lazy { arrayListOf<AbstractInventoryImpl>() }
 
     val entityTracker = EntityTracker(this)
 
@@ -71,6 +72,7 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
         {
             location.copyValuesTo(current)
             this.connection.addModifier { it.addEngineAction(OutgoingPacket.EngineAction.RELOAD) }
+            this.updatePossibleInventories()
         }
         else
         {
@@ -80,8 +82,19 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
         }
     }
 
+    fun updatePossibleInventories()
+    {
+        this.possibleInventorySources.clear()
+        this.possibleInventorySources.add(this.inventory)
+        if (this.location.town != null)
+        {
+            this.possibleInventorySources.add(this.location.town!!.inventory as MapInventoryImpl)
+        }
+    }
+
     fun connected()
     {
+        this.updatePossibleInventories()
         this.server.ticker.registerTickable(this.itemTracker)
         this.online = true
     }

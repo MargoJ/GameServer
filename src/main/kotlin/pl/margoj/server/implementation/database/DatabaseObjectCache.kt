@@ -5,21 +5,20 @@ import org.apache.logging.log4j.LogManager
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-import java.util.Arrays
 import java.util.Collections
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-abstract class DatabaseObjectCache<T>
+abstract class DatabaseObjectCache<I, T>
 (
         val databaseManager: DatabaseManager,
         val tableName: String,
         val searchBy: String = "id",
-        val multipleLoad: Boolean = true,
+        val simpleLoading: Boolean = true,
         vararg val rawColumns: String
 )
 {
-    private companion object
+    companion object
     {
         val logger = LogManager.getLogger("Cache")
     }
@@ -31,35 +30,28 @@ abstract class DatabaseObjectCache<T>
 
     private val logPrefix = this.javaClass.name
     private val lock = ReentrantLock()
-    private val cache = LinkedHashMap<Long, T?>()
+    protected val cache = LinkedHashMap<I, T?>()
 
     var lastSave: Long = 0
         private set
 
     val cached: Int get() = this.cache.size
 
-    fun loadOne(id: Long): T?
+    fun loadOne(id: I): T?
     {
         logger.trace("$logPrefix.loadOne($id)")
-        val ids = LongArray(1)
-        ids[0] = id
-        val out = this.load(ids)
+        val out = this.load(Collections.singletonList(id))
         return if (out.isEmpty()) null else out.iterator().next()
     }
 
-    fun load(ids: LongArray): List<T?>
+    fun load(ids: Collection<I>): List<T?>
     {
-        logger.trace("$logPrefix.loadOne(${Arrays.toString(ids)})")
+        logger.trace("$logPrefix.loadOne($ids})")
 
         val out = ArrayList<T?>(ids.size)
 
-        if (!this.multipleLoad && ids.size != 1)
-        {
-            throw IllegalStateException("multiple load not supported")
-        }
-
         this.lock.withLock {
-            val fromDb = ArrayList<Long>()
+            val fromDb = ArrayList<I>(ids.size)
             for (id in ids)
             {
                 if (cache.containsKey(id))
@@ -75,11 +67,9 @@ abstract class DatabaseObjectCache<T>
 
             if (!fromDb.isEmpty())
             {
-                val idsFromDb = LongArray(fromDb.size, { fromDb[it] })
-
                 this.databaseManager.withConnection {
-                    logger.info("$logPrefix - loading from database (${Arrays.toString(idsFromDb)})")
-                    this.loadFromDatabase(it, idsFromDb).mapTo(out) { it }
+                    logger.info("$logPrefix - loading from database ($fromDb)")
+                    this.loadFromDatabase(it, fromDb).mapTo(out) { it }
                 }
             }
         }
@@ -114,21 +104,13 @@ abstract class DatabaseObjectCache<T>
 
         this.lock.withLock {
             this.databaseManager.withConnection {
-                if (this.multipleLoad)
-                {
-                    this.saveToDatabase(it, this.cache.values)
-                }
+                this.saveToDatabase(it, this.cache.values)
 
                 val iterator = this.cache.values.iterator()
 
                 while (iterator.hasNext())
                 {
                     val data = iterator.next()
-
-                    if (!this.multipleLoad && data != null)
-                    {
-                        this.saveToDatabase(it, Collections.singletonList(data))
-                    }
 
                     if (data == null || this.canWipe(data))
                     {
@@ -140,28 +122,33 @@ abstract class DatabaseObjectCache<T>
 
             this.lastSave = System.currentTimeMillis()
         }
+
         return saved
     }
 
-    internal fun getOnlyFromCache(id: Long): T?
+    internal fun getOnlyFromCache(id: I): T?
     {
         return this.cache[id]
     }
 
-    internal fun remove(id: Long)
+    internal fun remove(id: I)
     {
         this.cache.remove(id)
     }
 
-    abstract fun getIdOf(data: T): Long
+    abstract fun getIdOf(data: T): I
 
     abstract fun canWipe(data: T): Boolean
 
-    protected abstract fun loadFromDatabase(connection: Connection, id: LongArray): List<T?>
+    protected abstract fun loadFromDatabase(connection: Connection, ids: Collection<I>): List<T?>
 
     protected abstract fun saveToDatabase(connection: Connection, data: Collection<T?>)
 
-    protected fun trySave(connection: Connection, data: Collection<T?>, populator: (data: T, statement: PreparedStatement, indexer: () -> Int, Boolean) -> Unit)
+    protected abstract fun setIdInSQL(statement: PreparedStatement, index: Int, id: I)
+
+    protected abstract fun idFromString(string: String): I?
+
+    protected fun trySave(connection: Connection, data: Collection<T?>, populator: (data: T, statement: PreparedStatement, indexer: () -> Int, Boolean) -> Unit, beforeBatch: () -> Unit = {})
     {
         val columns = rawColumns.map { "`$it`" }
         val queryBuilder = StringBuilder()
@@ -191,7 +178,7 @@ abstract class DatabaseObjectCache<T>
             populator(element, updateQuery, indexer, false)
             populator(element, updateQuery, indexer, true)
 
-            if (this.multipleLoad)
+            if (this.simpleLoading)
             {
                 updateQuery.addBatch()
             }
@@ -201,33 +188,49 @@ abstract class DatabaseObjectCache<T>
 
         if (any)
         {
+            beforeBatch()
             updateQuery.executeBatch()
         }
     }
 
-    protected fun tryLoad(connection: Connection, ids: LongArray, loader: (ResultSet) -> T): List<T?>
+    protected fun tryLoad(connection: Connection, ids: Collection<I>, loader: (ResultSet) -> T?): List<T?>
     {
-        val array = StringUtils.join(ids.toTypedArray(), ", ")
-        val resultSet = connection.createStatement().executeQuery("SELECT * FROM `$tableName` WHERE `$searchBy` IN ($array)")
+        val queryBuilder = StringBuilder("SELECT * FROM `$tableName` WHERE `$searchBy` IN(")
+        for ((index, _) in ids.withIndex())
+        {
+            queryBuilder.append("?")
+            if (index != ids.size - 1)
+            {
+                queryBuilder.append(", ")
+            }
+        }
+        queryBuilder.append(")")
+
+        val statement = connection.prepareStatement(queryBuilder.toString())
+        for((index, id) in ids.withIndex())
+        {
+            this.setIdInSQL(statement, index + 1, id)
+        }
+
+        val resultSet = statement.executeQuery()
 
         val out = ArrayList<T?>(ids.size)
 
-        if (multipleLoad)
+        if (simpleLoading)
         {
             while (resultSet.next())
             {
-                val element = loader(resultSet)
+                val element = loader(resultSet)!!
                 this.cache.put(this.getIdOf(element), element)
                 out.add(element)
             }
+
+            return out
         }
         else
         {
-            val element = loader(resultSet)
-            this.cache.put(this.getIdOf(element), element)
-            out.add(element)
+            loader(resultSet)
+            return emptyList()
         }
-
-        return out
     }
 }

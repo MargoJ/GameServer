@@ -1,6 +1,7 @@
 package pl.margoj.server.implementation.player.sublisteners
 
 import pl.margoj.mrf.item.ItemCategory
+import pl.margoj.server.api.inventory.map.MAP_LAYERS
 import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
@@ -26,18 +27,23 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
             {
                 return true
             }
+            this.checkForMaliciousData(inventory[item.ownerIndex!!] !== item, "invalid item at invalid index")
 
             when (query["st"]?.toInt())
             {
                 -2 ->
                 {
                     // destroy item
-                    this.checkForMaliciousData(inventory[item.ownerIndex!!] !== item, "invalid item at invalid index")
                     inventory[item.ownerIndex!!] = null
                 }
                 -1 ->
                 {
                     // drop item
+                    val location = player.location
+                    if(!location.town!!.inventory.addItem(location.x, location.y, item))
+                    {
+                        out.addAlert("Na tej pozycji leżą już przynajmniej ${MAP_LAYERS} przedmioty!")
+                    }
                 }
                 0 ->
                 {
@@ -140,6 +146,15 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
                     }
                 }
                 else -> this.reportMaliciousData("invalid slot ${query["st"]}")
+            }
+        }
+        else if(packet.type == "takeitem")
+        {
+            val location = player.location
+            val item = location.town!!.inventory.getItemOnTop(location.x, location.y)
+            if(item != null)
+            {
+                player.inventory.tryToPut(item)
             }
         }
 

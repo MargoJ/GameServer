@@ -174,6 +174,11 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
 
         resourceLoader = null
 
+        // preload data
+        this.databaseManager.withSkippedCheck {
+            this.databaseManager.preloadData()
+        }
+
         // tickables
         this.ticker.registerTickable(PlayerKeepAlive(this, config.engineConfig.keepAliveSeconds))
 

@@ -12,13 +12,14 @@ class CacheCommand : CommandListener
 {
     companion object
     {
-        var caches = HashMap<String, (DatabaseManager) -> DatabaseObjectCache<*>>()
+        var caches = HashMap<String, (DatabaseManager) -> DatabaseObjectCache<*, *>>()
 
         init
         {
             caches.put("players", { it.playerInventoryCache })
             caches.put("inventories", { it.playerInventoryCache })
             caches.put("items", { it.itemDataCache })
+            caches.put("mapinventories", { it.mapInventoryDataCache })
         }
     }
 
@@ -33,7 +34,7 @@ class CacheCommand : CommandListener
             return
         }
 
-        val selected: MutableMap<String, DatabaseObjectCache<*>> = HashMap(caches.size)
+        val selected: MutableMap<String, DatabaseObjectCache<*, *>> = HashMap(caches.size)
 
         if (!args.has(1))
         {
@@ -79,30 +80,38 @@ class CacheCommand : CommandListener
                     {
                         override fun run()
                         {
-                            sender.sendMessage("$cacheName flush - rozpoczęto")
-                            val before = cache.cached
-                            cache.saveToDatabase()
-                            val after = cache.cached
-                            sender.sendMessage("$cacheName flush - zakończono (zapisano - $before, zwolniono - ${before - after})")
+                            try
+                            {
+                                sender.sendMessage("$cacheName flush - rozpoczęto")
+                                val before = cache.cached
+                                cache.saveToDatabase()
+                                val after = cache.cached
+                                sender.sendMessage("$cacheName flush - zakończono (zapisano - $before, zwolniono - ${before - after})")
+                            }
+                            catch (e: Exception)
+                            {
+                                e.printStackTrace()
+                            }
                         }
                     })
                 }
             }
             "discard" ->
             {
-                args.ensureTrue({ args.has(2) }, "Nie podano nazwy lub id")
-                val id = args.asLong(2)
-                args.ensureNotNull(id, "${args.asString(0)} nie jest poprawnym id")
-
-                val (name, cache) = selected.iterator().next()
-                @Suppress("UNCHECKED_CAST")
-                cache as DatabaseObjectCache<Any>
-                sender.sendMessage("Usuwam obiekt od id '$id' z cache '$name' ...")
-
-                val toDiscard = cache.getOnlyFromCache(id!!)
-                args.ensureNotNull(toDiscard, "Nie znaleziono obiektu'")
-                args.ensureTrue({ cache.canWipe(toDiscard!!) }, "Nie można usunąc tego obiektu z cache (obiekt używany)")
-                cache.remove(id)
+                // TODO
+//                args.ensureTrue({ args.has(2) }, "Nie podano nazwy lub id")
+//                val id = args.asLong(2)
+//                args.ensureNotNull(id, "${args.asString(0)} nie jest poprawnym id")
+//
+//                val (name, cache) = selected.iterator().next()
+//                @Suppress("UNCHECKED_CAST")
+//                cache as DatabaseObjectCache<Any>
+//                sender.sendMessage("Usuwam obiekt od id '$id' z cache '$name' ...")
+//
+//                val toDiscard = cache.getOnlyFromCache(id!!)
+//                args.ensureNotNull(toDiscard, "Nie znaleziono obiektu'")
+//                args.ensureTrue({ cache.canWipe(toDiscard!!) }, "Nie można usunąc tego obiektu z cache (obiekt używany)")
+//                cache.remove(id)
             }
             else ->
             {
@@ -111,5 +120,5 @@ class CacheCommand : CommandListener
         }
     }
 
-    private abstract class NamedCacheTask(val cacheName: String, val cache: DatabaseObjectCache<*>) : Runnable
+    private abstract class NamedCacheTask(val cacheName: String, val cache: DatabaseObjectCache<*, *>) : Runnable
 }

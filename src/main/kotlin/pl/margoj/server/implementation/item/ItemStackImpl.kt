@@ -5,7 +5,9 @@ import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.implementation.inventory.AbstractInventoryImpl
 import pl.margoj.server.implementation.inventory.player.ItemTracker
 import pl.margoj.server.implementation.network.protocol.jsons.ItemObject
+import java.util.Collections
 import java.util.LinkedList
+import java.util.WeakHashMap
 
 class ItemStackImpl(itemManager: ItemManager, override val item: ItemImpl, override val id: Long) : ItemStack
 {
@@ -30,7 +32,7 @@ class ItemStackImpl(itemManager: ItemManager, override val item: ItemImpl, overr
             this.requestUpdate()
         }
 
-    var trackers = LinkedList<ItemTracker>()
+    var trackers = Collections.newSetFromMap(WeakHashMap<ItemTracker, Boolean>())
 
     fun requestUpdate()
     {

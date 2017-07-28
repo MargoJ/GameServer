@@ -85,7 +85,7 @@ class PlayerInventoryImpl : AbstractInventoryImpl(PLAYER_INVENTORY_SIZE), Player
         return Pair(margoY % 6, index)
     }
 
-    override operator fun set(index: Int, item: ItemStack?): ItemStack?
+    override operator fun set(index: Int, item: ItemStack?): ItemStackImpl?
     {
         val value = super.set(index, item)
 

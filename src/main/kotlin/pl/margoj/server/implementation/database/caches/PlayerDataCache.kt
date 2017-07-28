@@ -2,26 +2,37 @@ package pl.margoj.server.implementation.database.caches
 
 import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.player.Profession
+import pl.margoj.server.api.utils.Parse
 import pl.margoj.server.implementation.database.DatabaseManager
 import pl.margoj.server.implementation.database.DatabaseObjectCache
 import pl.margoj.server.implementation.database.TableNames
 import pl.margoj.server.implementation.player.PlayerDataImpl
 import java.sql.Connection
+import java.sql.PreparedStatement
 
-class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<PlayerDataImpl>
+class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Long, PlayerDataImpl>
 (
         databaseManager,
         TableNames.PLAYERS,
         rawColumns = *arrayOf("id", "characterName", "profession", "experience", "level", "map", "x", "y", "baseStrength", "baseAgility", "baseIntellect", "statPoints")
 )
 {
+    override fun idFromString(string: String): Long?
+    {
+        return Parse.parseLong(string)
+    }
+
+    override fun setIdInSQL(statement: PreparedStatement, index: Int, id: Long)
+    {
+        statement.setLong(index, id)
+    }
 
     override fun getIdOf(data: PlayerDataImpl): Long
     {
         return data.id
     }
 
-    override fun loadFromDatabase(connection: Connection, id: LongArray): List<PlayerDataImpl?>
+    override fun loadFromDatabase(connection: Connection, id: Collection<Long>): List<PlayerDataImpl?>
     {
         return this.tryLoad(connection, id) {
             val data = PlayerDataImpl(it.getLong("id"), it.getString("characterName"))
@@ -48,7 +59,7 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Pl
 
     override fun saveToDatabase(connection: Connection, data: Collection<PlayerDataImpl?>)
     {
-        this.trySave(connection, data) { d, statement, i, last ->
+        this.trySave(connection, data, { d, statement, i, last ->
             statement.setLong(i(), d.id)
             statement.setString(i(), d.characterName)
             statement.setString(i(), d.profession.id.toString())
@@ -62,7 +73,7 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Pl
             statement.setInt(i(), d.baseIntellect)
             statement.setInt(i(), d.statPoints)
             databaseManager.playerInventoryCache.saveOne(d.inventory!!)
-        }
+        })
     }
 
     override fun canWipe(data: PlayerDataImpl): Boolean

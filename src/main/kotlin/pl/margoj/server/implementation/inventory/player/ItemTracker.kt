@@ -1,6 +1,7 @@
 package pl.margoj.server.implementation.inventory.player
 
 import pl.margoj.server.api.sync.Tickable
+import pl.margoj.server.implementation.inventory.map.MapInventoryImpl
 import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.player.PlayerImpl
 import java.util.LinkedList
@@ -85,6 +86,11 @@ class ItemTracker(val player: PlayerImpl) : Tickable
         if (item.owner is PlayerInventoryImpl)
         {
             return item.owner == this.player.inventory
+        }
+
+        if (item.owner is MapInventoryImpl)
+        {
+            return (item.owner as MapInventoryImpl).map == this.player.location.town
         }
 
         return this.player.possibleInventorySources.contains(item.owner!!)
