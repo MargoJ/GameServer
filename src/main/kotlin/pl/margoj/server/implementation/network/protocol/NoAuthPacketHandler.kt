@@ -6,13 +6,13 @@ class NoAuthPacketHandler(private val manager: NetworkManager) : PacketHandler
 {
     override fun handle(response: HttpResponse, packet: IncomingPacket, out: OutgoingPacket, callback: (OutgoingPacket) -> Unit)
     {
-        if("getvar_addon" == packet.type && packet.queryParams.containsKey("callback"))
+        if ("getvar_addon" == packet.type && packet.queryParams.containsKey("callback"))
         {
             out.raw = packet.queryParams["callback"] + "(\"\")"
         }
         else
         {
-            out.addAlert("<a href=\"generateauth.html\">Generuj ID</a>").addEngineAction(OutgoingPacket.EngineAction.STOP)
+            out.addAlert("<a href=\"/login\">Zaloguj sie</a>").addEngineAction(OutgoingPacket.EngineAction.STOP)
         }
 
         callback(out)

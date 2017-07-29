@@ -10,6 +10,7 @@ import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.implementation.auth.Authenticator
 import pl.margoj.server.implementation.chat.ChatManagerImpl
 import pl.margoj.server.implementation.commands.CommandsManagerImpl
+import pl.margoj.server.implementation.commands.console.ConsoleCommandSenderImpl
 import pl.margoj.server.implementation.commands.defaults.DefaultCommands
 import pl.margoj.server.implementation.database.DatabaseManager
 import pl.margoj.server.implementation.database.DatabaseSaveThread
@@ -51,6 +52,7 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
     override val pluginManager = PluginManagerImpl(this)
     override val eventManager = EventManagerImpl(this)
     override val commandsManager = CommandsManagerImpl(this)
+    override val consoleCommandSender = ConsoleCommandSenderImpl(this)
     override val entityManager = EntityManagerImpl(this)
     override val chatManager = ChatManagerImpl(this)
 
@@ -136,6 +138,7 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
         httpServer.registerHandler(TownHandler(this))
         httpServer.registerHandler(ItemsHandler(this))
         httpServer.registerHandler(ResourceHandler(webFolder.absoluteFile))
+        httpServer.registerHandler(TemporaryLoginHandler(this))
 
         if (this.debugModeEnabled)
         {
@@ -191,6 +194,12 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
         // start http server
         httpServer.start()
 
+        // start console reader thread
+        val consoleReader = ConsoleReaderThread(this, this.useJLine)
+        consoleReader.isDaemon = true
+        consoleReader.start()
+
+        // call ready event
         this.eventManager.call(ServerReadyEvent(this))
 
         // main game loop

@@ -41,7 +41,7 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
 
     override fun sendMessage(message: String, messageSeverity: CommandSender.MessageSeverity)
     {
-        this.logToConsole(message, messageSeverity)
+        this.logToConsole(message.replace("\n", "<br>"), messageSeverity)
     }
 
     override fun sendChatMessage(message: ChatMessage)

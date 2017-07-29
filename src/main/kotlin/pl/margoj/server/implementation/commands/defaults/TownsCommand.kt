@@ -18,7 +18,7 @@ class TownsCommand : CommandListener
             stream = stream.filter { StringUtils.containsIgnoreCase(it.id, pattern) || StringUtils.containsIgnoreCase(it.name, pattern)  }
         }
 
-        val out = stream.map { " - ${it.id} [${it.name}] <br>" }.collect(Collectors.joining())
-        sender.sendMessage("Dostępne mapy: <br>$out")
+        val out = stream.map { " - ${it.id} [${it.name}] \n" }.collect(Collectors.joining())
+        sender.sendMessage("Dostępne mapy: \n$out")
     }
 }

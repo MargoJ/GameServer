@@ -7,6 +7,7 @@ object DefaultCommands
 {
     fun registerDefaults(commandsManagerImpl: CommandsManagerImpl)
     {
+        commandsManagerImpl.registerCoreListener(HelpCommand(), "help", "h")
         commandsManagerImpl.registerCoreListener(TeleportCommand(), "teleport", "tp")
         commandsManagerImpl.registerCoreListener(TownsCommand(), "towns")
         commandsManagerImpl.registerCoreListener(TestInventoryCommand(), "testinventory", "testinv")

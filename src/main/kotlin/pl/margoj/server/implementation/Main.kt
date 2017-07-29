@@ -16,6 +16,9 @@ import java.io.PrintStream
 import java.util.Arrays
 import java.util.Collections
 
+val ORIGINAL_IN = System.`in`
+val ORIGINAL_OUT = System.out
+
 fun main(args: Array<String>)
 {
     val logger = LogManager.getLogger("MargoJ") as Logger
@@ -44,7 +47,7 @@ fun main(args: Array<String>)
     }
 
 
-    val useJLine = options.has("nojline")
+    val useJLine = !options.has("nojline")
     val debug = options.has("debug")
 
     if (debug)

@@ -8,10 +8,12 @@ import pl.margoj.server.api.commands.CommandsManager
 import pl.margoj.server.api.plugin.MargoJPlugin
 import pl.margoj.server.implementation.ServerImpl
 import java.util.Arrays
+import java.util.TreeMap
 import java.util.TreeSet
 
 class CommandsManagerImpl(val server: ServerImpl) : CommandsManager
 {
+    private val allCommands: MutableMap<String, MutableCollection<String>> = TreeMap()
     private var allListeners = TreeSet<RegisteredListener>()
 
     override fun dispatchCommand(sender: CommandSender, string: String): Boolean
@@ -25,7 +27,13 @@ class CommandsManagerImpl(val server: ServerImpl) : CommandsManager
         val command = parts[0]
         val args = parts.copyOfRange(1, parts.size)
 
-        return commandDispatched(sender, command, args)
+        if (!commandDispatched(sender, command, args))
+        {
+            sender.sendMessage("Nie znaleziono podanej komendy, użyj .help aby wyświetlić pomoc", CommandSender.MessageSeverity.WARN)
+            return false
+        }
+
+        return true
     }
 
     private fun commandDispatched(sender: CommandSender, command: String, args: Array<String>): Boolean
@@ -44,14 +52,20 @@ class CommandsManagerImpl(val server: ServerImpl) : CommandsManager
         return true
     }
 
-    override fun registerListener(plugin: MargoJPlugin<*>, listener: CommandListener, vararg commands: String)
+    private fun registerListener0(plugin: MargoJPlugin<*>?, listener: CommandListener, commands: Array<out String>)
     {
         this.allListeners.add(RegisteredListener(commands, listener, plugin))
+        this.allCommands.put(commands[0], Arrays.asList(*commands))
+    }
+
+    override fun registerListener(plugin: MargoJPlugin<*>, listener: CommandListener, vararg commands: String)
+    {
+        this.registerListener0(plugin, listener, commands)
     }
 
     fun registerCoreListener(listener: CommandListener, vararg commands: String)
     {
-        this.allListeners.add(RegisteredListener(commands, listener, null))
+        this.registerListener0(null, listener, commands)
     }
 
     override fun unregisterAll(owner: MargoJPlugin<*>): Boolean
@@ -62,6 +76,11 @@ class CommandsManagerImpl(val server: ServerImpl) : CommandsManager
     override fun unregisterListener(listener: CommandListener): Boolean
     {
         return this.unregisterByCriteria { it.listener == listener }
+    }
+
+    override fun getAllCommands(): Map<String, Collection<String>>
+    {
+        return this.allCommands
     }
 
     private fun unregisterByCriteria(criteria: (RegisteredListener) -> Boolean): Boolean
