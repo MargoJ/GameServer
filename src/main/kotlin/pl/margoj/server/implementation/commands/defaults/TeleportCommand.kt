@@ -1,10 +1,12 @@
 package pl.margoj.server.implementation.commands.defaults
 
+import pl.margoj.mrf.map.objects.mapspawn.MapSpawnObject
 import pl.margoj.server.api.commands.Arguments
 import pl.margoj.server.api.commands.CommandListener
 import pl.margoj.server.api.commands.CommandSender
 import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.player.Player
+import pl.margoj.server.implementation.map.TownImpl
 
 class TeleportCommand : CommandListener
 {
@@ -14,7 +16,7 @@ class TeleportCommand : CommandListener
         args.ensureTrue({ sender is Player }, "Tylko gracz moze wykonać tą komende")
         sender as Player
 
-        val town = sender.server.getTownById(args.asString(0))
+        val town = sender.server.getTownById(args.asString(0)) as TownImpl?
 
         args.ensureNotNull(town, "Nie znaleziono miasta ${args.asString(0)}")
         town!!
@@ -24,23 +26,32 @@ class TeleportCommand : CommandListener
 
         if (targetX == null || targetY == null)
         {
-            var x = 0
-            var y = 0
-
-            loop@
-            while (x < town.width)
+            val spawnPoint = town.objects.find { it is MapSpawnObject }
+            if (spawnPoint != null)
             {
-                while (y < town.height)
+                targetX = spawnPoint.position.x
+                targetY = spawnPoint.position.y
+            }
+            else
+            {
+                var x = 0
+                var y = 0
+
+                loop@
+                while (x < town.width)
                 {
-                    if (!town.collisions[x][y])
+                    while (y < town.height)
                     {
-                        targetX = x
-                        targetY = y
-                        break@loop
+                        if (!town.collisions[x][y])
+                        {
+                            targetX = x
+                            targetY = y
+                            break@loop
+                        }
+                        y++
                     }
-                    y++
+                    x++
                 }
-                x++
             }
         }
 
