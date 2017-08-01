@@ -13,6 +13,7 @@ object DefaultCommands
         commandsManagerImpl.registerCoreListener(TestInventoryCommand(), "testinventory", "testinv")
         commandsManagerImpl.registerCoreListener(AddXPCommand(), "addxp")
         commandsManagerImpl.registerCoreListener(StopCommand(), "stop")
+        commandsManagerImpl.registerCoreListener(TestNpcCommand(), "testnpc")
         commandsManagerImpl.registerCoreListener(CacheCommand(), "cache")
     }
 }

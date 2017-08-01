@@ -105,6 +105,8 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
         val tracker = this.player!!.itemTracker
         tracker.enabled = false
         tracker.reset()
+
+        this.player!!.currentNpcTalk?.needsUpdate = true
     }
 
     private fun handleInit(out: OutgoingPacket)

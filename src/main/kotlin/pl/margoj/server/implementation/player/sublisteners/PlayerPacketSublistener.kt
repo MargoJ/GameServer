@@ -42,6 +42,7 @@ abstract class PlayerPacketSubListener(
                 ::PlayerChatAndConsolePacketListener,
                 ::PlayerAddStatPointListener,
                 ::PlayerLogoutListener,
+                ::PlayerTalkListener,
                 ::AdditionalPlayerPacketListener,
 
                 // async

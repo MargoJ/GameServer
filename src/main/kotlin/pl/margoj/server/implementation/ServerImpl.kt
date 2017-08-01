@@ -22,6 +22,7 @@ import pl.margoj.server.implementation.map.TownImpl
 import pl.margoj.server.implementation.network.handlers.*
 import pl.margoj.server.implementation.network.http.HttpServer
 import pl.margoj.server.implementation.network.protocol.NetworkManager
+import pl.margoj.server.implementation.npc.parser.NpcScriptParser
 import pl.margoj.server.implementation.player.PlayerImpl
 import pl.margoj.server.implementation.plugin.PluginManagerImpl
 import pl.margoj.server.implementation.resources.ResourceBundleManager
@@ -42,6 +43,7 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
     var useJLine: Boolean = true
 
     override val version get() = VERSION
+    override val name: String get() = this.config.serverConfig!!.name
     override val players: Collection<PlayerImpl> get() = this.entityManager.players
     override val towns: Collection<TownImpl> get() = this.towns_.values
     override val items: Collection<ItemImpl> get() = this.items_.values
@@ -60,6 +62,7 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
     val networkManager = NetworkManager(this)
     val itemManager = ItemManager(this)
     val databaseManager = DatabaseManager(this)
+    val npcScriptParser = NpcScriptParser()
 
     lateinit var httpServer: HttpServer
         private set

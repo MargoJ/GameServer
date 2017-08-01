@@ -13,6 +13,7 @@ import pl.margoj.server.implementation.inventory.map.MapInventoryImpl
 import pl.margoj.server.implementation.inventory.player.ItemTracker
 import pl.margoj.server.implementation.inventory.player.PlayerInventoryImpl
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
+import pl.margoj.server.implementation.npc.talk.NpcTalk
 
 class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerImpl, val connection: PlayerConnection) : EntityImpl(data.id.toInt()), Player
 {
@@ -32,6 +33,8 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
     override val movementManager = MovementManagerImpl(this)
 
     override val currencyManager = CurrencyManagerImpl(this)
+
+    var currentNpcTalk: NpcTalk? = null
 
     val possibleInventorySources by lazy { arrayListOf<AbstractInventoryImpl>() }
 

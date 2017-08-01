@@ -6,7 +6,7 @@ import pl.margoj.server.api.commands.CommandSender
 
 class HelpCommand : CommandListener
 {
-    private val ENTRIES_PER_PAGE = 3
+    private val ENTRIES_PER_PAGE = 8
 
     override fun commandPerformed(command: String, sender: CommandSender, args: Arguments)
     {
