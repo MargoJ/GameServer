@@ -39,6 +39,7 @@ data class HeroObject(
         var ttl: Int? = null,
         var x: Int? = null,
         var y: Int? = null,
+        var back: Int? = null,
         var bag: Int? = null,
         var party: Int? = null,
         var trade: Int? = null,

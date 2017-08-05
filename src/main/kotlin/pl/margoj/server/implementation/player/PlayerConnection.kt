@@ -22,6 +22,7 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
     internal val packetModifiers = CopyOnWriteArrayList<(OutgoingPacket) -> Unit>()
     internal var lastEvent: Double = 0.0
 
+    var initLevel = 0
     var lastPacket: Long = 0
     var ip: String? = null
     var player: PlayerImpl? = null
@@ -51,6 +52,7 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
 
         response.delayed = true
 
+        out.connection = this
         out.player = this.player
         this.manager.server.ticker.tickOnce(ConnectionTickable(this, response, packet, out, callback))
     }
@@ -122,12 +124,14 @@ private class ConnectionTickable(val playerConnection: PlayerConnection, val res
     @Suppress("LoopToCallChain")
     override fun tick(currentTick: Long)
     {
+        var cancelled = false
         for (subListener in playerConnection.subListeners)
         {
             if (!subListener.async)
             {
                 if (!processListener(subListener))
                 {
+                    cancelled = true
                     break
                 }
             }
@@ -136,13 +140,16 @@ private class ConnectionTickable(val playerConnection: PlayerConnection, val res
         delayedSenderExecutor.submit({
             playerConnection.manager.server.ticker.waitForNext()
 
-            for (subListener in playerConnection.subListeners)
+            if (!cancelled)
             {
-                if (subListener.async)
+                for (subListener in playerConnection.subListeners)
                 {
-                    if (!processListener(subListener))
+                    if (subListener.async)
                     {
-                        break
+                        if (!processListener(subListener))
+                        {
+                            break
+                        }
                     }
                 }
             }

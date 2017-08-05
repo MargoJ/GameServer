@@ -1,6 +1,7 @@
 package pl.margoj.server.implementation.npc.parser.expressions
 
 import pl.margoj.server.implementation.npc.parser.CodeParser
+import pl.margoj.server.implementation.npc.parser.constants.OneSideOperatorParser
 import pl.margoj.server.implementation.npc.parser.constants.TwoSideOperatorParser
 
 abstract class OperatorParser
@@ -11,6 +12,7 @@ abstract class OperatorParser
 
         init
         {
+            ALL.add(OneSideOperatorParser("nie "))
             ALL.add(TwoSideOperatorParser("&&", "||", " i ", " oraz ", " lub ", "=", "==", "!=", "<", ">", "<=", ">="))
         }
     }

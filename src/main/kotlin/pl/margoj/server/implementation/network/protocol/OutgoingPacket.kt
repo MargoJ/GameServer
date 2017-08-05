@@ -7,7 +7,9 @@ import pl.margoj.server.api.chat.ChatMessage
 import pl.margoj.server.api.commands.CommandSender
 import pl.margoj.server.api.utils.TimeUtils
 import pl.margoj.server.implementation.network.protocol.jsons.ItemObject
+import pl.margoj.server.implementation.network.protocol.jsons.NpcObject
 import pl.margoj.server.implementation.network.protocol.jsons.OtherObject
+import pl.margoj.server.implementation.player.PlayerConnection
 import pl.margoj.server.implementation.player.PlayerImpl
 import pl.margoj.server.implementation.player.StatisticType
 import pl.margoj.server.implementation.utils.GsonUtils
@@ -21,8 +23,11 @@ class OutgoingPacket
         private set
     var raw: String? = null
     var player: PlayerImpl? = null
+    var connection: PlayerConnection? = null
+
     private val messages = mutableListOf<ChatMessage>()
     private val others = mutableListOf<OtherObject>()
+    private val npcs = mutableListOf<NpcObject>()
     private val items = mutableListOf<ItemObject>()
     private val logMessages = hashMapOf<CommandSender.MessageSeverity, MutableList<String>>()
 
@@ -35,9 +40,13 @@ class OutgoingPacket
 
     fun addEngineAction(action: OutgoingPacket.EngineAction): OutgoingPacket
     {
-        if (action == OutgoingPacket.EngineAction.STOP)
+        if (action == EngineAction.STOP)
         {
             this.shouldStop = true
+        }
+        if(action == EngineAction.STOP || action == EngineAction.RELOAD)
+        {
+            this.connection?.initLevel = 0
         }
         this.json.addProperty("t", action.toString().toLowerCase())
         return this
@@ -103,6 +112,12 @@ class OutgoingPacket
         return this
     }
 
+    fun addNpc(npcObject: NpcObject): OutgoingPacket
+    {
+        this.npcs.add(npcObject)
+        return this
+    }
+
     fun addStatisticRecalculation(statisticType: StatisticType)
     {
         this.recalculations += statisticType
@@ -144,6 +159,7 @@ class OutgoingPacket
     {
         this.json.add("c", this.assembleListElement(this.messages, { i, _ -> i.toLong() }, true))
         this.json.add("other", this.assembleListElement(this.others, { _, (id) -> id.toLong() }))
+        this.json.add("npc", this.assembleListElement(this.npcs, { _, (id) -> id.toLong() }))
         this.json.add("item", this.assembleListElement(this.items, { _, (id) -> id!! }))
 
         for ((severity, messages) in this.logMessages)

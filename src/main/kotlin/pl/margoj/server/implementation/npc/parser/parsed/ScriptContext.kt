@@ -1,10 +1,11 @@
 package pl.margoj.server.implementation.npc.parser.parsed
 
 import pl.margoj.server.api.player.Player
-import pl.margoj.server.implementation.npc.BuildInVariable
+import pl.margoj.server.implementation.npc.Npc
 import pl.margoj.server.implementation.npc.parser.ValueFetcher
+import pl.margoj.server.implementation.npc.parser.buildin.BuildInVariable
 
-data class ScriptContext(val player: Player)
+data class ScriptContext(val player: Player?, val npc: Npc?)
 {
     private var variables: MutableMap<String, Any> = LinkedHashMap()
     var delegate: ((String, Array<Any>, ScriptContext) -> Unit)? = null

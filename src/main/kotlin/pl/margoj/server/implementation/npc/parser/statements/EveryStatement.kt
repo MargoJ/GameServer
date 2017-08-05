@@ -7,21 +7,20 @@ import pl.margoj.server.implementation.npc.parser.constants.VariableConstant
 import pl.margoj.server.implementation.npc.parser.parsed.NpcCodeBlock
 import pl.margoj.server.implementation.npc.parser.parsed.ScriptContext
 
-class EveryStatement(val name: String, val parser: CodeParser, val line: CodeLine) : CodeStatement()
+class EveryStatement : CodeStatement()
 {
     private companion object
     {
         var everyLabelCounter = 1
     }
 
-    private var variableIterated: VariableConstant
-    private var variableList: VariableConstant
+    private lateinit var variableIterated: VariableConstant
+    private lateinit var variableList: VariableConstant
 
     private val codeBlock: CodeBlock = CodeBlock("EVERY_LABEL_${everyLabelCounter++}")
     private val npcCodeBlock: NpcCodeBlock by lazy { NpcCodeBlock(this.codeBlock) }
 
-
-    init
+    override fun init(function: String, parser: CodeParser, line: CodeLine)
     {
         line.skipSpaces()
         this.variableIterated = parser.parseLiteral() as VariableConstant

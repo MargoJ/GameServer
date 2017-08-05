@@ -12,6 +12,7 @@ abstract class ConstantParser<T>
         {
             ALL.add(ExpressionConstantParser())
             ALL.add(StringConstantParser())
+            ALL.add(BooleanConstantParser())
             ALL.add(CodeLabelConstantParser())
             ALL.add(SystemLabelConstantParser())
             ALL.add(VariableConstantParser())

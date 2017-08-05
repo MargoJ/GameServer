@@ -4,16 +4,22 @@ import pl.margoj.mrf.map.Point
 import pl.margoj.mrf.map.metadata.MetadataElement
 import pl.margoj.mrf.map.metadata.pvp.MapPvP
 import pl.margoj.mrf.map.objects.MapObject
+import pl.margoj.mrf.map.objects.npc.NpcMapObject
 import pl.margoj.mrf.map.serialization.MapData
+import pl.margoj.server.api.map.ImmutableLocation
 import pl.margoj.server.api.map.PvPStatus
 import pl.margoj.server.api.map.Town
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.inventory.map.MapInventoryImpl
+import pl.margoj.server.implementation.npc.Npc
+import pl.margoj.server.implementation.npc.NpcType
 import java.io.File
 
 data class TownImpl(val server: ServerImpl, override val numericId: Int, override val id: String, override val name: String, override val width: Int, override val height: Int, override val collisions: Array<BooleanArray>, val metadata: Collection<MetadataElement>, val objects: Collection<MapObject<*>>, val image: File) : Town
 {
     override lateinit var inventory: MapInventoryImpl
+    private var npcs_ = ArrayList<Npc>()
+    val npc: Collection<Npc> get() = this.npcs_
 
     @Suppress("LoopToCallChain")
     val margonemCollisionsString: String
@@ -101,6 +107,33 @@ data class TownImpl(val server: ServerImpl, override val numericId: Int, overrid
         }
 
         return MapData.mapMetadata.values.stream().filter { clazz.isInstance(it.defaultValue) }.findAny().map { it.defaultValue }.get() as T
+    }
+
+    fun updateNpcs()
+    {
+        for (npc in this.npcs_)
+        {
+            this.server.entityManager.unregisterEntity(npc)
+        }
+        this.npcs_.clear()
+
+        for (mapObject in this.objects)
+        {
+            if (mapObject !is NpcMapObject)
+            {
+                continue
+            }
+
+            val script = if (mapObject.script == null) null else this.server.npcScriptParser.getNpcScript(mapObject.script!!)
+            val npc = Npc(script, ImmutableLocation(this, mapObject.position.x, mapObject.position.y), NpcType.NPC) // TODO
+            npc.loadData()
+
+            npc.takeIf { mapObject.graphics != null }?.graphics = mapObject.graphics!!
+            npc.takeIf { mapObject.name != null }?.name = mapObject.name!!
+            npc.takeIf { mapObject.level != null }?.level = mapObject.level!!
+
+            this.server.entityManager.registerEntity(npc)
+        }
     }
 
     fun inBounds(point: Point): Boolean

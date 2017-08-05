@@ -5,7 +5,7 @@ import pl.margoj.mrf.item.ItemCategory
 import pl.margoj.mrf.item.ItemProperty
 import pl.margoj.mrf.item.ItemRarity
 import pl.margoj.mrf.item.properties.*
-import pl.margoj.mrf.item.serialization.ItemIcon
+import pl.margoj.mrf.MRFIcon
 import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.implementation.network.protocol.jsons.ItemObject
 
@@ -133,11 +133,11 @@ class RarityPropertyParser : ItemPropertyParser<ItemRarity, RarityProperty>
     }
 }
 
-class IconPropertyParser : ItemPropertyParser<ItemIcon?, IconProperty>
+class IconPropertyParser : ItemPropertyParser<MRFIcon?, IconProperty>
 {
     override val propertyType: Class<IconProperty> = IconProperty::class.java
 
-    override fun apply(property: IconProperty, itemObject: ItemObject, value: ItemIcon?, itemStack: ItemStack, item: ItemImpl)
+    override fun apply(property: IconProperty, itemObject: ItemObject, value: MRFIcon?, itemStack: ItemStack, item: ItemImpl)
     {
         if (value == null)
         {

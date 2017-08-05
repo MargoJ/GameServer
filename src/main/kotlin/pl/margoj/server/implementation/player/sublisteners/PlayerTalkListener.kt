@@ -2,6 +2,8 @@ package pl.margoj.server.implementation.player.sublisteners
 
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
+import pl.margoj.server.implementation.npc.Npc
+import pl.margoj.server.implementation.npc.NpcTalk
 import pl.margoj.server.implementation.player.PlayerConnection
 
 class PlayerTalkListener(connection: PlayerConnection) : PlayerPacketSubListener
@@ -13,8 +15,34 @@ class PlayerTalkListener(connection: PlayerConnection) : PlayerPacketSubListener
 {
     override fun handle(packet: IncomingPacket, out: OutgoingPacket, query: Map<String, String>): Boolean
     {
+        if (query["c"] == null)
+        {
+            val id = query["id"]?.toInt()
+            this.checkForMaliciousData(id == null, "invalid id")
+            id!!
+
+            val npc = this.player!!.server.entityManager.getEntityById(id) as? Npc
+            this.checkForMaliciousData(npc == null, "invalid npc")
+            npc!!
+
+            if (!player!!.location.isNear(npc.location, true))
+            {
+                out.addAlert("Jesteś zbyt daleko od postaci, by z nią rozmawiać!")
+                return true
+            }
+
+            if(npc.script == null)
+            {
+                return true
+            }
+
+            val talk = NpcTalk(player!!, npc, npc.script)
+            player!!.currentNpcTalk = talk
+            return true
+        }
+
         val talk = this.player!!.currentNpcTalk
-        if(talk == null)
+        if (talk == null)
         {
             return true
         }
@@ -25,7 +53,7 @@ class PlayerTalkListener(connection: PlayerConnection) : PlayerPacketSubListener
 
         for (option in talk.options)
         {
-            if(option.id == optionId)
+            if (option.id == optionId)
             {
                 talk.update(option.label)
                 return true

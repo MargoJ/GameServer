@@ -1,7 +1,9 @@
 package pl.margoj.server.implementation.entity
 
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
+import pl.margoj.server.implementation.network.protocol.jsons.NpcObject
 import pl.margoj.server.implementation.network.protocol.jsons.OtherObject
+import pl.margoj.server.implementation.npc.Npc
 import pl.margoj.server.implementation.player.PlayerImpl
 import java.util.LinkedList
 
@@ -23,6 +25,11 @@ class EntityTracker(val owner: PlayerImpl)
         if (this.owner.location.town != anotherEntity.location.town)
         {
             return false
+        }
+
+        if (anotherEntity is Npc && this.trackedEntities_.contains(anotherEntity))
+        {
+            return true
         }
 
         val town = this.owner.location.town!!
@@ -69,7 +76,7 @@ class EntityTracker(val owner: PlayerImpl)
             }
             else if (this.shouldTrack(entity))
             {
-                this.annouceEntity(entity, out)
+                this.announceEntity(entity, out)
                 this.trackedEntities_.add(entity)
             }
         }
@@ -86,33 +93,43 @@ class EntityTracker(val owner: PlayerImpl)
         }
     }
 
-    private fun annouceEntity(entity: EntityImpl, out: OutgoingPacket)
+    private fun announceEntity(entity: EntityImpl, out: OutgoingPacket)
     {
-        val other = OtherObject()
-        other.id = entity.id
-
         if (entity is PlayerImpl)
         {
+            val other = OtherObject()
+            other.id = entity.id
             other.nick = entity.name
             other.icon = entity.data.icon
-            other.clan = ""
+            other.clan = "" // TODO
             other.x = entity.location.x
             other.y = entity.location.y
             other.direction = entity.movementManager.playerDirection
-            other.rights = 0
+            other.rights = 0 // TODO
             other.level = entity.data.level
             other.profession = entity.data.profession
-            other.attributes = 0
-            other.relation = ""
+            other.attributes = 0 // TODO
+            other.relation = "" // TODO
 
             entity.setTrackingData(this, TrackingData(entity))
-        }
-        else
-        {
-            // TODO
-        }
 
-        out.addOther(other)
+            out.addOther(other)
+        }
+        else if (entity is Npc)
+        {
+            val npc = NpcObject()
+            npc.id = entity.id
+            npc.nick = entity.name
+            npc.questMark = 0 // TODO
+            npc.icon = entity.graphics
+            npc.x = entity.location.x
+            npc.y = entity.location.y
+            npc.level = entity.level
+            npc.type = entity.type.margoId
+            npc.subType = 0 // TODO
+            npc.group = 0 // TODO
+            out.addNpc(npc)
+        }
     }
 
     private fun disposeEntity(entity: EntityImpl, out: OutgoingPacket)
@@ -128,6 +145,11 @@ class EntityTracker(val owner: PlayerImpl)
 
     private fun updateEntity(entity: EntityImpl, out: OutgoingPacket)
     {
+        if(entity is Npc)
+        {
+            return
+        }
+
         val trackingData = entity.getTrackingData(this)
         var updated = false
         val other = OtherObject()

@@ -10,6 +10,7 @@ class CodeBlock(val label: String) : AbstractBlock()
 {
     override val name: String = label
     val statements = LinkedList<CodeStatement>()
+    var lastStatement: CodeStatement? = null
 
     override fun start()
     {
@@ -21,6 +22,7 @@ class CodeBlock(val label: String) : AbstractBlock()
 
     override fun parse(codeParser: CodeParser, currentLine: CodeLine)
     {
-        this.statements.add(codeParser.parseStatement())
+        this.lastStatement = codeParser.parseStatement()
+        this.statements.add(this.lastStatement!!)
     }
 }

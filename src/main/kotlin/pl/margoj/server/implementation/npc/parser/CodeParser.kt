@@ -30,6 +30,9 @@ class CodeParser(code: String)
     var currentLine: CodeLine? = null
         private set
 
+    val currentBlock: AbstractBlock?
+        get() = this.currentBlockStack.peek()
+
     fun hasMore(): Boolean
     {
         return currentLineIndex < this.lines.size
@@ -91,7 +94,9 @@ class CodeParser(code: String)
     {
         val name = this.currentLine!!.readUntilSpace()
         val type = CodeStatement.types[name] ?: this.throwError("nieznana instrukcja $name")
-        return type(name, this, this.currentLine!!)
+        val statement = type()
+        statement.init(name, this, this.currentLine!!)
+        return statement
     }
 
     fun openBlock(block: AbstractBlock)
@@ -138,7 +143,7 @@ class CodeParser(code: String)
             StringConstantParser.INSTANCE.tryParse(this, line)
             val endingIndex = line.currentIndex
 
-            if(startingIndex != endingIndex)
+            if (startingIndex != endingIndex)
             {
                 current.append(line.line.substring(startingIndex, endingIndex))
                 continue

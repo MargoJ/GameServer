@@ -5,13 +5,16 @@ import pl.margoj.server.implementation.npc.parser.CodeParser
 import pl.margoj.server.implementation.npc.parser.constants.VariableConstant
 import pl.margoj.server.implementation.npc.parser.parsed.ScriptContext
 
-class MathStatement(val name: String, val parser: CodeParser, val line: CodeLine) : CodeStatement()
+class MathStatement : CodeStatement()
 {
-    private val variable: VariableConstant
-    private val number: Any
+    private lateinit var name: String
+    private lateinit var variable: VariableConstant
+    private lateinit var number: Any
 
-    init
+    override fun init(function: String, parser: CodeParser, line: CodeLine)
     {
+        this.name = function
+
         line.skipSpaces()
         variable = parser.parseLiteral() as VariableConstant
 

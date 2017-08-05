@@ -26,6 +26,7 @@ class StringValueFetcher : ValueFetcher<String>()
             {
                 if (i > 0 && array[i - 1] == '\\')
                 {
+                    out.deleteCharAt(out.length - 1)
                     out.append(array[i])
                     i++
                     continue

@@ -4,7 +4,7 @@ import pl.margoj.server.implementation.npc.parser.CodeLine
 import pl.margoj.server.implementation.npc.parser.CodeParser
 import pl.margoj.server.implementation.npc.parser.parsed.ScriptContext
 
-class VariableSetStatement(val name: String, val parser: CodeParser, val line: CodeLine) : CodeStatement()
+class VariableSetStatement : CodeStatement()
 {
     companion object
     {
@@ -12,10 +12,10 @@ class VariableSetStatement(val name: String, val parser: CodeParser, val line: C
         val VARIABLE_LETTER_REGEX = VARIABLE_LETTER_REGEX_STRING.toRegex()
     }
 
-    private var variableName: String
-    private var value: Any
+    private lateinit var variableName: String
+    private lateinit var value: Any
 
-    init
+    override fun init(function: String, parser: CodeParser, line: CodeLine)
     {
         line.skipSpaces()
 

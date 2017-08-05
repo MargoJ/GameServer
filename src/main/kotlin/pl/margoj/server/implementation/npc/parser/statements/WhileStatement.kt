@@ -7,19 +7,21 @@ import pl.margoj.server.implementation.npc.parser.expressions.Expression
 import pl.margoj.server.implementation.npc.parser.parsed.NpcCodeBlock
 import pl.margoj.server.implementation.npc.parser.parsed.ScriptContext
 
-class WhileStatement(val name: String, val parser: CodeParser, val line: CodeLine) : CodeStatement()
+class WhileStatement : CodeStatement()
 {
     private companion object
     {
         var whileLabelCounter = 1
     }
 
-    private val expression: Any = parser.parseLiteral()!!
+    private lateinit var expression: Any
     private val codeBlock: CodeBlock = CodeBlock("IF_LABEL_${whileLabelCounter++}")
     private val npcCodeBlock: NpcCodeBlock by lazy { NpcCodeBlock(this.codeBlock) }
 
-    init
+    override fun init(function: String, parser: CodeParser, line: CodeLine)
     {
+        line.skipSpaces()
+        this.expression = parser.parseLiteral()!!
         parser.openBlock(codeBlock)
     }
 

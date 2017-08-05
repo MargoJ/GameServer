@@ -61,7 +61,10 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
             }
             2 -> // collisions
             {
-                server.ticker.registerWaitable { out.json.addProperty("cl", (this.player!!.location.town!! as TownImpl).margonemCollisionsString) }.wait()
+                server.ticker.registerWaitable {
+                    out.json.addProperty("cl", (this.player!!.location.town!! as TownImpl).margonemCollisionsString)
+                    connection.initLevel = 2
+                }.wait()
             }
             3 -> // items
             {
@@ -70,6 +73,7 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
             4 -> // finish
             {
                 out.addEvent()
+                connection.initLevel = 4
             }
         }
 
@@ -153,6 +157,8 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
         j.addProperty("clientver", 1461248638)
 
         j.add("h", GsonUtils.gson.toJsonTree(this.player!!.data.recalculateStatistics(StatisticType.ALL)))
+
+        connection.initLevel = 1
     }
 
     private fun initItems()
@@ -161,5 +167,6 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
         tracker.enabled = true
         tracker.reset()
         tracker.doTrack()
+        connection.initLevel = 3
     }
 }

@@ -5,7 +5,7 @@ import pl.margoj.server.api.commands.Arguments
 import pl.margoj.server.api.commands.CommandListener
 import pl.margoj.server.api.commands.CommandSender
 import pl.margoj.server.implementation.ServerImpl
-import pl.margoj.server.implementation.npc.talk.NpcTalk
+import pl.margoj.server.implementation.npc.NpcTalk
 import pl.margoj.server.implementation.player.PlayerImpl
 import java.io.File
 import java.io.FileInputStream
@@ -57,7 +57,7 @@ class TestNpcCommand : CommandListener
 
         sender.sendMessage("Wysłam dialog npc '${npcScript!!.name}'!")
 
-        val talk = NpcTalk(sender as PlayerImpl, npcScript)
+        val talk = NpcTalk(sender as PlayerImpl, null, npcScript)
         sender.currentNpcTalk = talk
     }
 }

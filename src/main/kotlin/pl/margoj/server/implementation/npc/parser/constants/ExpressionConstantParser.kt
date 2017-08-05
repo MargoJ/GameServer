@@ -12,6 +12,7 @@ class ExpressionConstantParser : ConstantParser<Expression>()
     {
         val OPERATOR_ORDER = arrayOf(
                 arrayOf("&&", "||", " i ", " oraz ", " lub "),
+                arrayOf("nie "),
                 arrayOf("==", "=", "!=", "<=", ">=", "<", ">")
         )
     }
@@ -31,6 +32,12 @@ class ExpressionConstantParser : ConstantParser<Expression>()
 
             while (!line.finished)
             {
+                StringConstantParser.INSTANCE.tryParse(parser, line)
+                if (line.finished)
+                {
+                    break
+                }
+
                 for (currentOperator in operators)
                 {
                     val operatorArray = currentOperator.toCharArray()

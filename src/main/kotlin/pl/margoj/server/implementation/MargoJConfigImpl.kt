@@ -42,6 +42,11 @@ data class MargoJConfigImpl(
     {
         override val saveIntervalSeconds: Int
             get() = this.saveInterval
+
+        override fun toString(): String
+        {
+            return "MySQLConfigImpl(ip='$ip', database='$database', username='$username', password='******', maxConnectionPoolSize=$maxConnectionPoolSize, saveInterval=$saveInterval)"
+        }
     }
 
     override val mySQLConfig: MargoJConfig.MySQLConfig

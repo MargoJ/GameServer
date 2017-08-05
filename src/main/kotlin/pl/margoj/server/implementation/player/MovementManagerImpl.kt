@@ -15,6 +15,13 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
     private var nextMove: QueuedMove? = null
     override val location: Location get() = this.player.data.location
     override var playerDirection: Int = 0
+    var resetPosition = false
+
+    override val canMove: Boolean
+        get()
+        {
+            return this.player.currentNpcTalk == null
+        }
 
     fun queueMove(x: Int, y: Int, timestamp: Double)
     {
@@ -32,6 +39,11 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
             if (current.timestamp >= TimeUtils.getTimestampDouble())
             {
                 break
+            }
+
+            if(!this.canMove)
+            {
+                return this.resetPosition()
             }
 
             if (this.lastMove != null && this.lastMove != current && this.lastMove!!.timestamp + ANTISPEEDHACK_TRIGGER > current.timestamp)
@@ -68,6 +80,7 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
     {
         this.queuedMoves.clear()
         this.nextMove = QueuedMove(this.location.x, this.location.y, 0.0)
+        this.resetPosition = true
     }
 
     fun updatePosition()

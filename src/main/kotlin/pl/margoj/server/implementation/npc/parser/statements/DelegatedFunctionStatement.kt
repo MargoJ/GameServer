@@ -4,12 +4,14 @@ import pl.margoj.server.implementation.npc.parser.CodeLine
 import pl.margoj.server.implementation.npc.parser.CodeParser
 import pl.margoj.server.implementation.npc.parser.parsed.ScriptContext
 
-class DelegatedFunctionStatement(val function: String, val parser: CodeParser, val line: CodeLine) : CodeStatement()
+class DelegatedFunctionStatement : CodeStatement()
 {
     private val parameters = ArrayList<Any>()
+    private lateinit var function: String
 
-    init
+    override fun init(function: String, parser: CodeParser, line: CodeLine)
     {
+        this.function = function
         while (true)
         {
             line.skipSpaces()

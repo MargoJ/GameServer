@@ -1,4 +1,4 @@
-package pl.margoj.server.implementation.npc.talk
+package pl.margoj.server.implementation.npc
 
 import com.google.gson.JsonArray
 import pl.margoj.server.api.player.Player
@@ -13,7 +13,7 @@ import pl.margoj.server.implementation.npc.parser.parsed.NpcParsedScript
 import pl.margoj.server.implementation.npc.parser.parsed.ScriptContext
 import pl.margoj.server.implementation.player.PlayerImpl
 
-class NpcTalk(val player: Player, val npcScript: NpcParsedScript)
+class NpcTalk(val player: Player, val npc: Npc?, val npcScript: NpcParsedScript)
 {
     lateinit var name: String
     lateinit var text: String
@@ -23,7 +23,7 @@ class NpcTalk(val player: Player, val npcScript: NpcParsedScript)
 
     private var optionId = 1
 
-    val context = ScriptContext(player)
+    val context = ScriptContext(player, npc)
     var needsUpdate: Boolean = true
 
     init
@@ -112,7 +112,7 @@ class NpcTalk(val player: Player, val npcScript: NpcParsedScript)
 
         if (!finished)
         {
-            addElement(0, this.name, "0") // TODO: NPC ID
+            addElement(0, this.name, npc?.id?.toString() ?: "0")
             addElement(1, this.text, "")
 
             for ((id, type, text) in this.options)

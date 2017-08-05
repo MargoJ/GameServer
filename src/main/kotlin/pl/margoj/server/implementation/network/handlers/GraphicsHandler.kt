@@ -9,9 +9,9 @@ import java.io.File
 import java.net.URLConnection
 import java.nio.file.Files
 
-class ItemsHandler(private val server: ServerImpl) : HttpHandler
+class GraphicsHandler(private val server: ServerImpl, private val directory: File) : HttpHandler
 {
-    private val path = "/obrazki/itemy/"
+    private val path = "/obrazki/npc/"
 
     override fun shouldHandle(path: String): Boolean
     {
@@ -22,10 +22,10 @@ class ItemsHandler(private val server: ServerImpl) : HttpHandler
     {
         val file = this.getItemFile(request.path)
 
-        if(file == null)
+        if(file == null || !file.exists())
         {
             response.status = HttpResponseStatus.NOT_FOUND
-            response.responseString = "Item image not found"
+            response.responseString = "Image not found"
             response.contentType = "text/plain"
             return
         }
@@ -37,7 +37,13 @@ class ItemsHandler(private val server: ServerImpl) : HttpHandler
     private fun getItemFile(path: String): File?
     {
         val fileName = path.substring(this.path.length)
+        val file = File(this.directory, fileName)
 
-        return this.server.items.find { it.imgFileName == fileName }?.imgFileLocation
+        if(!file.absolutePath.startsWith(this.directory.absolutePath))
+        {
+            return null
+        }
+
+        return file
     }
 }

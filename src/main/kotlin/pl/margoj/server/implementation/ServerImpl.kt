@@ -175,10 +175,27 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
                 {
                     logger.trace("Załadowano tileset: ${view.fileName}")
                 }
+                MargoResource.Category.NPC_SCRIPTS ->
+                {
+                    npcScriptParser.parse(view.id, resourceLoader.loadScript(view.id)!!.content)
+                }
+                MargoResource.Category.GRAPHIC ->
+                {
+                    resourceLoader.loadGraphic(view.id)
+                }
             }
         }
 
+        val graphicsCacheDirectory = resourceLoader.graphicsCacheDirectory
         resourceLoader = null
+
+        // late network handlers
+        httpServer.registerHandler(GraphicsHandler(this, graphicsCacheDirectory))
+
+        // load npcs
+        this.towns.forEach {
+            it.updateNpcs()
+        }
 
         // preload data
         this.databaseManager.withSkippedCheck {

@@ -2,6 +2,7 @@ package pl.margoj.server.implementation.resources
 
 import org.apache.commons.io.IOUtils
 import pl.margoj.mrf.MargoResource
+import pl.margoj.mrf.graphics.GraphicDeserializer
 import pl.margoj.mrf.item.ItemProperties
 import pl.margoj.mrf.item.serialization.ItemDeserializer
 import pl.margoj.mrf.map.MargoMap
@@ -9,6 +10,8 @@ import pl.margoj.mrf.map.serialization.MapDeserializer
 import pl.margoj.mrf.map.tileset.AutoTileset
 import pl.margoj.mrf.map.tileset.Tileset
 import pl.margoj.mrf.map.tileset.TilesetFile
+import pl.margoj.mrf.npc.NpcScript
+import pl.margoj.mrf.npc.serialization.NpcScriptDeserializer
 import pl.margoj.server.implementation.item.ItemImpl
 import pl.margoj.server.implementation.map.TownImpl
 import java.awt.Color
@@ -24,11 +27,14 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
 {
     private var mapDeserializer: MapDeserializer? = null
     private var itemDeserializer = ItemDeserializer()
+    private var scriptDeserializer = NpcScriptDeserializer()
+    private var graphicDeserializer = GraphicDeserializer()
 
     private var numericId: Int = 1
-    private val mapCacheDirectory = File(this.cacheDirectory, "maps")
-    private val itemCacheDirectory = File(this.cacheDirectory, "items")
-    private val mapIndexFile = File(mapCacheDirectory, "index.json")
+    val mapCacheDirectory = File(this.cacheDirectory, "maps")
+    val itemCacheDirectory = File(this.cacheDirectory, "items")
+    val graphicsCacheDirectory = File(this.cacheDirectory, "graphics")
+    val mapIndexFile = File(mapCacheDirectory, "index.json")
 
     init
     {
@@ -36,6 +42,7 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
 
         MD5CacheUtils.ensureDirectoryExists(this.mapCacheDirectory)
         MD5CacheUtils.ensureDirectoryExists(this.itemCacheDirectory)
+        MD5CacheUtils.ensureDirectoryExists(this.graphicsCacheDirectory)
 
         MD5CacheUtils.ensureIndexFileExists(this.mapIndexFile)
     }
@@ -123,6 +130,41 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
         return ItemImpl(margoItem, itemIconFile, itemIconName)
     }
 
+    fun loadGraphic(id: String)
+    {
+        val logger = this.resourceBundleManager.server.logger
+        logger.trace("Ładuje grafike: $id")
+
+        val bundle = this.resourceBundleManager.currentBundle
+        val view = bundle!!.getResource(MargoResource.Category.GRAPHIC, id)!!
+
+        val inputStream = bundle.loadResource(view)!!
+        val graphic = this.graphicDeserializer.deserialize(inputStream)
+
+        val file = File(this.graphicsCacheDirectory, view.name)
+        file.delete()
+
+        FileOutputStream(file).use {
+            IOUtils.copy(ByteArrayInputStream(graphic.icon.image), it)
+        }
+
+        logger.info("Załadowano grafike: $id")
+    }
+
+    fun loadScript(id: String): NpcScript?
+    {
+        val logger = this.resourceBundleManager.server.logger
+        logger.trace("Ładuje skrypt: $id")
+
+        val bundle = this.resourceBundleManager.currentBundle
+        val view = bundle!!.getResource(MargoResource.Category.NPC_SCRIPTS, id) ?: return null
+        val resource = bundle.loadResource(view)
+        scriptDeserializer.fileName = id
+        val script = scriptDeserializer.deserialize(resource!!)
+
+        return script
+    }
+
     fun reloadTilesets()
     {
         val bundle = this.resourceBundleManager.currentBundle!!
@@ -131,8 +173,7 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
         val tilesetFiles = ArrayList<TilesetFile>(resources.size)
         val tilesets = ArrayList<Tileset>(resources.size)
 
-        resources.forEach {
-            resource ->
+        resources.forEach { resource ->
             bundle.loadResource(resource) // make sure it will unpack and be avaialbe using getLocalFile
 
             tilesetFiles.add(TilesetFile(bundle.getLocalFile(resource), resource.id, resource.id.startsWith("auto-")))

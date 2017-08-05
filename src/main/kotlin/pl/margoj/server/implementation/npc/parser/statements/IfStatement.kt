@@ -7,27 +7,44 @@ import pl.margoj.server.implementation.npc.parser.expressions.Expression
 import pl.margoj.server.implementation.npc.parser.parsed.NpcCodeBlock
 import pl.margoj.server.implementation.npc.parser.parsed.ScriptContext
 
-class IfStatement(val name: String, val parser: CodeParser, val line: CodeLine) : CodeStatement()
+open class IfStatement : CodeStatement()
 {
-    private companion object
+    companion object
     {
         var ifLabelCounter = 1
     }
 
-    private val expression: Any = parser.parseLiteral()!!
-    private val codeBlock: CodeBlock = CodeBlock("IF_LABEL_${ifLabelCounter++}")
-    private val npcCodeBlock: NpcCodeBlock by lazy { NpcCodeBlock(this.codeBlock) }
+    private lateinit var expression: Any
+    val codeBlock: CodeBlock = CodeBlock("IF_LABEL_${ifLabelCounter++}")
+    protected val npcCodeBlock: NpcCodeBlock by lazy { NpcCodeBlock(this.codeBlock) }
+    var nextIf: IfStatement? = null
 
-    init
+    override fun init(function: String, parser: CodeParser, line: CodeLine)
     {
+        line.skipSpaces()
+        this.expression = parser.parseLiteral()!!
         parser.openBlock(codeBlock)
+    }
+
+    open fun evaluateExpression(context: ScriptContext): Boolean
+    {
+        return Expression.evaluate(context, this.expression)
     }
 
     override fun execute(context: ScriptContext)
     {
-        if(Expression.evaluate(context, this.expression))
+        this.executeChained(context)
+    }
+
+    fun executeChained(context: ScriptContext)
+    {
+        if(this.evaluateExpression(context))
         {
             npcCodeBlock.execute(context)
+        }
+        else
+        {
+            this.nextIf?.executeChained(context)
         }
     }
 }

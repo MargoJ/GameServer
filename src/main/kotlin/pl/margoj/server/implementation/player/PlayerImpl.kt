@@ -13,7 +13,7 @@ import pl.margoj.server.implementation.inventory.map.MapInventoryImpl
 import pl.margoj.server.implementation.inventory.player.ItemTracker
 import pl.margoj.server.implementation.inventory.player.PlayerInventoryImpl
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
-import pl.margoj.server.implementation.npc.talk.NpcTalk
+import pl.margoj.server.implementation.npc.NpcTalk
 
 class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerImpl, val connection: PlayerConnection) : EntityImpl(data.id.toInt()), Player
 {

@@ -189,6 +189,12 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
             out.dir = this.player.movementManager.playerDirection
             out.x = this.player.location.x
             out.y = this.player.location.y
+
+            if(this.player.movementManager.resetPosition)
+            {
+                this.player.movementManager.resetPosition = false
+                out.back = 1
+            }
         }
 
         if (StatisticType.CURRENCY in type)

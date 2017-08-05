@@ -1,4 +1,4 @@
-package pl.margoj.server.implementation.npc
+package pl.margoj.server.implementation.npc.parser.buildin
 
 import pl.margoj.server.implementation.npc.parser.parsed.ScriptContext
 
