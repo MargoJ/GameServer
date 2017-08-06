@@ -15,7 +15,19 @@ import pl.margoj.server.implementation.npc.Npc
 import pl.margoj.server.implementation.npc.NpcType
 import java.io.File
 
-data class TownImpl(val server: ServerImpl, override val numericId: Int, override val id: String, override val name: String, override val width: Int, override val height: Int, override val collisions: Array<BooleanArray>, val metadata: Collection<MetadataElement>, val objects: Collection<MapObject<*>>, val image: File) : Town
+data class TownImpl(
+        val server: ServerImpl,
+        override val numericId: Int,
+        override val id: String,
+        override val name: String,
+        override val width: Int,
+        override val height: Int,
+        override val collisions: Array<BooleanArray>,
+        val metadata: Collection<MetadataElement>,
+        val objects: Collection<MapObject<*>>,
+        val image: File,
+        val partList: Map<Point, Int>
+) : Town
 {
     override lateinit var inventory: MapInventoryImpl
     private var npcs_ = ArrayList<Npc>()
@@ -115,6 +127,7 @@ data class TownImpl(val server: ServerImpl, override val numericId: Int, overrid
         {
             this.server.entityManager.unregisterEntity(npc)
         }
+
         this.npcs_.clear()
 
         for (mapObject in this.objects)
@@ -132,6 +145,15 @@ data class TownImpl(val server: ServerImpl, override val numericId: Int, overrid
             npc.takeIf { mapObject.name != null }?.name = mapObject.name!!
             npc.takeIf { mapObject.level != null }?.level = mapObject.level!!
 
+            this.server.entityManager.registerEntity(npc)
+        }
+
+        for ((point, id) in this.partList)
+        {
+            val npc = Npc(null, ImmutableLocation(this, point.x, point.y), NpcType.TRANSPARENT)
+            npc.graphics = "parts/${this.id}_${id}.png"
+            npc.level = 0
+            npc.name = "P $id"
             this.server.entityManager.registerEntity(npc)
         }
     }

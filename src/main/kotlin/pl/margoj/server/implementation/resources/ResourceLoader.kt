@@ -6,6 +6,8 @@ import pl.margoj.mrf.graphics.GraphicDeserializer
 import pl.margoj.mrf.item.ItemProperties
 import pl.margoj.mrf.item.serialization.ItemDeserializer
 import pl.margoj.mrf.map.MargoMap
+import pl.margoj.mrf.map.Point
+import pl.margoj.mrf.map.fragment.empty.EmptyMapFragment
 import pl.margoj.mrf.map.serialization.MapDeserializer
 import pl.margoj.mrf.map.tileset.AutoTileset
 import pl.margoj.mrf.map.tileset.Tileset
@@ -34,6 +36,7 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
     val mapCacheDirectory = File(this.cacheDirectory, "maps")
     val itemCacheDirectory = File(this.cacheDirectory, "items")
     val graphicsCacheDirectory = File(this.cacheDirectory, "graphics")
+    val partsGraphicsCacheDirectory = File(this.graphicsCacheDirectory, "parts")
     val mapIndexFile = File(mapCacheDirectory, "index.json")
 
     init
@@ -43,6 +46,7 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
         MD5CacheUtils.ensureDirectoryExists(this.mapCacheDirectory)
         MD5CacheUtils.ensureDirectoryExists(this.itemCacheDirectory)
         MD5CacheUtils.ensureDirectoryExists(this.graphicsCacheDirectory)
+        MD5CacheUtils.ensureDirectoryExists(this.partsGraphicsCacheDirectory)
 
         MD5CacheUtils.ensureIndexFileExists(this.mapIndexFile)
     }
@@ -64,9 +68,14 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
         val map = mapDeserializer!!.deserialize(ByteArrayInputStream(bytes))
         val currentMD5 = MD5CacheUtils.getMD5FromCache(this.mapIndexFile, map.id)
         val imageFile = File(this.mapCacheDirectory, map.id + ".png")
+        var upperLayerCounter = 1
+        val partList = HashMap<Point, Int>()
+        var needsUpdating = false
+
 
         if (!imageFile.exists() || md5 != currentMD5)
         {
+            needsUpdating = true
             logger.trace("MD5: $md5, current: $currentMD5")
 
             val image = BufferedImage(map.width * 32, map.height * 32, BufferedImage.TYPE_INT_ARGB)
@@ -91,14 +100,60 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
             }
 
             ImageIO.write(image, "png", imageFile)
+
             MD5CacheUtils.updateMD5Cache(this.mapIndexFile, map.id, md5)
         }
 
+        for (x in 0..(map.width - 1))
+        {
+            var currentUpperFragment = ArrayList<Int>()
+            val processedMapFragments = HashSet<Int>()
+
+            for (y in 0..(map.height - 1))
+            {
+                if (processedMapFragments.contains(y))
+                {
+                    continue
+                }
+
+                val upperLayer = map.fragments[x][y][MargoMap.COVERING_LAYER]
+
+                if (upperLayer is EmptyMapFragment)
+                {
+                    continue
+                }
+
+                currentUpperFragment.add(y)
+                processedMapFragments.add(y)
+
+                if (y + 1 >= map.height || map.fragments[x][y + 1][MargoMap.COVERING_LAYER] is EmptyMapFragment)
+                {
+                    val currentId = upperLayerCounter++
+
+                    if(needsUpdating)
+                    {
+                        val partImage = BufferedImage(32, 32 * (currentUpperFragment.size + 1), BufferedImage.TYPE_INT_ARGB)
+                        val upperPartGraphics = partImage.graphics
+
+                        for (partY in 0 until currentUpperFragment.size)
+                        {
+                            val tileImage = BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB)
+                            map.fragments[x][currentUpperFragment[partY]][MargoMap.COVERING_LAYER].draw(tileImage.graphics)
+                            upperPartGraphics.drawImage(tileImage, 0, partY * 32, null)
+                        }
+
+                        ImageIO.write(partImage, "png", File(this.partsGraphicsCacheDirectory, "${map.id}_${currentId}.png"))
+                    }
+
+                    partList.put(Point(x, y + 1), currentId)
+                    currentUpperFragment = ArrayList()
+                }
+            }
+        }
 
         logger.info("Załadowano mape: $name")
 
-
-        return TownImpl(this.resourceBundleManager.server, numericId++, map.id, map.name, map.width, map.height, map.collisions, map.metadata, map.objects, imageFile)
+        return TownImpl(this.resourceBundleManager.server, numericId++, map.id, map.name, map.width, map.height, map.collisions, map.metadata, map.objects, imageFile, partList)
     }
 
     fun loadItem(id: String): ItemImpl?

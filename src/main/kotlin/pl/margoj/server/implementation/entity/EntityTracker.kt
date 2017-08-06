@@ -1,9 +1,12 @@
 package pl.margoj.server.implementation.entity
 
+import pl.margoj.server.api.map.Location
+import pl.margoj.server.api.map.Town
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.network.protocol.jsons.NpcObject
 import pl.margoj.server.implementation.network.protocol.jsons.OtherObject
 import pl.margoj.server.implementation.npc.Npc
+import pl.margoj.server.implementation.npc.NpcType
 import pl.margoj.server.implementation.player.PlayerImpl
 import java.util.LinkedList
 
@@ -27,17 +30,28 @@ class EntityTracker(val owner: PlayerImpl)
             return false
         }
 
-        if (anotherEntity is Npc && this.trackedEntities_.contains(anotherEntity))
-        {
-            return true
-        }
 
         val town = this.owner.location.town!!
         val our = this.owner.location
         val their = anotherEntity.location
 
-        return Math.abs(our.x - their.x) <= this.getRequiredDistance(WINDOW_SIZE, our.x, town.width)
-                && Math.abs(our.y - their.y) <= this.getRequiredDistance(WINDOW_SIZE, our.y, town.height)
+        if (anotherEntity is Npc)
+        {
+            if (this.trackedEntities_.contains(anotherEntity))
+            {
+                return true
+            }
+
+            return this.canSee(our, their, town, WINDOW_SIZE * 3)
+        }
+
+        return this.canSee(our, their, town, WINDOW_SIZE)
+    }
+
+    private fun canSee(our: Location, their: Location, town: Town, size: Int): Boolean
+    {
+        return Math.abs(our.x - their.x) <= this.getRequiredDistance(size, our.x, town.width)
+                && Math.abs(our.y - their.y) <= this.getRequiredDistance(size, our.y, town.height)
     }
 
     private fun getRequiredDistance(windowSize: Int, position: Int, width: Int): Int
@@ -145,7 +159,7 @@ class EntityTracker(val owner: PlayerImpl)
 
     private fun updateEntity(entity: EntityImpl, out: OutgoingPacket)
     {
-        if(entity is Npc)
+        if (entity is Npc)
         {
             return
         }
