@@ -1,6 +1,7 @@
 package pl.margoj.server.implementation.npc.parser
 
 import pl.margoj.server.implementation.npc.parser.blocks.GlobalBlock
+import pl.margoj.server.implementation.npc.parser.constants.FunctionOperatorParser
 import pl.margoj.server.implementation.npc.parser.parsed.NpcParsedScript
 import pl.margoj.server.implementation.npc.parser.parsed.ParsedScript
 
@@ -13,6 +14,9 @@ class NpcScriptParser
     fun parse(id: String, code: String): ParsedScript
     {
         val context = CodeParser(code)
+
+        // init to populate operator list
+        FunctionOperatorParser()
 
         while (context.hasMore())
         {

@@ -31,7 +31,7 @@ class PlayerTalkListener(connection: PlayerConnection) : PlayerPacketSubListener
                 return true
             }
 
-            if(npc.script == null)
+            if (npc.script == null)
             {
                 return true
             }
@@ -55,7 +55,16 @@ class PlayerTalkListener(connection: PlayerConnection) : PlayerPacketSubListener
         {
             if (option.id == optionId)
             {
-                talk.update(option.label)
+                try
+                {
+                    talk.update(option.label)
+                }
+                catch (e: Exception)
+                {
+                    player!!.currentNpcTalk = null
+                    throw e;
+                }
+
                 return true
             }
         }

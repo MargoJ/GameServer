@@ -10,10 +10,11 @@ class ExpressionConstantParser : ConstantParser<Expression>()
 {
     companion object
     {
-        val OPERATOR_ORDER = arrayOf(
-                arrayOf("&&", "||", " i ", " oraz ", " lub "),
-                arrayOf("nie "),
-                arrayOf("==", "=", "!=", "<=", ">=", "<", ">")
+        val OPERATOR_ORDER = arrayOf<List<String>>(
+                arrayListOf("&&", "||", " i ", " oraz ", " lub "),
+                arrayListOf("nie "),
+                arrayListOf("==", "=", "!=", "<=", ">=", "<", ">"),
+                arrayListOf()
         )
     }
 
@@ -47,7 +48,7 @@ class ExpressionConstantParser : ConstantParser<Expression>()
                         operatorStartIndex = line.currentIndex
 
                         var found = true
-                        for (i in 1..operatorArray.size - 1)
+                        for (i in 1 until operatorArray.size)
                         {
                             line.next()
                             if (line.finished)

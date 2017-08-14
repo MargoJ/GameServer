@@ -40,17 +40,23 @@ class NpcTalk(val player: Player, val npc: Npc?, val npcScript: NpcParsedScript)
         this.options.clear()
 
         context.delegate = this::delegate
+        context.nextLabel = this::nextLabel
 
+        context.nextLabel!!.invoke(label, context)
+
+        this.needsUpdate = true
+    }
+
+    private fun nextLabel(label: Label, context: ScriptContext)
+    {
         if (label is CodeLabel)
         {
             this.npcScript.getNpcCodeBlock(label.name)!!.execute(context)
         }
-        else if(label is SystemLabel)
+        else if (label is SystemLabel)
         {
             this.executeSystemLabel(label)
         }
-
-        this.needsUpdate = true
     }
 
     private fun delegate(function: String, parameters: Array<Any>, context: ScriptContext)

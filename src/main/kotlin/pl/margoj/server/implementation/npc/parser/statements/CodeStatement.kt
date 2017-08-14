@@ -24,6 +24,7 @@ abstract class CodeStatement
             types.put("każdy", ::EveryStatement)
 
             types.put("ustaw", ::VariableSetStatement)
+            types.put("wykonaj", ::ExecuteStatement)
 
             types.put("nazwa", ::DelegatedFunctionStatement)
             types.put("dialog", ::DelegatedFunctionStatement)
