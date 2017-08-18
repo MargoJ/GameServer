@@ -49,8 +49,8 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
     override val items: Collection<ItemImpl> get() = this.items_.values
 
     override var running = false
-    override val ticker = TickerImpl(this, Thread.currentThread())
-    override val scheduler = SchedulerImpl()
+    override val ticker = TickerImpl(this, Thread.currentThread(), config.engineConfig.targetTps)
+    override val scheduler = SchedulerImpl(this)
     override val pluginManager = PluginManagerImpl(this)
     override val eventManager = EventManagerImpl(this)
     override val commandsManager = CommandsManagerImpl(this)
@@ -128,8 +128,7 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
         this.itemManager.initCounter()
 
         // synchronization
-        ticker.targetTps = config.engineConfig.targetTps
-        ticker.registerTickable(this.scheduler)
+        this.scheduler.start()
 
         // network
         val httpConfig = this.config.httpConfig

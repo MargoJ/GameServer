@@ -11,14 +11,14 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-class TickerImpl(val server: ServerImpl, var mainThread: Thread?) : Ticker
+class TickerImpl(val server: ServerImpl, var mainThread: Thread?, override val targetTps: Int) : Ticker
 {
     private val lock = ReentrantLock()
     private val condition = lock.newCondition()
     private val registerQueue = LinkedList<Tickable>()
     private val unregisterQueue = LinkedList<Tickable>()
     private val iteratingNow = AtomicBoolean()
-    private var waitTime = 0L
+    private var waitTime = Ticker.NANOS_IN_SECOND / targetTps
     private var lastTick = 0L
     private var tickSection = 0L
     private var catchupTime = 0L
@@ -31,13 +31,6 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?) : Ticker
 
     override val tickables = LinkedList<Tickable>()
     override val recentTps = DoubleArray(3)
-
-    override var targetTps: Int = 0
-        set(value)
-        {
-            field = value
-            waitTime = Ticker.NANOS_IN_SECOND / value
-        }
 
     override val isInMainThread: Boolean
         get() = Thread.currentThread() == this.mainThread
@@ -71,7 +64,7 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?) : Ticker
                 // idk how it works, and i don't want to know
                 recentTps[0] = this.calcTps(recentTps[0], 0.92, currentTps)
                 recentTps[1] = this.calcTps(recentTps[1], 0.9835, currentTps)
-                recentTps[2] = this.calcTps(recentTps[2], 0.9945000000000001, currentTps)
+                recentTps[2] = this.calcTps(recentTps[2], 0.9945, currentTps)
                 tickSection = curTime
             }
 
@@ -185,6 +178,11 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?) : Ticker
         return avg * exp + tps * (1.0 - exp)
     }
 
+    fun removeCurrent()
+    {
+        this.currentIterator!!.remove()
+    }
+
     fun waitForNext()
     {
         val required = this.currentTick + 2L
@@ -215,7 +213,7 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?) : Ticker
             }
             finally
             {
-                this@TickerImpl.currentIterator!!.remove()
+                this@TickerImpl.removeCurrent()
             }
         }
     }
