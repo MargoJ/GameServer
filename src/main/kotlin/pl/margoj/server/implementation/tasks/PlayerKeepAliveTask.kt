@@ -1,14 +1,13 @@
-package pl.margoj.server.implementation.threads
+package pl.margoj.server.implementation.tasks
 
-import pl.margoj.server.api.sync.Tickable
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.player.PlayerImpl
 
-class PlayerKeepAlive(val server: ServerImpl, keepAliveSeconds: Int) : Tickable
+class PlayerKeepAliveTask(val server: ServerImpl, keepAliveSeconds: Int) : Runnable
 {
     private val keepAlive: Long = keepAliveSeconds.toLong() * 1000L
 
-    override fun tick(currentTick: Long)
+    override fun run()
     {
         if (this.server.players.isEmpty())
         {

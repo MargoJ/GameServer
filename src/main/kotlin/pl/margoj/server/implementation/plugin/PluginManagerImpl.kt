@@ -80,7 +80,7 @@ class PluginManagerImpl(override val server: ServerImpl) : PluginManager
         val event = PluginInitEvent(plugin)
         this.server.eventManager.call(event)
 
-        if(event.cancelled)
+        if (event.cancelled)
         {
             return
         }
@@ -100,6 +100,7 @@ class PluginManagerImpl(override val server: ServerImpl) : PluginManager
 
         this.server.eventManager.unregisterAll(plugin)
         this.server.commandsManager.unregisterAll(plugin)
+        this.server.scheduler.cancelAll(plugin)
 
         plugin.unload()
         plugin.enabled = false

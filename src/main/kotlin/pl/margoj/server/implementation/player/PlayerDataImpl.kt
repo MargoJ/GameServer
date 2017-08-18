@@ -39,6 +39,7 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
     override var maxHp: Int = 0
 
     override var ttl: Int = 0
+    var lastTtlPointTaken = -1L
     override var deadUntil: Date? = null
 
     var location: Location = Location(null)
@@ -213,10 +214,10 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
             out.goldlim = this.player.currencyManager.goldLimit
         }
 
-        if(StatisticType.TTL in type)
+        if (StatisticType.TTL in type)
         {
             out.pttl = "Limit 6h/dzień"
-            out.ttl = 275
+            out.ttl = player.data.ttl
         }
 
         // TODO
