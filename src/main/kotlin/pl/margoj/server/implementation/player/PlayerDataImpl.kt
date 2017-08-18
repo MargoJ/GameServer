@@ -12,6 +12,7 @@ import pl.margoj.server.api.utils.toBigDecimal
 import pl.margoj.server.implementation.inventory.player.PlayerInventoryImpl
 import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.network.protocol.jsons.HeroObject
+import java.util.Date
 
 // TODO
 class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
@@ -37,8 +38,14 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
 
     override var maxHp: Int = 0
 
+    override var ttl: Int = 0
+    override var deadUntil: Date? = null
+
     var location: Location = Location(null)
     var inventory: PlayerInventoryImpl? = null
+
+    /* use CurrencyManager to manipulate this value */
+    internal var gold: Long = 0L
 
     override fun addExp(xp: Long)
     {
@@ -190,7 +197,7 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
             out.x = this.player.location.x
             out.y = this.player.location.y
 
-            if(this.player.movementManager.resetPosition)
+            if (this.player.movementManager.resetPosition)
             {
                 this.player.movementManager.resetPosition = false
                 out.back = 1
@@ -206,6 +213,12 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
             out.goldlim = this.player.currencyManager.goldLimit
         }
 
+        if(StatisticType.TTL in type)
+        {
+            out.pttl = "Limit 6h/dzień"
+            out.ttl = 275
+        }
+
         // TODO
         if (StatisticType.ALL in type)
         {
@@ -218,9 +231,7 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
             out.mailsAll = 0
             out.mailsLast = ""
             out.mpath = ""
-            out.pttl = "Limit 6h/dzień"
             out.pvp = 0
-            out.ttl = 275
             out.bag = 0
             out.party = 0
             out.trade = 0
@@ -234,14 +245,17 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
     }
 }
 
-class StatisticType private constructor(val flag: Int)
+class StatisticType private constructor(val flag: Int = (1 shl counter++))
 {
     companion object
     {
-        val NONE = StatisticType(0)
-        val WARRIOR = StatisticType(1 shl 1)
-        val POSITION = StatisticType(1 shl 2)
-        val CURRENCY = StatisticType(1 shl 3)
+        private var counter = 1
+
+        val NONE = StatisticType()
+        val WARRIOR = StatisticType()
+        val POSITION = StatisticType()
+        val CURRENCY = StatisticType()
+        val TTL = StatisticType()
 
         // all
         val ALL = StatisticType(-1)

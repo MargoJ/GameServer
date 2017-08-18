@@ -6,7 +6,7 @@ class CurrencyManagerImpl(val player: PlayerImpl) : CurrencyManager
 {
     override val goldLimit: Long = 3_000_000_000L // TODO
 
-    override var gold: Long = 0
+    override var gold: Long
         set(value)
         {
             if (!this.canFit(value))
@@ -14,7 +14,11 @@ class CurrencyManagerImpl(val player: PlayerImpl) : CurrencyManager
                 throw IllegalStateException("can't fit gold, ${this.gold} -> $value")
             }
             this.requestCurrencyRecalculation()
-            field = value
+            player.data.gold = value
+        }
+        get()
+        {
+            return player.data.gold
         }
 
     override fun canFit(gold: Long): Boolean

@@ -14,7 +14,10 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Lo
 (
         databaseManager,
         TableNames.PLAYERS,
-        rawColumns = *arrayOf("id", "characterName", "profession", "experience", "level", "map", "x", "y", "baseStrength", "baseAgility", "baseIntellect", "statPoints")
+        rawColumns = *arrayOf(
+                "id", "characterName", "profession", "experience", "level", "map", "x", "y", "baseStrength", "baseAgility", "baseIntellect", "statPoints",
+                "gold", "ttl", "dead_until"
+        )
 )
 {
     override fun idFromString(string: String): Long?
@@ -32,9 +35,9 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Lo
         return data.id
     }
 
-    override fun loadFromDatabase(connection: Connection, id: Collection<Long>): List<PlayerDataImpl?>
+    override fun loadFromDatabase(connection: Connection, ids: Collection<Long>): List<PlayerDataImpl?>
     {
-        return this.tryLoad(connection, id) {
+        return this.tryLoad(connection, ids) {
             val data = PlayerDataImpl(it.getLong("id"), it.getString("characterName"))
             data.profession = Profession.getById(it.getString("profession")[0])!!
             data.xp = it.getLong("experience")
@@ -52,6 +55,9 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Lo
             data.baseAgility = it.getInt("baseAgility")
             data.baseIntellect = it.getInt("baseIntellect")
             data.statPoints = it.getInt("statPoints")
+            data.gold = it.getLong("gold")
+            data.ttl = it.getInt("ttl")
+            data.deadUntil = it.getDate("dead_until")
             data.inventory = databaseManager.playerInventoryCache.loadOne(data.id)
             data
         }
@@ -72,6 +78,9 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Lo
             statement.setInt(i(), d.baseAgility)
             statement.setInt(i(), d.baseIntellect)
             statement.setInt(i(), d.statPoints)
+            statement.setLong(i(), d.gold)
+            statement.setInt(i(), d.ttl)
+            statement.setDate(i(), if(d.deadUntil == null) null else java.sql.Date(d.deadUntil!!.time))
             databaseManager.playerInventoryCache.saveOne(d.inventory!!)
         })
     }

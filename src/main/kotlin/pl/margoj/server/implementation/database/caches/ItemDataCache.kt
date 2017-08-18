@@ -4,6 +4,7 @@ import pl.margoj.server.api.utils.Parse
 import pl.margoj.server.implementation.database.DatabaseManager
 import pl.margoj.server.implementation.database.DatabaseObjectCache
 import pl.margoj.server.implementation.database.TableNames
+import pl.margoj.server.implementation.inventory.map.MapInventoryImpl
 import pl.margoj.server.implementation.inventory.player.PlayerInventoryImpl
 import pl.margoj.server.implementation.item.ItemImpl
 import pl.margoj.server.implementation.item.ItemStackImpl
@@ -64,6 +65,10 @@ class ItemDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Long
         if (data.owner is PlayerInventoryImpl)
         {
             return !(data.owner as PlayerInventoryImpl).player.online
+        }
+        if (data.owner is MapInventoryImpl)
+        {
+            return false
         }
 
         return true

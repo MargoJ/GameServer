@@ -15,7 +15,7 @@ class WhileStatement : CodeStatement()
     }
 
     private lateinit var expression: Any
-    private val codeBlock: CodeBlock = CodeBlock("IF_LABEL_${whileLabelCounter++}")
+    private val codeBlock: CodeBlock = CodeBlock("WHILE_LABEL_${whileLabelCounter++}")
     private val npcCodeBlock: NpcCodeBlock by lazy { NpcCodeBlock(this.codeBlock) }
 
     override fun init(function: String, parser: CodeParser, line: CodeLine)
