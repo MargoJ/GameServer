@@ -22,6 +22,8 @@ class SchedulerImpl(val server: ServerImpl) : Scheduler, Tickable
 
     private val tasks: MutableMap<Int, Task> = Collections.synchronizedMap(HashMap())
     private val taskId = AtomicInteger()
+    private var processing = false
+    private val news = LinkedList<Task>()
     private val deletes = LinkedList<Int>()
 
     fun start()
@@ -41,16 +43,24 @@ class SchedulerImpl(val server: ServerImpl) : Scheduler, Tickable
             throw IllegalArgumentException("Task ID ${task.id} already taken")
         }
 
-        this.tasks.put(task.id, task)
+        if (this.processing)
+        {
+            this.news.add(task)
+        }
+        else
+        {
+            this.tasks.put(task.id, task)
+        }
     }
 
     override fun tick(currentTick: Long)
     {
+        this.processing = true
         for (task in tasks.values)
         {
             if (task.cancelled)
             {
-                this.tasks.remove(task.id)
+                this.deletes.add(task.id)
                 continue
             }
 
@@ -63,7 +73,7 @@ class SchedulerImpl(val server: ServerImpl) : Scheduler, Tickable
             {
                 if (task.lastExecution != -1L) // was already executed
                 {
-                    this.tasks.remove(task.id)
+                    this.deletes.add(task.id)
                     continue
                 }
             }
@@ -86,6 +96,21 @@ class SchedulerImpl(val server: ServerImpl) : Scheduler, Tickable
                 Task.Mode.ASYNC -> executor.execute(task.action)
             }
         }
+        this.processing = false
+
+        this.iterateAndClear(this.deletes) { this.tasks.remove(it) }
+        this.iterateAndClear(this.news) { this.tasks.put(it.id, it) }
+    }
+
+    private inline fun <T> iterateAndClear(iterable: MutableIterable<T>, consumer: (T) -> Unit)
+    {
+        val iterator = iterable.iterator()
+
+        while(iterator.hasNext())
+        {
+            consumer(iterator.next())
+            iterator.remove()
+        }
     }
 
     fun systemTask(): TaskBuilder
@@ -106,6 +131,6 @@ class SchedulerImpl(val server: ServerImpl) : Scheduler, Tickable
 
     override fun cancelAll(plugin: MargoJPlugin<*>)
     {
-        this.tasks.values.filter { it.owner === plugin }.forEach { it.cancelled = true }
+        this.tasks.values.stream().filter { it.owner === plugin }.forEach { it.cancelled = true }
     }
 }
