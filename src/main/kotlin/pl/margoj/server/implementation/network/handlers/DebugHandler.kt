@@ -38,8 +38,7 @@ class DebugHandler(private val server: ServerImpl) : HttpHandler
                 }
                 else
                 {
-                    request.queryParameters.forEach{
-                        key, value ->
+                    request.queryParameters.forEach { key, value ->
                         out.append("\t ").append(key).append(" = ").append(value).append("\n")
                     }
                 }
@@ -52,8 +51,7 @@ class DebugHandler(private val server: ServerImpl) : HttpHandler
                 }
                 else
                 {
-                    request.headers.forEach {
-                        entry ->
+                    request.headers.forEach { entry ->
                         out.append("\t ").append(entry.key).append(" = ").append(entry.value).append("\n")
                     }
                 }
@@ -64,15 +62,14 @@ class DebugHandler(private val server: ServerImpl) : HttpHandler
             }
             "/debug/sendheaders" ->
             {
-                if(request.queryParameters.isEmpty())
+                if (request.queryParameters.isEmpty())
                 {
                     response.responseString = "No headers requested"
                     response.status = HttpResponseStatus.NOT_ACCEPTABLE
                     return
                 }
 
-                request.queryParameters.forEach {
-                    (key, value) ->
+                request.queryParameters.forEach { (key, value) ->
                     response.headers[AsciiString(key)] = value
                 }
 

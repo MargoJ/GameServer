@@ -40,7 +40,7 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
                 {
                     // drop item
                     val location = player.location
-                    if(!location.town!!.inventory.addItem(location.x, location.y, item))
+                    if (!location.town!!.inventory.addItem(location.x, location.y, item))
                     {
                         out.addAlert("Na tej pozycji leżą już przynajmniej $MAP_LAYERS przedmioty!")
                     }
@@ -66,7 +66,7 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
                             out.addAlert("Aby zdjąć torbę, należy ją najpierw opróżnić!")
                             return true
                         }
-                        else if(bagId == equipedBag)
+                        else if (bagId == equipedBag)
                         {
                             out.addAlert("Nie można ściągnąć torby do niej samej!")
                             return true
@@ -148,11 +148,11 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
                 else -> this.reportMaliciousData("invalid slot ${query["st"]}")
             }
         }
-        else if(packet.type == "takeitem")
+        else if (packet.type == "takeitem")
         {
             val location = player.location
             val item = location.town!!.inventory.getItemOnTop(location.x, location.y)
-            if(item != null)
+            if (item != null)
             {
                 player.inventory.tryToPut(item)
             }

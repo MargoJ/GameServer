@@ -15,7 +15,7 @@ abstract class Expression
     {
         fun evaluate(context: ScriptContext, expression: Any): Boolean
         {
-            if(expression is Expression)
+            if (expression is Expression)
             {
                 val expressionResult = context.fetch(expression.execute(context))
 
@@ -40,15 +40,15 @@ abstract class Expression
 
         fun asBoolean(fetch: Any?): Boolean
         {
-            if(fetch is Boolean)
+            if (fetch is Boolean)
             {
                 return fetch
             }
-            if(fetch is Number)
+            if (fetch is Number)
             {
                 return fetch.toLong() != 0L
             }
-            if(fetch is String)
+            if (fetch is String)
             {
                 return fetch.isNotEmpty()
             }

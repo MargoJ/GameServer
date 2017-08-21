@@ -41,7 +41,7 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
                 break
             }
 
-            if(!this.canMove)
+            if (!this.canMove)
             {
                 return this.resetPosition()
             }

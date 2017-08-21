@@ -80,7 +80,7 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Lo
             statement.setInt(i(), d.statPoints)
             statement.setLong(i(), d.gold)
             statement.setInt(i(), d.ttl)
-            statement.setDate(i(), if(d.deadUntil == null) null else java.sql.Date(d.deadUntil!!.time))
+            statement.setDate(i(), if (d.deadUntil == null) null else java.sql.Date(d.deadUntil!!.time))
             databaseManager.playerInventoryCache.saveOne(d.inventory!!)
         })
     }

@@ -45,8 +45,7 @@ class EngineHandler(private val server: ServerImpl) : HttpHandler
         {
             response.delayed = true
 
-            this.server.authenticator.authenticateAsync(aid.toString()) {
-                success ->
+            this.server.authenticator.authenticateAsync(aid.toString()) { success ->
                 if (success)
                 {
                     val connection = server.networkManager.createPlayerConnection(aid!!)

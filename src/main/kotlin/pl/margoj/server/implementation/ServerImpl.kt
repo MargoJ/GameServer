@@ -230,7 +230,7 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
             {
                 this.ticker.tick()
             }
-            catch(e: Exception)
+            catch (e: Exception)
             {
                 e.printStackTrace()
             }

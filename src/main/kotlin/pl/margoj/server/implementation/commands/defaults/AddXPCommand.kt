@@ -5,7 +5,7 @@ import pl.margoj.server.api.commands.CommandListener
 import pl.margoj.server.api.commands.CommandSender
 import pl.margoj.server.api.player.Player
 
-class AddXPCommand: CommandListener
+class AddXPCommand : CommandListener
 {
     override fun commandPerformed(command: String, sender: CommandSender, args: Arguments)
     {

@@ -1,11 +1,11 @@
 package pl.margoj.server.implementation.item
 
 import org.apache.commons.lang3.StringEscapeUtils
+import pl.margoj.mrf.MRFIcon
 import pl.margoj.mrf.item.ItemCategory
 import pl.margoj.mrf.item.ItemProperty
 import pl.margoj.mrf.item.ItemRarity
 import pl.margoj.mrf.item.properties.*
-import pl.margoj.mrf.MRFIcon
 import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.implementation.network.protocol.jsons.ItemObject
 

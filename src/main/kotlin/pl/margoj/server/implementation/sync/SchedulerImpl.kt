@@ -106,7 +106,7 @@ class SchedulerImpl(val server: ServerImpl) : Scheduler, Tickable
     {
         val iterator = iterable.iterator()
 
-        while(iterator.hasNext())
+        while (iterator.hasNext())
         {
             consumer(iterator.next())
             iterator.remove()

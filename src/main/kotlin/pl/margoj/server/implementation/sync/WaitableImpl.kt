@@ -35,7 +35,7 @@ class WaitableImpl<out ResultT>(private val runnable: () -> ResultT) : Waitable<
             }
         }
 
-   override val result: ResultT?
+    override val result: ResultT?
         get()
         {
             this.lock.withLock {

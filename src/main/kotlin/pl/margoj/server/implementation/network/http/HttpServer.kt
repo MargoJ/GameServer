@@ -60,8 +60,7 @@ class HttpServer(private val logger: Logger, private val host: String, private v
     internal fun handle(httpRequest: HttpRequest, httpResponse: HttpResponse)
     {
         var foundAny = false
-        this.handlers.stream().forEach {
-            handler ->
+        this.handlers.stream().forEach { handler ->
             if (handler.shouldHandle(httpRequest.path))
             {
                 handler.handle(httpRequest, httpResponse)

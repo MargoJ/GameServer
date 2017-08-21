@@ -46,7 +46,7 @@ class PlayerPreMovementPacketListener(connection: PlayerConnection) : PlayerPack
                 {
                     timestamp = moveTimestamps[i].toDouble()
                 }
-                catch(e: NumberFormatException)
+                catch (e: NumberFormatException)
                 {
                     timestamp = null
                 }

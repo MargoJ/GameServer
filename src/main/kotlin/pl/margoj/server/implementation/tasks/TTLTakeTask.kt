@@ -22,7 +22,7 @@ class TTLTakeTask(val server: ServerImpl) : Runnable
 
                 player.data.lastTtlPointTaken = System.currentTimeMillis()
 
-                if(player.data.ttl == 0)
+                if (player.data.ttl == 0)
                 {
                     continue
                 }

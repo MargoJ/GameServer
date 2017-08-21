@@ -44,7 +44,7 @@ class OutgoingPacket
         {
             this.shouldStop = true
         }
-        if(action == EngineAction.STOP || action == EngineAction.RELOAD)
+        if (action == EngineAction.STOP || action == EngineAction.RELOAD)
         {
             this.connection?.initLevel = 0
         }

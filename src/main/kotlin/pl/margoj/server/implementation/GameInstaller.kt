@@ -70,7 +70,7 @@ class GameInstaller(val targetDirectory: File, val logger: Logger)
             {
                 val array = StringUtils.splitByWholeSeparator(it.nextLine(), SEPARATOR)
 
-                changes.computeIfAbsent(array[0], { ArrayList() }).add(Pair(array[1], if(array.size >= 3) array[2] else ""))
+                changes.computeIfAbsent(array[0], { ArrayList() }).add(Pair(array[1], if (array.size >= 3) array[2] else ""))
             }
 
             for ((fileName, replacement) in changes)

@@ -16,7 +16,7 @@ class DelegatedFunctionStatement : CodeStatement()
         {
             line.skipSpaces()
 
-            if(line.finished)
+            if (line.finished)
             {
                 break
             }

@@ -88,7 +88,7 @@ class PlayerInventoryImpl : AbstractInventoryImpl(PLAYER_INVENTORY_SIZE), Player
     {
         val value = super.set(index, item)
 
-        if(this.player_ != null)
+        if (this.player_ != null)
         {
             if (index in 0..7)
             {

@@ -13,7 +13,7 @@ class NpcParsedScript(block: NpcBlock)
     {
         for (child in block.children)
         {
-            if(child is CodeBlock)
+            if (child is CodeBlock)
             {
                 codeBlocks.put(child.label, NpcCodeBlock(child))
             }

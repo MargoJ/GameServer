@@ -15,7 +15,7 @@ class CodeLabelConstantParser : ConstantParser<CodeLabel>()
         }
 
         val label = line.readUntilSpace()
-        if(label.length < 2)
+        if (label.length < 2)
         {
             return null
         }

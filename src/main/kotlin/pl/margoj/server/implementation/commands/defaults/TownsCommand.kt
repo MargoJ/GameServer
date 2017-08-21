@@ -12,10 +12,10 @@ class TownsCommand : CommandListener
     {
         var stream = sender.server.towns.stream()
 
-        if(args.has(0))
+        if (args.has(0))
         {
             val pattern = args.asString(0)
-            stream = stream.filter { StringUtils.containsIgnoreCase(it.id, pattern) || StringUtils.containsIgnoreCase(it.name, pattern)  }
+            stream = stream.filter { StringUtils.containsIgnoreCase(it.id, pattern) || StringUtils.containsIgnoreCase(it.name, pattern) }
         }
 
         val out = stream.map { " - ${it.id} [${it.name}] \n" }.collect(Collectors.joining())

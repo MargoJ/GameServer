@@ -12,7 +12,7 @@ class ParsedScript(global: GlobalBlock)
     {
         for (child in global.children)
         {
-            if(child is NpcBlock)
+            if (child is NpcBlock)
             {
                 npcScripts.put(child.name, NpcParsedScript(child))
             }

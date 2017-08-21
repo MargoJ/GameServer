@@ -207,7 +207,7 @@ abstract class DatabaseObjectCache<I, T>
         queryBuilder.append(")")
 
         val statement = connection.prepareStatement(queryBuilder.toString())
-        for((index, id) in ids.withIndex())
+        for ((index, id) in ids.withIndex())
         {
             this.setIdInSQL(statement, index + 1, id)
         }

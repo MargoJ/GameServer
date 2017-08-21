@@ -43,7 +43,7 @@ class StringValueFetcher : ValueFetcher<String>()
                 }
                 i--
 
-                if(!anyMatch)
+                if (!anyMatch)
                 {
                     out.append(array[i++])
                     continue

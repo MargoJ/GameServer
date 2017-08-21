@@ -6,7 +6,7 @@ import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.player.PlayerImpl
 import java.util.LinkedList
 
-class EntityManagerImpl(server: ServerImpl): EntityManager
+class EntityManagerImpl(server: ServerImpl) : EntityManager
 {
     private val entities_ = HashMap<Int, EntityImpl>()
     private val players_ = LinkedList<PlayerImpl>()

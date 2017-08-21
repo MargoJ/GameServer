@@ -130,7 +130,7 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
                 {
                     val currentId = upperLayerCounter++
 
-                    if(needsUpdating)
+                    if (needsUpdating)
                     {
                         val partImage = BufferedImage(32, 32 * (currentUpperFragment.size + 1), BufferedImage.TYPE_INT_ARGB)
                         val upperPartGraphics = partImage.graphics

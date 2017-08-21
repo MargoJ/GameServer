@@ -93,7 +93,7 @@ internal class DatabaseInitializer(var databaseManager: DatabaseManager)
     {
         for (sql in sqlScript.split(";"))
         {
-            if(sql.trim().isEmpty())
+            if (sql.trim().isEmpty())
             {
                 continue
             }

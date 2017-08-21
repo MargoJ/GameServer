@@ -118,7 +118,7 @@ class ResourceBundleManager(val server: ServerImpl, val resourceDirectory: File,
             {
                 currentBundle.close()
             }
-            catch(e: Exception)
+            catch (e: Exception)
             {
                 throw IllegalStateException("Couldn't close resource bundle (${currentBundle::class.java})", e)
             }

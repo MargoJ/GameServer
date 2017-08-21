@@ -31,12 +31,12 @@ class HttpServerHandler(private val server: HttpServer) : ChannelInboundHandlerA
 
         server.handle(HttpRequest(request, query.path, request.uri(), ip, request.method(), request.headers(), query.parameters, request.content()), response)
 
-        if(!HttpUtil.isKeepAlive(request))
+        if (!HttpUtil.isKeepAlive(request))
         {
             response.keepAlive = true
         }
 
-        if(!response.delayed)
+        if (!response.delayed)
         {
             this.sendResponse(response, ctx)
         }
@@ -45,10 +45,10 @@ class HttpServerHandler(private val server: HttpServer) : ChannelInboundHandlerA
     fun sendResponse(response: HttpResponse, ctx: ChannelHandlerContext)
     {
         val httpResponse = DefaultFullHttpResponse(HttpVersion.HTTP_1_1, response.status, Unpooled.wrappedBuffer(response.response))
-        response.headers.forEach { key, value -> httpResponse.headers().set(key ,value) }
+        response.headers.forEach { key, value -> httpResponse.headers().set(key, value) }
         httpResponse.headers()[HttpHeaderNames.CONTENT_LENGTH] = httpResponse.content().readableBytes()
 
-        if(response.keepAlive)
+        if (response.keepAlive)
         {
             httpResponse.headers()[HttpHeaderNames.CONNECTION] = KEEP_ALIVE
 

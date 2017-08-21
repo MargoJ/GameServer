@@ -10,12 +10,12 @@ class NetworkManager(val server: ServerImpl)
 
     fun getHandler(aid: Int?): PacketHandler?
     {
-        return if(aid == null) this.noAuth else this.connections[aid]
+        return if (aid == null) this.noAuth else this.connections[aid]
     }
 
     fun createPlayerConnection(aid: Int): PlayerConnection
     {
-        if(this.connections.containsKey(aid))
+        if (this.connections.containsKey(aid))
         {
             throw IllegalStateException("Connection with id $aid already exists")
         }

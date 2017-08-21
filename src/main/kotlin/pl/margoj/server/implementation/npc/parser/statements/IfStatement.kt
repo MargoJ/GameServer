@@ -38,7 +38,7 @@ open class IfStatement : CodeStatement()
 
     fun executeChained(context: ScriptContext)
     {
-        if(this.evaluateExpression(context))
+        if (this.evaluateExpression(context))
         {
             npcCodeBlock.execute(context)
         }

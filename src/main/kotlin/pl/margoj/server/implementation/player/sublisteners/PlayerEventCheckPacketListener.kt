@@ -24,7 +24,7 @@ class PlayerEventCheckPacketListener(connection: PlayerConnection) : PlayerPacke
                 }
                 this.connection.lastEvent = evDouble
             }
-            catch(e: NumberFormatException)
+            catch (e: NumberFormatException)
             {
                 this.reportMaliciousData("Invalid 'ev' received")
             }

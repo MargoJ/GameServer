@@ -21,7 +21,7 @@ class PlayerInitLvlCheckListener(connection: PlayerConnection) : PlayerPacketSub
             return false
         }
 
-        if(query["initlvl"]?.toInt() != expectedInitLevel)
+        if (query["initlvl"]?.toInt() != expectedInitLevel)
         {
             this.info(out)
             return false

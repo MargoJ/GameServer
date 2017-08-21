@@ -90,7 +90,7 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?, override val t
                     any = true
                 }
 
-                if(!any)
+                if (!any)
                 {
                     break
                 }
@@ -109,7 +109,7 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?, override val t
                 {
                     tickable.tick(currentTick)
                 }
-                catch(e: Exception)
+                catch (e: Exception)
                 {
                     server.logger.error("Exception while executing task ${realTickable::class.java.name} ($realTickable)")
                     e.printStackTrace()
@@ -142,7 +142,7 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?, override val t
     {
         if (this.iteratingNow.get())
         {
-            if(!this.tickables.contains(tickable))
+            if (!this.tickables.contains(tickable))
             {
                 return false
             }

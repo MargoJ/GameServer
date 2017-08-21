@@ -16,7 +16,8 @@ class BooleanConstantParser : ConstantParser<Boolean>()
     override fun tryParse(parser: CodeParser, line: CodeLine): Boolean?
     {
         val word = line.readIfMatches(VariableSetStatement.VARIABLE_LETTER_REGEX)
-        return when(word) {
+        return when (word)
+        {
             in TRUE_VALUES -> true
             in FALSE_VALUES -> false
             else -> null

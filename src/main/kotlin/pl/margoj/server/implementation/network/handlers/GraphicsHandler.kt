@@ -22,7 +22,7 @@ class GraphicsHandler(private val server: ServerImpl, private val directory: Fil
     {
         val file = this.getItemFile(request.path)
 
-        if(file == null || !file.exists())
+        if (file == null || !file.exists())
         {
             response.status = HttpResponseStatus.NOT_FOUND
             response.responseString = "Image not found"
@@ -39,7 +39,7 @@ class GraphicsHandler(private val server: ServerImpl, private val directory: Fil
         val fileName = path.substring(this.path.length)
         val file = File(this.directory, fileName)
 
-        if(!file.absolutePath.startsWith(this.directory.absolutePath))
+        if (!file.absolutePath.startsWith(this.directory.absolutePath))
         {
             return null
         }

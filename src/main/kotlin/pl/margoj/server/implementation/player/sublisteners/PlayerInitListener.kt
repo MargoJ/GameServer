@@ -91,7 +91,7 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
         this.server.entityManager.registerEntity(this.connection.player!!)
 
         val location = player.location
-        if(location.town == null)
+        if (location.town == null)
         {
             location.town = this.server.getTownById("pierwsza_mapa") // TODO
             location.x = 8

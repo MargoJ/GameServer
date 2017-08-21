@@ -4,7 +4,7 @@ import pl.margoj.server.implementation.npc.parser.AbstractBlock
 import pl.margoj.server.implementation.npc.parser.CodeLine
 import pl.margoj.server.implementation.npc.parser.CodeParser
 
-class GlobalBlock: AbstractBlock()
+class GlobalBlock : AbstractBlock()
 {
     companion object
     {

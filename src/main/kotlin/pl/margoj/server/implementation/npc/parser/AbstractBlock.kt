@@ -25,14 +25,14 @@ abstract class AbstractBlock
     override fun toString(): String
     {
         val out = StringBuilder()
-        for(i in 1..this.indentLevel)
+        for (i in 1..this.indentLevel)
         {
             out.append("\t")
         }
 
         out.append(this.javaClass.simpleName)
 
-        if(this.name.isNotEmpty())
+        if (this.name.isNotEmpty())
         {
             out.append(" - ").append(this.name)
         }

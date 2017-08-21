@@ -22,7 +22,7 @@ class ItemsHandler(private val server: ServerImpl) : HttpHandler
     {
         val file = this.getItemFile(request.path)
 
-        if(file == null)
+        if (file == null)
         {
             response.status = HttpResponseStatus.NOT_FOUND
             response.responseString = "Item image not found"

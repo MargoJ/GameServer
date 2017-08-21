@@ -17,7 +17,7 @@ class AdditionalPlayerPacketListener(connection: PlayerConnection) : PlayerPacke
             player.currentNpcTalk!!.needsUpdate = false
             player.currentNpcTalk!!.handlePacket(out)
 
-            if(player.currentNpcTalk!!.finished)
+            if (player.currentNpcTalk!!.finished)
             {
                 player.currentNpcTalk = null
             }
