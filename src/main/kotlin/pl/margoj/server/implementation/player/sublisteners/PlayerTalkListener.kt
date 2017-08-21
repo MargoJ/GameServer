@@ -41,11 +41,7 @@ class PlayerTalkListener(connection: PlayerConnection) : PlayerPacketSubListener
             return true
         }
 
-        val talk = this.player!!.currentNpcTalk
-        if (talk == null)
-        {
-            return true
-        }
+        val talk = this.player!!.currentNpcTalk ?: return true
 
         val optionId = query["c"]?.toInt()
         this.checkForMaliciousData(optionId == null, "option not present")
@@ -62,7 +58,7 @@ class PlayerTalkListener(connection: PlayerConnection) : PlayerPacketSubListener
                 catch (e: Exception)
                 {
                     player!!.currentNpcTalk = null
-                    throw e;
+                    throw e
                 }
 
                 return true

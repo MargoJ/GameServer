@@ -4,7 +4,6 @@ import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.api.inventory.player.PlayerBagInventory
 import pl.margoj.server.api.inventory.player.PlayerEquipment
 import pl.margoj.server.api.inventory.player.PlayerInventory
-import pl.margoj.server.api.player.Player
 import pl.margoj.server.implementation.inventory.AbstractInventoryImpl
 import pl.margoj.server.implementation.item.ItemLocation
 import pl.margoj.server.implementation.item.ItemStackImpl

@@ -38,7 +38,7 @@ class CommandsManagerImpl(val server: ServerImpl) : CommandsManager
 
     private fun commandDispatched(sender: CommandSender, command: String, args: Array<String>): Boolean
     {
-        val listener = this.allListeners.filter { it.commands.contains(command) }.firstOrNull() ?: return false
+        val listener = this.allListeners.firstOrNull { it.commands.contains(command) } ?: return false
 
         try
         {

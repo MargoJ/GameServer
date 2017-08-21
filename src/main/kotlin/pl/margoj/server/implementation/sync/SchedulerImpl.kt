@@ -17,7 +17,7 @@ class SchedulerImpl(val server: ServerImpl) : Scheduler, Tickable
         val asyncTaskCounter = AtomicInteger()
         val executor = Executors.newCachedThreadPool {
             Thread(it, "MargoJAsyncTask-${asyncTaskCounter.getAndIncrement()}")
-        }
+        }!!
     }
 
     private val tasks: MutableMap<Int, Task> = Collections.synchronizedMap(HashMap())

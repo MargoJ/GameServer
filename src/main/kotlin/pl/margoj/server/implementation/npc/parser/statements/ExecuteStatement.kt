@@ -18,17 +18,11 @@ open class ExecuteStatement : CodeStatement()
 
     override fun execute(context: ScriptContext)
     {
-        if (this.expression is Expression)
+        when
         {
-            (this.expression as Expression).execute(context)
-        }
-        else if(this.expression is Label)
-        {
-            context.nextLabel!!.invoke(this.expression as Label, context)
-        }
-        else
-        {
-            throw IllegalStateException("invalid expression type: $expression")
+            this.expression is Expression -> (this.expression as Expression).execute(context)
+            this.expression is Label -> context.nextLabel!!.invoke(this.expression as Label, context)
+            else -> throw IllegalStateException("invalid expression type: $expression")
         }
     }
 }

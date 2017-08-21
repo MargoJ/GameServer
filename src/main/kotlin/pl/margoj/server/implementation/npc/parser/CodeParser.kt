@@ -2,7 +2,6 @@ package pl.margoj.server.implementation.npc.parser
 
 import org.apache.commons.lang3.StringUtils
 import pl.margoj.server.implementation.npc.parser.blocks.GlobalBlock
-import pl.margoj.server.implementation.npc.parser.constants.FunctionOperatorParser
 import pl.margoj.server.implementation.npc.parser.constants.StringConstantParser
 import pl.margoj.server.implementation.npc.parser.statements.CodeStatement
 import java.util.Deque

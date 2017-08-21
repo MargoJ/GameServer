@@ -29,7 +29,7 @@ class MapInventoryImpl : AbstractInventoryImpl(MargoMap.MAX_SIZE * MargoMap.MAX_
     {
         val items = ArrayList<ItemStackImpl?>(MAP_LAYERS)
 
-        for (layer in 0..MAP_LAYERS - 1)
+        for (layer in 0 until MAP_LAYERS)
         {
             items.add(this.allItems[this.getIndexFor(x, y, layer)])
         }
@@ -41,7 +41,7 @@ class MapInventoryImpl : AbstractInventoryImpl(MargoMap.MAX_SIZE * MargoMap.MAX_
     {
         val iterator = items.iterator()
 
-        for (layer in 0..MAP_LAYERS - 1)
+        for (layer in 0 until MAP_LAYERS)
         {
             this.allItems[this.getIndexFor(x, y, layer)] = if (iterator.hasNext()) (iterator.next() as ItemStackImpl) else null
         }
@@ -49,7 +49,7 @@ class MapInventoryImpl : AbstractInventoryImpl(MargoMap.MAX_SIZE * MargoMap.MAX_
 
     override fun addItem(x: Int, y: Int, itemStack: ItemStack): Boolean
     {
-        for (layer in 0..MAP_LAYERS - 1)
+        for (layer in 0 until MAP_LAYERS)
         {
             if (this.getItemAt(x, y, layer) == null)
             {

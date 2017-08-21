@@ -90,7 +90,7 @@ class OutgoingPacket
 
     fun addLogMessage(text: String, severity: CommandSender.MessageSeverity): OutgoingPacket
     {
-        this.logMessages.computeIfAbsent(severity, { LinkedList<String>() }).add(text)
+        this.logMessages.computeIfAbsent(severity, { LinkedList() }).add(text)
         return this
     }
 

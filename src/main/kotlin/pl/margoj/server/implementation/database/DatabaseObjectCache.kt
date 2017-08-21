@@ -20,7 +20,7 @@ abstract class DatabaseObjectCache<I, T>
 {
     companion object
     {
-        val logger = LogManager.getLogger("Cache")
+        val logger = LogManager.getLogger("Cache")!!
     }
 
     init
@@ -155,9 +155,9 @@ abstract class DatabaseObjectCache<I, T>
         queryBuilder.append("INSERT INTO `$tableName`(")
         queryBuilder.append(StringUtils.join(columns, ", "))
         queryBuilder.append(") VALUES (")
-        queryBuilder.append(StringUtils.join(Array<String>(columns.size, { "?" }), ", "))
+        queryBuilder.append(StringUtils.join(Array(columns.size, { "?" }), ", "))
         queryBuilder.append(") ON DUPLICATE KEY UPDATE ")
-        queryBuilder.append(StringUtils.join(Array<String>(columns.size, { "${columns[it]}=?" }), ", "))
+        queryBuilder.append(StringUtils.join(Array(columns.size, { "${columns[it]}=?" }), ", "))
 
         val updateQuery = connection.prepareStatement(queryBuilder.toString())
 

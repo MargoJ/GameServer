@@ -56,7 +56,7 @@ class NoSemicolonSingleValueQueryStringDecoder(val uri: String)
 
         var name: String? = null
         var pos = 0
-        var i: Int = 0
+        var i = 0
         var c: Char
 
         while (i < s.length)
@@ -110,7 +110,7 @@ class NoSemicolonSingleValueQueryStringDecoder(val uri: String)
             return ""
         }
         val size = s.length
-        val modified = (0..size - 1)
+        val modified = (0 until size)
                 .map { s[it] }
                 .any { it == '%' || it == '+' }
         if (!modified)
@@ -163,21 +163,12 @@ class NoSemicolonSingleValueQueryStringDecoder(val uri: String)
 
     private fun decodeHexNibble(c: Char): Char
     {
-        if (c in '0'..'9')
+        when (c)
         {
-            return (c - '0').toChar()
-        }
-        else if (c in 'a'..'f')
-        {
-            return (c - 'a' + 10).toChar()
-        }
-        else if (c in 'A'..'F')
-        {
-            return (c - 'A' + 10).toChar()
-        }
-        else
-        {
-            return Character.MAX_VALUE
+            in '0'..'9' -> return (c - '0').toChar()
+            in 'a'..'f' -> return (c - 'a' + 10).toChar()
+            in 'A'..'F' -> return (c - 'A' + 10).toChar()
+            else -> return Character.MAX_VALUE
         }
     }
 }

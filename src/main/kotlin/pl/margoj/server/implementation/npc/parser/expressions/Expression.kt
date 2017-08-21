@@ -29,21 +29,12 @@ abstract class Expression
 
         fun asNumber(fetch: Any?): Long
         {
-            if (fetch is Boolean)
+            when (fetch)
             {
-                return if (fetch) 1 else 0
-            }
-            else if (fetch is String)
-            {
-                return fetch.length.toLong()
-            }
-            else if (fetch is Number)
-            {
-                return fetch.toLong()
-            }
-            else
-            {
-                return if (fetch != null) 1 else 0
+                is Boolean -> return if (fetch) 1 else 0
+                is String -> return fetch.length.toLong()
+                is Number -> return fetch.toLong()
+                else -> return if (fetch != null) 1 else 0
             }
         }
 

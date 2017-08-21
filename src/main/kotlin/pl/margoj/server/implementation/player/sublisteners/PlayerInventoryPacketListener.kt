@@ -42,7 +42,7 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
                     val location = player.location
                     if(!location.town!!.inventory.addItem(location.x, location.y, item))
                     {
-                        out.addAlert("Na tej pozycji leżą już przynajmniej ${MAP_LAYERS} przedmioty!")
+                        out.addAlert("Na tej pozycji leżą już przynajmniej $MAP_LAYERS przedmioty!")
                     }
                 }
                 0 ->
@@ -88,7 +88,7 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
 
                     if (previousEqupment != null)
                     {
-                        inventory.set(currentItemIndex, previousEqupment)
+                        inventory[currentItemIndex] = previousEqupment
                     }
                 }
                 9 ->

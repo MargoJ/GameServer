@@ -16,8 +16,8 @@ import java.io.PrintStream
 import java.util.Arrays
 import java.util.Collections
 
-val ORIGINAL_IN = System.`in`
-val ORIGINAL_OUT = System.out
+val ORIGINAL_IN = System.`in`!!
+val ORIGINAL_OUT = System.out!!
 
 fun main(args: Array<String>)
 {

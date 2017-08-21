@@ -151,7 +151,7 @@ data class TownImpl(
         for ((point, id) in this.partList)
         {
             val npc = Npc(null, ImmutableLocation(this, point.x, point.y), NpcType.TRANSPARENT)
-            npc.graphics = "parts/${this.id}_${id}.png"
+            npc.graphics = "parts/${this.id}_$id.png"
             npc.level = 0
             npc.name = "P $id"
             this.server.entityManager.registerEntity(npc)

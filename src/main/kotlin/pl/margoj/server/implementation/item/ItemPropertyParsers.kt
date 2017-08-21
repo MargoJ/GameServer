@@ -43,7 +43,7 @@ class StringPropertyParser : ItemPropertyParser<String, StringProperty>
             return
         }
 
-        itemObject.statistics += "${property.propertyName}=$value;";
+        itemObject.statistics += "${property.propertyName}=$value;"
     }
 }
 
@@ -57,7 +57,7 @@ class IntPropertyParser : ItemPropertyParser<Int, IntProperty>
         {
             return
         }
-        itemObject.statistics += "${property.propertyName}=$value;";
+        itemObject.statistics += "${property.propertyName}=$value;"
     }
 }
 
@@ -72,7 +72,7 @@ class DoublePropertyParser : ItemPropertyParser<Double, DoubleProperty>
             return
         }
 
-        itemObject.statistics += "${property.propertyName}=$value;";
+        itemObject.statistics += "${property.propertyName}=$value;"
     }
 }
 
@@ -86,7 +86,7 @@ class LongPropertyParser : ItemPropertyParser<Long, LongProperty>
         {
             return
         }
-        itemObject.statistics += "${property.propertyName}=$value;";
+        itemObject.statistics += "${property.propertyName}=$value;"
     }
 }
 

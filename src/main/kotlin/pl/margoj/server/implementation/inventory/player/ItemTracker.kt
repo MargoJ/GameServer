@@ -78,7 +78,7 @@ class ItemTracker(val player: PlayerImpl) : Tickable
 
     private fun shouldSee(item: ItemStackImpl?): Boolean
     {
-        if (item == null || item.owner == null)
+        if (item?.owner == null)
         {
             return false
         }

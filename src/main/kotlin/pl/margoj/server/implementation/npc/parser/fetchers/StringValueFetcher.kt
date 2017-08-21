@@ -16,11 +16,11 @@ class StringValueFetcher : ValueFetcher<String>()
             return value
         }
 
-        val array = value
+        val array = value.toCharArray()
         val out = StringBuilder()
 
         var i = 0
-        while (i < array.length)
+        while (i < array.size)
         {
             if (array[i] == '!')
             {
@@ -36,7 +36,7 @@ class StringValueFetcher : ValueFetcher<String>()
 
                 var anyMatch = false
                 val variableNameBuilder = StringBuilder()
-                while (i < array.length && array[i].toString().matches(VariableSetStatement.VARIABLE_LETTER_REGEX))
+                while (i < array.size && array[i].toString().matches(VariableSetStatement.VARIABLE_LETTER_REGEX))
                 {
                     anyMatch = true
                     variableNameBuilder.append(array[i++])

@@ -141,7 +141,7 @@ private class ThreadConnection
         if (connection == null)
         {
             usageCount.set(0)
-            connection = dataSource.getConnection()
+            connection = dataSource.connection
             DatabaseObjectCache.logger.trace("ThreadConnection[${Thread.currentThread()}] - requested new connection")
         }
 

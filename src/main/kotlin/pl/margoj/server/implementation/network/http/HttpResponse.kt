@@ -9,7 +9,7 @@ data class HttpResponse(
         var keepAlive: Boolean,
         var response: ByteArray = ByteArray(0),
         var status: HttpResponseStatus = HttpResponseStatus.OK,
-        var headers: MutableMap<AsciiString, Any> = hashMapOf<AsciiString, Any>(),
+        var headers: MutableMap<AsciiString, Any> = hashMapOf(),
         var delayed: Boolean = false
 )
 {

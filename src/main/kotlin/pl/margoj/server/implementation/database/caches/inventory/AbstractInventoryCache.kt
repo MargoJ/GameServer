@@ -37,7 +37,7 @@ abstract class AbstractInventoryCache<I, T : AbstractInventoryImpl>(
             {
                 val item = it.getLong("item")
                 itemsToLoad.add(item)
-                inventoriesPrepared.computeIfAbsent(this.getIdFromResultSet(it), { LinkedHashMap<Int, Long>() }).put(it.getInt("index"), item)
+                inventoriesPrepared.computeIfAbsent(this.getIdFromResultSet(it), { LinkedHashMap() }).put(it.getInt("index"), item)
             }
 
             null
@@ -53,7 +53,7 @@ abstract class AbstractInventoryCache<I, T : AbstractInventoryImpl>(
         {
             val inventory = this.newInventory(id)
 
-            val prepared = inventoriesPrepared.get(id)
+            val prepared = inventoriesPrepared[id]
             if (prepared != null)
             {
                 for ((index, item) in prepared)

@@ -5,7 +5,6 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.logging.log4j.Logger
 import java.io.File
 import java.io.FileInputStream
-import java.net.Socket
 import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.util.Scanner
@@ -74,17 +73,17 @@ class GameInstaller(val targetDirectory: File, val logger: Logger)
                 changes.computeIfAbsent(array[0], { ArrayList() }).add(Pair(array[1], if(array.size >= 3) array[2] else ""))
             }
 
-            for (change in changes)
+            for ((fileName, replacement) in changes)
             {
-                logger.info("Zamieniam w pliku: ${change.key}")
+                logger.info("Zamieniam w pliku: $fileName")
 
-                val file = File(this.targetDirectory, change.key)
+                val file = File(this.targetDirectory, fileName)
                 var string = FileUtils.readFileToString(file, StandardCharsets.UTF_8)
 
-                for (pair in change.value)
+                for ((from, to) in replacement)
                 {
-                    logger.info("Zamieniam ${pair.first} na ${pair.second}")
-                    string = StringUtils.replace(string, pair.first, pair.second)
+                    logger.info("Zamieniam $from na $to")
+                    string = StringUtils.replace(string, from, to)
                 }
 
                 FileUtils.writeStringToFile(file, string, StandardCharsets.UTF_8)

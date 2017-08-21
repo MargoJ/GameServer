@@ -42,12 +42,12 @@ class FunctionOperatorParser : OperatorParser()
 
         init
         {
-            this.registerFunction("posiada", 1);
-            this.registerFunction("nie posiada", 1);
-            this.registerFunction("dodaj", 1);
-            this.registerFunction("zabierz", 1);
-            this.registerFunction("dodaj złoto", 1);
-            this.registerFunction("zabierz złoto", 1);
+            this.registerFunction("posiada", 1)
+            this.registerFunction("nie posiada", 1)
+            this.registerFunction("dodaj", 1)
+            this.registerFunction("zabierz", 1)
+            this.registerFunction("dodaj złoto", 1)
+            this.registerFunction("zabierz złoto", 1)
 
             this.recalculateOperatorOrder()
         }

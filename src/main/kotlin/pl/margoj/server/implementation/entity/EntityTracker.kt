@@ -6,7 +6,6 @@ import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.network.protocol.jsons.NpcObject
 import pl.margoj.server.implementation.network.protocol.jsons.OtherObject
 import pl.margoj.server.implementation.npc.Npc
-import pl.margoj.server.implementation.npc.NpcType
 import pl.margoj.server.implementation.player.PlayerImpl
 import java.util.LinkedList
 

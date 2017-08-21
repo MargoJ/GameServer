@@ -1,7 +1,6 @@
 package pl.margoj.server.implementation.inventory
 
 import pl.margoj.server.api.inventory.Inventory
-import pl.margoj.server.api.inventory.Item
 import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.api.utils.ListFromMap
 import pl.margoj.server.implementation.item.ItemStackImpl
@@ -59,12 +58,12 @@ abstract class AbstractInventoryImpl(final override val size: Int) : Inventory
             throw IllegalArgumentException("item.owner != this")
         }
 
-        if (this.get(item.ownerIndex!!) != item)
+        if (this[item.ownerIndex!!] != item)
         {
             throw IllegalArgumentException("item is not at 'item.ownerIndex' in inventory 'item.owner'")
         }
 
-        this.set(item.ownerIndex!!, null)
+        this[item.ownerIndex!!] = null
     }
 
     abstract fun createPacketFor(item: ItemStackImpl): ItemObject?

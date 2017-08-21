@@ -142,7 +142,7 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
                             upperPartGraphics.drawImage(tileImage, 0, partY * 32, null)
                         }
 
-                        ImageIO.write(partImage, "png", File(this.partsGraphicsCacheDirectory, "${map.id}_${currentId}.png"))
+                        ImageIO.write(partImage, "png", File(this.partsGraphicsCacheDirectory, "${map.id}_$currentId.png"))
                     }
 
                     partList.put(Point(x, y + 1), currentId)
@@ -168,7 +168,7 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
 
         val itemIcon = margoItem[ItemProperties.ICON]
 
-        var itemIconName: String = ""
+        var itemIconName = ""
         var itemIconFile: File? = null
 
         if (itemIcon != null)
@@ -215,9 +215,8 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
         val view = bundle!!.getResource(MargoResource.Category.NPC_SCRIPTS, id) ?: return null
         val resource = bundle.loadResource(view)
         scriptDeserializer.fileName = id
-        val script = scriptDeserializer.deserialize(resource!!)
 
-        return script
+        return scriptDeserializer.deserialize(resource!!)
     }
 
     fun reloadTilesets()

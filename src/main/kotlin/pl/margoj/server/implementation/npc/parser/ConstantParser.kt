@@ -2,7 +2,7 @@ package pl.margoj.server.implementation.npc.parser
 
 import pl.margoj.server.implementation.npc.parser.constants.*
 
-abstract class ConstantParser<T>
+abstract class ConstantParser<out T>
 {
     companion object
     {

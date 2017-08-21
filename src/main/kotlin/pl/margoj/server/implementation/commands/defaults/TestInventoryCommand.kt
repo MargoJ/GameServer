@@ -16,7 +16,7 @@ class TestInventoryCommand : CommandListener
 
         if (sender.inventory.getBag(0) == null)
         {
-            val item = sender.server.items.map { it as ItemImpl }.filter { it.margoItem.itemCategory == ItemCategory.BAGS }.first()
+            val item = sender.server.items.map { it as ItemImpl }.first { it.margoItem.itemCategory == ItemCategory.BAGS }
 
             sender.inventory.setBag(0, sender.server.newItemStack(item))
         }

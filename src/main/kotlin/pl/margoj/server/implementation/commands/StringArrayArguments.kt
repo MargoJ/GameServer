@@ -10,7 +10,7 @@ class StringArrayArguments(val server: ServerImpl, val array: Array<String>) : A
 {
     override fun has(i: Int): Boolean
     {
-        return i < array.size;
+        return i < array.size
     }
 
     override fun asString(i: Int): String
@@ -32,7 +32,7 @@ class StringArrayArguments(val server: ServerImpl, val array: Array<String>) : A
     override fun asPlayer(i: Int): Player?
     {
         val string = this.asString(i)
-        return this.server.players.filter { it.name == string }.firstOrNull()
+        return this.server.players.firstOrNull { it.name == string }
     }
 
     override fun ensureTrue(condition: () -> Boolean)

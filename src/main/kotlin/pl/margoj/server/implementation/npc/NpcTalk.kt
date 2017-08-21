@@ -2,7 +2,6 @@ package pl.margoj.server.implementation.npc
 
 import com.google.gson.JsonArray
 import pl.margoj.server.api.player.Player
-import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.npc.parser.CodeLabel
 import pl.margoj.server.implementation.npc.parser.Label
@@ -29,7 +28,7 @@ class NpcTalk(val player: Player, val npc: Npc?, val npcScript: NpcParsedScript)
     init
     {
         context.setVariable("gracz", PlayerBuildInVariable(this.player as PlayerImpl))
-        context.setVariable("serwer", ServerBuildInVariable(this.player.server as ServerImpl))
+        context.setVariable("serwer", ServerBuildInVariable(this.player.server))
 
         this.update(CodeLabel("start"))
     }

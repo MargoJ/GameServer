@@ -21,7 +21,7 @@ class PluginManagerImpl(override val server: ServerImpl) : PluginManager
 
     override fun load(file: File): MargoJPlugin<*>
     {
-        val loader = this.pluginLoaders.filter { it.canLoad(file) }.lastOrNull() ?: throw IllegalArgumentException("no capable loader found")
+        val loader = this.pluginLoaders.lastOrNull { it.canLoad(file) } ?: throw IllegalArgumentException("no capable loader found")
         val plugin = loader.load(file)
         this.register(plugin)
         return plugin

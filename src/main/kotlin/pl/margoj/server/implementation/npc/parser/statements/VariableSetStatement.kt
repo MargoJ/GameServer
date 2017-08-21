@@ -31,11 +31,7 @@ class VariableSetStatement : CodeStatement()
 
         line.skipSpaces()
 
-        val rightSide = parser.parseLiteral()
-        if (rightSide == null)
-        {
-            parser.throwError("błąd składni: niepoprawna wartość")
-        }
+        val rightSide = parser.parseLiteral() ?: parser.throwError("błąd składni: niepoprawna wartość")
 
         this.value = rightSide
     }

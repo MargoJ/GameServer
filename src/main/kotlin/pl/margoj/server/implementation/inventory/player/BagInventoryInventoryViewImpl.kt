@@ -69,6 +69,6 @@ class BagInventoryInventoryViewImpl(override val owner: PlayerInventoryImpl, val
 
     private fun coordinatesToIndex(x: Int, y: Int): Int
     {
-        return y * 7 + x;
+        return y * 7 + x
     }
 }
