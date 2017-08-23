@@ -192,9 +192,11 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger)
         // late network handlers
         httpServer.registerHandler(GraphicsHandler(this, graphicsCacheDirectory))
 
-        // load npcs
+        // initialize towns
         this.towns.forEach {
             it.updateNpcs()
+            it.updateParentMaps()
+            it.cachedMapData.update()
         }
 
         // preload data

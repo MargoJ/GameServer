@@ -1,8 +1,14 @@
 package pl.margoj.server.implementation.map
 
+import com.google.gson.JsonElement
 import pl.margoj.mrf.map.Point
 import pl.margoj.mrf.map.metadata.MetadataElement
+import pl.margoj.mrf.map.metadata.ismain.IsMain
+import pl.margoj.mrf.map.metadata.istown.IsTown
+import pl.margoj.mrf.map.metadata.parentmap.ParentMap
 import pl.margoj.mrf.map.metadata.pvp.MapPvP
+import pl.margoj.mrf.map.metadata.respawnmap.RespawnMap
+import pl.margoj.mrf.map.metadata.welcome.WelcomeMessage
 import pl.margoj.mrf.map.objects.MapObject
 import pl.margoj.mrf.map.objects.npc.NpcMapObject
 import pl.margoj.mrf.map.serialization.MapData
@@ -11,8 +17,10 @@ import pl.margoj.server.api.map.PvPStatus
 import pl.margoj.server.api.map.Town
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.inventory.map.MapInventoryImpl
+import pl.margoj.server.implementation.network.protocol.jsons.TownObject
 import pl.margoj.server.implementation.npc.Npc
 import pl.margoj.server.implementation.npc.NpcType
+import pl.margoj.server.implementation.utils.GsonUtils
 import java.io.File
 
 data class TownImpl(
@@ -29,6 +37,16 @@ data class TownImpl(
         val partList: Map<Point, Int>
 ) : Town
 {
+    val cachedMapData: CachedMapData = CachedMapData(this)
+
+    private var updatedOnce = false
+
+    override var parentMap: Town? = null
+        private set
+
+    override lateinit var respawnMap: Town
+        private set
+
     override lateinit var inventory: MapInventoryImpl
     private var npcs_ = ArrayList<Npc>()
     val npc: Collection<Npc> get() = this.npcs_
@@ -108,6 +126,12 @@ data class TownImpl(
             else -> PvPStatus.CONDITIONAL
         }
 
+    override val isTown: Boolean
+        get() = this.getMetadata(IsTown::class.java).value
+
+    override val isMain: Boolean
+        get() = this.getMetadata(IsMain::class.java).value
+
     @Suppress("UNCHECKED_CAST")
     fun <T : MetadataElement> getMetadata(clazz: Class<T>): T
     {
@@ -155,6 +179,44 @@ data class TownImpl(
             npc.level = 0
             npc.name = "P $id"
             this.server.entityManager.registerEntity(npc)
+        }
+    }
+
+    fun updateParentMaps()
+    {
+        this.updatedOnce = true
+
+        if (this.isMain)
+        {
+            this.parentMap = null
+        }
+        else
+        {
+            this.parentMap = this.server.getTownById(this.getMetadata(ParentMap::class.java).value)
+        }
+
+        var possibleRespawnMap = this.server.getTownById(this.getMetadata(RespawnMap::class.java).value)
+
+        if(possibleRespawnMap == null && !this.isMain)
+        {
+            val parent = this.parentMap!! as TownImpl
+
+            if(!parent.updatedOnce)
+            {
+                parent.updateParentMaps()
+            }
+
+            possibleRespawnMap = parent.respawnMap as TownImpl
+        }
+
+        if (possibleRespawnMap == null)
+        {
+            // TODO: DEFAULT MAP
+            throw IllegalArgumentException("couldn't find respawn map for '${this.id}', respawn id: '${this.getMetadata(RespawnMap::class.java).value}'")
+        }
+        else
+        {
+            this.respawnMap = possibleRespawnMap
         }
     }
 
