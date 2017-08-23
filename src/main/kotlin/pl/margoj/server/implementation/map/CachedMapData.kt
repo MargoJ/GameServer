@@ -52,8 +52,19 @@ class CachedMapData(val town: TownImpl)
             this.gw2.add(targetMap.numericId)
             this.gw2.add(gateway.position.x)
             this.gw2.add(gateway.position.y)
-            this.gw2.add(0) // TODO needs key
-            this.gw2.add(0) // TODO: min level & max level
+            this.gw2.add(if(gateway.keyId == null) 0 else 1) /// needs key
+
+            // level restrictions
+            if(gateway.levelRestriction.enabled)
+            {
+                val minLevel = gateway.levelRestriction.minLevel
+                val maxLevel = gateway.levelRestriction.maxLevel
+                this.gw2.add(minLevel or (maxLevel shl 16))
+            }
+            else
+            {
+                this.gw2.add(0)
+            }
 
             this.townname.add(targetMap.numericId.toString(), JsonPrimitive(targetMap.name))
         }

@@ -61,23 +61,43 @@ class PlayerPreMovementPacketListener(connection: PlayerConnection) : PlayerPack
 
         if (packet.type == "walk")
         {
-            val gateway = (player!!.location.town as? TownImpl)?.getObject(Point(player!!.location.x, player!!.location.y)) as? GatewayObject
-            if (gateway != null)
-            {
-                val targetMap = player!!.server.getTownById(gateway.targetMap)
-
-                if (targetMap == null || !targetMap.inBounds(gateway.target))
-                {
-                    player!!.logToConsole("unknown or invalid map: ${gateway.targetMap}")
-                    player!!.server.logger.warn("unknown or invalid map: ${gateway.targetMap} at ${gateway.position}")
-                }
-                else
-                {
-                    player!!.teleport(Location(targetMap, gateway.target.x, gateway.target.y))
-                }
-            }
+            this.handleWalk()
         }
 
         return true
+    }
+
+    private fun handleWalk()
+    {
+        val gateway = (player!!.location.town as? TownImpl)?.getObject(Point(player!!.location.x, player!!.location.y)) as? GatewayObject ?: return
+        val targetMap = player!!.server.getTownById(gateway.targetMap)
+
+        if (targetMap == null || !targetMap.inBounds(gateway.target))
+        {
+            player!!.logToConsole("unknown or invalid map: ${gateway.targetMap}")
+            player!!.server.logger.warn("unknown or invalid map: ${gateway.targetMap} at ${gateway.position}")
+            return
+        }
+
+        if (gateway.levelRestriction.enabled)
+        {
+            if (player!!.data.level < gateway.levelRestriction.minLevel || player!!.data.level > gateway.levelRestriction.maxLevel)
+            {
+                player!!.displayAlert("Przejście dostępne jest od ${gateway.levelRestriction.minLevel} do ${gateway.levelRestriction.maxLevel} poziomu!")
+                return
+            }
+        }
+
+        if (gateway.keyId != null)
+        {
+            val keyItem = this.server.getItemById(gateway.keyId!!)
+            if (keyItem == null || !player!!.inventory.contains(keyItem))
+            {
+                player!!.displayAlert("Nie możesz przejść bez klucza")
+                return
+            }
+        }
+
+        player!!.teleport(Location(targetMap, gateway.target.x, gateway.target.y))
     }
 }

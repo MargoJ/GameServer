@@ -10,10 +10,15 @@ object DefaultCommands
         commandsManagerImpl.registerCoreListener(HelpCommand(), "help", "h")
         commandsManagerImpl.registerCoreListener(TeleportCommand(), "teleport", "tp")
         commandsManagerImpl.registerCoreListener(TownsCommand(), "towns")
-        commandsManagerImpl.registerCoreListener(TestInventoryCommand(), "testinventory", "testinv")
+        commandsManagerImpl.registerCoreListener(ItemCommand(), "item")
         commandsManagerImpl.registerCoreListener(AddXPCommand(), "addxp")
         commandsManagerImpl.registerCoreListener(StopCommand(), "stop")
-        commandsManagerImpl.registerCoreListener(TestNpcCommand(), "testnpc")
         commandsManagerImpl.registerCoreListener(CacheCommand(), "cache")
+        commandsManagerImpl.registerCoreListener(ConfirmCommand(), "confirm")
+
+        if(commandsManagerImpl.server.debugModeEnabled)
+        {
+            commandsManagerImpl.registerCoreListener(TestNpcCommand(), "testnpc")
+        }
     }
 }

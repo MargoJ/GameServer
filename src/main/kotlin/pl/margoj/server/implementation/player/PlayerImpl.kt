@@ -42,6 +42,21 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
 
     val itemTracker = ItemTracker(this)
 
+    private var task: ((CommandSender) -> Unit)? = null
+
+    override fun addConfirmationTask(task: (CommandSender) -> Unit, message: String)
+    {
+        this.sendMessage(message)
+        this.task = task
+    }
+
+    override fun executeConfirmationTask(): Boolean
+    {
+        val result = task?.invoke(this) != null
+        task = null
+        return result
+    }
+
     override fun sendMessage(message: String, messageSeverity: CommandSender.MessageSeverity)
     {
         this.logToConsole(message.replace("\n", "<br>"), messageSeverity)

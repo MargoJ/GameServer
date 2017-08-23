@@ -7,6 +7,7 @@ import java.io.File
 class ItemImpl(val margoItem: MargoItem, val imgFileLocation: File?, val imgFileName: String) : Item
 {
     override val id: String get() = this.margoItem.id
+    override val name: String get() = this.margoItem.name
 
     override fun hashCode(): Int
     {
