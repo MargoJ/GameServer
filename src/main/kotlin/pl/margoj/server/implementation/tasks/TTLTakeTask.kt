@@ -18,7 +18,10 @@ class TTLTakeTask(val server: ServerImpl) : Runnable
 
             if (System.currentTimeMillis() > player.data.lastTtlPointTaken + TimeUnit.MINUTES.toMillis(1))
             {
-                // TODO: CHECK IF IN TOWN
+                if(player.location.town!!.isTown || player.location.town!!.parentMap?.isTown == true)
+                {
+                    continue
+                }
 
                 player.data.lastTtlPointTaken = System.currentTimeMillis()
 
