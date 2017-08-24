@@ -170,6 +170,7 @@ data class TownImpl(
             npc.takeIf { mapObject.level != null }?.level = mapObject.level!!
 
             this.server.entityManager.registerEntity(npc)
+            this.npcs_.add(npc)
         }
 
         for ((point, id) in this.partList)
@@ -179,6 +180,7 @@ data class TownImpl(
             npc.level = 0
             npc.name = "P $id"
             this.server.entityManager.registerEntity(npc)
+            this.npcs_.add(npc)
         }
     }
 

@@ -6,6 +6,7 @@ import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.player.MovementManager
 import pl.margoj.server.api.utils.TimeUtils
 import pl.margoj.server.implementation.map.TownImpl
+import pl.margoj.server.implementation.npc.NpcType
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class MovementManagerImpl(val player: PlayerImpl) : MovementManager
@@ -52,9 +53,8 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
             }
 
             val newLocation = Location(this.location.town, current.x, current.y)
-            val town = this.location.town!! as TownImpl
 
-            if (!this.location.isNear(newLocation) || town.collisions[newLocation.x][newLocation.y] || !town.inBounds(Point(current.x, current.y)))
+            if (!this.canMoveTo(newLocation))
             {
                 return this.resetPosition()
             }
@@ -102,6 +102,47 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
         val nextMove = this.nextMove
         this.nextMove = null
         return nextMove
+    }
+
+    fun canMoveTo(newLocation: Location): Boolean
+    {
+        if(!this.location.isNear(newLocation))
+        {
+            return false
+        }
+
+        val town = this.location.town!! as TownImpl
+
+        if(!town.inBounds(Point(newLocation.x, newLocation.y)))
+        {
+            return false
+        }
+
+        val canNoclip = this.player.server.debugModeEnabled // TODO: PERMISSIONS
+
+        if(!canNoclip)
+        {
+            if (town.collisions[newLocation.x][newLocation.y])
+            {
+                return false
+            }
+
+            for (npc in town.npc)
+            {
+                if(npc.type == NpcType.TRANSPARENT)
+                {
+                    continue
+                }
+
+                if(npc.location == newLocation)
+                {
+                    return false
+                }
+            }
+        }
+
+
+        return true
     }
 
     companion object
