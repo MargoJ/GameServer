@@ -115,6 +115,8 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
         this.updatePossibleInventories()
         this.server.ticker.registerTickable(this.itemTracker)
         this.online = true
+
+        this.server.gameLogger.info("${this.name}: zalogowano się do gry. Pozycja: ${this.location.toSimpleString()}")
     }
 
     fun disconnect()
@@ -125,6 +127,8 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
         this.server.entityManager.unregisterEntity(this)
         this.online = false
         this.server.eventManager.call(PlayerQuitEvent(this))
+
+        this.server.gameLogger.info("${this.name}: wylogowano się z gry. Pozycja: ${this.location.toSimpleString()}")
     }
 
     override fun toString(): String

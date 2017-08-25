@@ -60,6 +60,8 @@ class TeleportCommand : CommandListener
         targetY!!
 
         sender.logToConsole("Teleportuje...")
+        sender.server.gameLogger.info("${sender.name}: .tp ${town.id}[${town.name}] $targetX $targetY")
+
         sender.teleport(Location(town, targetX, targetY))
     }
 }

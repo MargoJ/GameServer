@@ -95,6 +95,9 @@ class CacheCommand : CommandListener
                         }
                     })
                 }
+
+                sender.server.gameLogger.info("${sender.name}: .cache flush ${selected.keys}")
+
             }
             "discard" ->
             {

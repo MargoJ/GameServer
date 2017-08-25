@@ -13,7 +13,7 @@
             </Policies>
         </RollingRandomAccessFile>
         <RollingRandomAccessFile name="GameFile" fileName="logs/game.log" filePattern="logs/game-%d{yyyy-MM-dd}-%i.log">
-            <PatternLayout pattern="[%d[HH:mm:ss}] %5level: %msg%n"/>
+            <PatternLayout pattern="[%d{HH:mm:ss}] %5level: %msg%n"/>
             <Policies>
                 <OnStartupTriggeringPolicy/>
                 <TimeBasedTriggeringPolicy/>

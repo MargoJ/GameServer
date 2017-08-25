@@ -83,7 +83,9 @@ fun main(args: Array<String>)
 
     println(config)
 
-    val server = ServerImpl(config, logger)
+    val gameLogger = LogManager.getLogger("Game")
+
+    val server = ServerImpl(config, logger, gameLogger)
     server.useJLine = useJLine
     server.debugModeEnabled = debug
     server.start()

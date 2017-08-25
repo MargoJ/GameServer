@@ -35,7 +35,7 @@ import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-class ServerImpl(override val config: MargoJConfig, override val logger: Logger) : Server
+class ServerImpl(override val config: MargoJConfig, override val logger: Logger, override val gameLogger: Logger) : Server
 {
     private var towns_ = hashMapOf<String, TownImpl>()
     private var items_ = hashMapOf<String, ItemImpl>()

@@ -23,4 +23,9 @@ class ItemImpl(val margoItem: MargoItem, val imgFileLocation: File?, val imgFile
     {
         return "ItemImpl(margoItem=$margoItem, imgFileLocation=$imgFileLocation, imgFileName='$imgFileName')"
     }
+
+    fun toSimpleString(): String
+    {
+        return "$id[$name]"
+    }
 }

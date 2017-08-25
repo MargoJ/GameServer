@@ -115,6 +115,7 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
 
         if(!town.inBounds(Point(newLocation.x, newLocation.y)))
         {
+            player.server.gameLogger.warn("${player.name}: niedozwolone przejśćie: ${newLocation.toSimpleString()}, miejsce poza mapą!")
             return false
         }
 

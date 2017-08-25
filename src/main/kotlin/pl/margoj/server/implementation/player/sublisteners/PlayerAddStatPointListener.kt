@@ -15,6 +15,7 @@ class PlayerAddStatPointListener(connection: PlayerConnection) : PlayerPacketSub
     override fun handle(packet: IncomingPacket, out: OutgoingPacket, query: Map<String, String>): Boolean
     {
         val player = this.player!!
+        player.server.gameLogger.info("${player.name}: levelowanie statystyki: ${query["a"]} o ${query["cnt"]}")
 
         val amount = query["cnt"]?.toInt()
         this.checkForMaliciousData(amount == null || amount <= 0, "invalid amount (cnt)")
@@ -25,8 +26,6 @@ class PlayerAddStatPointListener(connection: PlayerConnection) : PlayerPacketSub
             return true
         }
 
-        player.data.statPoints -= amount
-
         when (query["a"])
         {
             "str" -> player.data.baseStrength += amount
@@ -34,6 +33,8 @@ class PlayerAddStatPointListener(connection: PlayerConnection) : PlayerPacketSub
             "int" -> player.data.baseIntellect += amount
             else -> this.reportMaliciousData("invalid stat ${query["a"]}")
         }
+
+        player.data.statPoints -= amount
 
         player.connection.addModifier { it.addStatisticRecalculation(StatisticType.WARRIOR) }
 

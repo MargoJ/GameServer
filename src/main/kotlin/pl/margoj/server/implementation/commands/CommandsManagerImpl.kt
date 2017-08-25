@@ -18,6 +18,8 @@ class CommandsManagerImpl(val server: ServerImpl) : CommandsManager
 
     override fun dispatchCommand(sender: CommandSender, string: String): Boolean
     {
+        sender.server.gameLogger.info("${sender.name}: cmd: $string")
+
         var input = string.trim()
         if (input.first() == '.' || input.first() == '/')
         {

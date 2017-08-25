@@ -14,6 +14,7 @@ class ChatManagerImpl(val server: ServerImpl) : ChatManager
 
         val msg = ChatMessage(type = ChatMessage.Type.TYPE_GLOBAL, nickname = player.name, text = escapedInput)
 
+        this.server.gameLogger.info("${player.name}: chat input: $input")
         this.server.players.filter { it.location.town == player.location.town }.forEach { it.sendChatMessage(msg) }
     }
 }

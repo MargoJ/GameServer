@@ -17,6 +17,8 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
 
         if (packet.type == "moveitem")
         {
+            player.server.gameLogger.info("${player.name}: moveitem: id=${query["id"]}, slot = ${query["st"]}")
+
             val id = query["id"]?.toLong()
             val item = if (id == null) null else inventory.getItemstackById(id) as? ItemStackImpl
 
@@ -33,6 +35,8 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
             {
                 -2 ->
                 {
+                    player.server.gameLogger.info("${player.name}: item zniszczony: ${item.item.toSimpleString()}")
+
                     // destroy item
                     inventory[item.ownerIndex!!] = null
                 }
@@ -43,6 +47,10 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
                     if (!location.town!!.inventory.addItem(location.x, location.y, item))
                     {
                         out.addAlert("Na tej pozycji leżą już przynajmniej $MAP_LAYERS przedmioty!")
+                    }
+                    else
+                    {
+                        player.server.gameLogger.info("${player.name}: item upusczony: ${item.item.toSimpleString()} na pozycji ${location.toSimpleString()}")
                     }
                 }
                 0 ->
@@ -151,9 +159,10 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
         else if (packet.type == "takeitem")
         {
             val location = player.location
-            val item = location.town!!.inventory.getItemOnTop(location.x, location.y)
+            val item = location.town!!.inventory.getItemOnTop(location.x, location.y) as? ItemStackImpl
             if (item != null)
             {
+                player.server.gameLogger.info("${player.name}: item podniesiony: ${item.item.toSimpleString()}, id=${item.id}, lokacja = ${location.toSimpleString()}")
                 player.inventory.tryToPut(item)
             }
         }

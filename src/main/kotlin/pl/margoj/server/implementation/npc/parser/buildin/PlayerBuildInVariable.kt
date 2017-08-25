@@ -32,6 +32,8 @@ class PlayerBuildInVariable(val player: PlayerImpl) : BuildInVariable()
                     return false
                 }
 
+                player.server.gameLogger.info("${player.name}, npc: ${context.npc?.id}: zmiana złota: $change")
+
                 this.player.currencyManager.giveGold(change)
                 return true
             }
@@ -41,10 +43,12 @@ class PlayerBuildInVariable(val player: PlayerImpl) : BuildInVariable()
 
                 if (functionName == "dodaj")
                 {
-                    val result = this.player.inventory.tryToPut(this.player.server.newItemStack(item))
+                    val itemstack = this.player.server.newItemStack(item)
+                    val result = this.player.inventory.tryToPut(itemstack)
                     if (result)
                     {
                         this.player.displayScreenMessage("Otrzymano nowy przedmiot: ${item.name}")
+                        player.server.gameLogger.info("${player.name}, npc: ${context.npc?.id}: otrzymano ${item.id}[${item.name}], itemid=${itemstack.id}")
                     }
                     return result
                 }
@@ -56,6 +60,7 @@ class PlayerBuildInVariable(val player: PlayerImpl) : BuildInVariable()
                         {
                             this.player.inventory[i.ownerIndex!!] = null
                             this.player.displayScreenMessage("Stracono przedmiot: ${i.item.name}")
+                            player.server.gameLogger.info("${player.name}, npc: ${context.npc?.id}: stracono ${item.id}[${item.name}], itemid=${i.id}")
                             return true
                         }
                     }

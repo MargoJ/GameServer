@@ -20,6 +20,7 @@ class AddXPCommand : CommandListener
         sender.data.addExp(xp)
 
         sender.sendMessage("Dodano $xp xp!")
+        sender.server.gameLogger.info("${sender.name}: .addxp: $xp")
     }
 
 }

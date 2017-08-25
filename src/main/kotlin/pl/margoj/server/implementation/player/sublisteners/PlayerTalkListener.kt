@@ -31,6 +31,8 @@ class PlayerTalkListener(connection: PlayerConnection) : PlayerPacketSubListener
                 return true
             }
 
+            player!!.server.gameLogger.info("${player!!.name}: rozmowa z npc ${npc.id}[${npc.name}], lokacja= ${npc.location.toSimpleString()}")
+
             if (npc.script == null)
             {
                 return true

@@ -8,6 +8,7 @@ import pl.margoj.server.api.commands.CommandSender
 import pl.margoj.server.api.inventory.Item
 import pl.margoj.server.api.player.Player
 import pl.margoj.server.api.utils.Paged
+import java.util.LinkedList
 import java.util.stream.Collectors
 
 class ItemCommand : CommandListener
@@ -77,10 +78,12 @@ class ItemCommand : CommandListener
                     sender as Player
                 }
 
-                val success = target.inventory.tryToPut(target.server.newItemStack(item))
+                val itemStack = target.server.newItemStack(item)
+                val success = target.inventory.tryToPut(itemStack)
                 args.ensureTrue({ success }, "Nie udało się dodać przedmiotu (pełny ekwipunek)")
 
                 sender.sendMessage("Dodano przedmiot ${item.id} [${item.name}] do ekwipunku gracza ${target.name}")
+                sender.server.gameLogger.info("${sender.name}: .item give: ${item.id}[${item.name}], id=${itemStack.id}, target= ${target.name}")
             }
             "clearinv" ->
             {
@@ -98,27 +101,43 @@ class ItemCommand : CommandListener
 
                 sender.addConfirmationTask({
                     val inventory = target.inventory
+                    val removed = LinkedList<Long>()
+
                     for (i in 0 until inventory.equipment.size)
                     {
-                        inventory.equipment[i] = null
+                        if (inventory.equipment[i] != null)
+                        {
+                            removed.add(inventory.equipment[i]!!.id)
+                            inventory.equipment[i] = null
+                        }
                     }
 
                     for (bagInventory in inventory.bagInventories)
                     {
                         for (i in 0 until bagInventory.size)
                         {
-                            bagInventory[i] = null
+                            if (bagInventory[i] != null)
+                            {
+                                removed.add(bagInventory[i]!!.id)
+                                bagInventory[i] = null
+                            }
                         }
                     }
 
                     for (bag in 0..3)
                     {
-                        inventory.setBag(bag, null)
+                        if (inventory.getBag(bag) != null)
+                        {
+                            removed.add(inventory.getBag(bag)!!.id)
+                            inventory.setBag(bag, null)
+                        }
                     }
 
                     // TODO: DEFAULT BAG
 
                     sender.sendMessage("Wymazano cały ekwipunek gracza ${target.name}!")
+                    sender.server.gameLogger.info("${sender.name}: .item clearinv ${target.name} - ID usunietych przedmiotow: $removed")
+
                 }, "Czy na pewno chcesz WYMAZAĆ CAŁY EKWIPUNEK gracza ${target.name}? Wpisz .confirm aby potwierdzić")
             }
             else -> this.showHelp(sender)

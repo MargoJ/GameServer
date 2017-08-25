@@ -8,6 +8,7 @@ class StopCommand : CommandListener
 {
     override fun commandPerformed(command: String, sender: CommandSender, args: Arguments)
     {
+        sender.server.gameLogger.info("${sender.name}: .stop")
         sender.server.shutdown()
     }
 }
