@@ -28,7 +28,7 @@ class CachedMapData(val town: TownImpl)
     {
         this.townObject = TownObject(
                 mapId = town.numericId,
-                mainMapId = if (town.isMain) 0 else town.parentMap!!.numericId,
+                mainMapId = if (town.parentMap == null) 0 else town.parentMap!!.numericId,
                 width = town.width,
                 height = town.height,
                 imageFileName = "${town.id}.png",

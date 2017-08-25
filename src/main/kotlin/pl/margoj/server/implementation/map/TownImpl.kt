@@ -199,7 +199,7 @@ data class TownImpl(
 
         var possibleRespawnMap = this.server.getTownById(this.getMetadata(RespawnMap::class.java).value)
 
-        if(possibleRespawnMap == null && !this.isMain)
+        if(possibleRespawnMap == null && this.parentMap != null)
         {
             val parent = this.parentMap!! as TownImpl
 

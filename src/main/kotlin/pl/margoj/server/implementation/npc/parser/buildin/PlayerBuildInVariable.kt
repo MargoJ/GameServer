@@ -35,6 +35,34 @@ class PlayerBuildInVariable(val player: PlayerImpl) : BuildInVariable()
                 this.player.currencyManager.giveGold(change)
                 return true
             }
+            "dodaj", "zabierz" ->
+            {
+                val item = this.player.server.getItemById(parameters[0] as String) ?: return false
+
+                if (functionName == "dodaj")
+                {
+                    val result = this.player.inventory.tryToPut(this.player.server.newItemStack(item))
+                    if (result)
+                    {
+                        this.player.displayScreenMessage("Otrzymano nowy przedmiot: ${item.name}")
+                    }
+                    return result
+                }
+                else
+                {
+                    for (i in this.player.inventory.allItems)
+                    {
+                        if (i?.item == item)
+                        {
+                            this.player.inventory[i.ownerIndex!!] = null
+                            this.player.displayScreenMessage("Stracono przedmiot: ${i.item.name}")
+                            return true
+                        }
+                    }
+
+                    return false
+                }
+            }
             else -> throw IllegalStateException("'$functionName' not found")
         }
     }
