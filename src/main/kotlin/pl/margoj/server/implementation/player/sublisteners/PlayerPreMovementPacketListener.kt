@@ -9,17 +9,19 @@ import pl.margoj.server.implementation.map.TownImpl
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.player.PlayerConnection
+import pl.margoj.server.implementation.player.PlayerImpl
 
 class PlayerPreMovementPacketListener(connection: PlayerConnection) : PlayerPacketSubListener(connection, onlyOnPlayer = true)
 {
     override fun handle(packet: IncomingPacket, out: OutgoingPacket, query: Map<String, String>): Boolean
     {
+        val player = player!!
         val pdir = query["pdir"]
         if (pdir != null)
         {
             val intDirection = Parse.parseInt(pdir)
             this.checkForMaliciousData(intDirection == null || intDirection < 0 || intDirection > 3, "invalid direction")
-            player!!.movementManager.playerDirection = intDirection!!
+            player.movementManager.playerDirection = intDirection!!
         }
 
         val ml = query["ml"]
@@ -53,37 +55,42 @@ class PlayerPreMovementPacketListener(connection: PlayerConnection) : PlayerPack
 
                 this.checkForMaliciousData(x == null || y == null || timestamp == null, "invalid move format")
 
-                player!!.movementManager.queueMove(x!!, y!!, timestamp!!)
+                player.movementManager.queueMove(x!!, y!!, timestamp!!)
             }
 
-            player!!.movementManager.processMove()
+            player.movementManager.processMove()
         }
 
         if (packet.type == "walk")
         {
-            this.handleWalk()
+            this.handleWalk(player)
         }
 
         return true
     }
 
-    private fun handleWalk()
+    private fun handleWalk(player: PlayerImpl)
     {
-        val gateway = (player!!.location.town as? TownImpl)?.getObject(Point(player!!.location.x, player!!.location.y)) as? GatewayObject ?: return
-        val targetMap = player!!.server.getTownById(gateway.targetMap)
+        if(!player.movementManager.canMove)
+        {
+            return
+        }
+
+        val gateway = (player.location.town as? TownImpl)?.getObject(Point(player.location.x, player.location.y)) as? GatewayObject ?: return
+        val targetMap = player.server.getTownById(gateway.targetMap)
 
         if (targetMap == null || !targetMap.inBounds(gateway.target))
         {
-            player!!.logToConsole("unknown or invalid map: ${gateway.targetMap}")
-            player!!.server.logger.warn("unknown or invalid map: ${gateway.targetMap} at ${gateway.position}")
+            player.logToConsole("unknown or invalid map: ${gateway.targetMap}")
+            player.server.logger.warn("unknown or invalid map: ${gateway.targetMap} at ${gateway.position}")
             return
         }
 
         if (gateway.levelRestriction.enabled)
         {
-            if (player!!.data.level < gateway.levelRestriction.minLevel || player!!.data.level > gateway.levelRestriction.maxLevel)
+            if (player.data.level < gateway.levelRestriction.minLevel || player.data.level > gateway.levelRestriction.maxLevel)
             {
-                player!!.displayAlert("Przejście dostępne jest od ${gateway.levelRestriction.minLevel} do ${gateway.levelRestriction.maxLevel} poziomu!")
+                player.displayAlert("Przejście dostępne jest od ${gateway.levelRestriction.minLevel} do ${gateway.levelRestriction.maxLevel} poziomu!")
                 return
             }
         }
@@ -91,15 +98,15 @@ class PlayerPreMovementPacketListener(connection: PlayerConnection) : PlayerPack
         if (gateway.keyId != null)
         {
             val keyItem = this.server.getItemById(gateway.keyId!!)
-            if (keyItem == null || !player!!.inventory.contains(keyItem))
+            if (keyItem == null || !player.inventory.contains(keyItem))
             {
-                player!!.displayAlert("Nie możesz przejść bez klucza")
+                player.displayAlert("Nie możesz przejść bez klucza")
                 return
             }
         }
 
         val target = Location(targetMap, gateway.target.x, gateway.target.y)
-        player!!.server.gameLogger.info("${player!!.name}: przejscie z ${player!!.location.toSimpleString()} do ${target.toSimpleString()}, gateway=$gateway)")
-        player!!.teleport(target)
+        player.server.gameLogger.info("${player.name}: przejscie z ${player.location.toSimpleString()} do ${target.toSimpleString()}, gateway=$gateway)")
+        player.teleport(target)
     }
 }
