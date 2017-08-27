@@ -20,6 +20,11 @@ class PlayerKeepAliveTask(val server: ServerImpl, keepAliveSeconds: Int) : Runna
         {
             val player = iterator.next()
 
+            if(!player.canBeLoggedOff)
+            {
+                continue
+            }
+
             if (player.connection.lastPacket != 0L && player.connection.lastPacket + keepAlive < System.currentTimeMillis())
             {
                 iterator.remove()

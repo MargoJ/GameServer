@@ -3,6 +3,7 @@ package pl.margoj.server.implementation.player
 import pl.margoj.mrf.item.ItemProperties
 import pl.margoj.server.api.events.player.PlayerLevelUpEvent
 import pl.margoj.server.api.map.Location
+import pl.margoj.server.api.player.Gender
 import pl.margoj.server.api.player.PlayerData
 import pl.margoj.server.api.player.Profession
 import pl.margoj.server.api.utils.fastPow4
@@ -22,6 +23,7 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
 
     override var icon: String = "/vip/3599584.gif"
     override var profession: Profession = Profession.WARRIOR
+    override var gender: Gender = Gender.MALE
 
     override var level: Int = 1
     override var xp: Long = 0
@@ -37,6 +39,12 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
     override var attackSpeed: Double = 1.00
 
     override var maxHp: Int = 0
+    override var hp: Int = 0
+        set(value)
+        {
+            this.player_?.recalculateWarriorStatistics()
+            field = value
+        }
 
     override var ttl: Int = 0
     var lastTtlPointTaken = -1L
@@ -174,7 +182,7 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
             out.warriorStats.it = this.intellect
 
             out.warriorStats.maxhp = this.maxHp
-            out.warriorStats.hp = this.maxHp
+            out.warriorStats.hp = this.hp
             out.warriorStats.sa = this.attackSpeed.toBigDecimal()
 
             out.warriorStats.crit = 1.04.toBigDecimal()

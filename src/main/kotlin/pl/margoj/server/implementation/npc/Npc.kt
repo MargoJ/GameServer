@@ -1,17 +1,26 @@
 package pl.margoj.server.implementation.npc
 
+import pl.margoj.server.api.Server
 import pl.margoj.server.api.map.ImmutableLocation
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.npc.parser.parsed.NpcParsedScript
 import pl.margoj.server.implementation.npc.parser.parsed.ScriptContext
 import java.util.concurrent.atomic.AtomicInteger
 
-class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation, val type: NpcType) : EntityImpl(npcIdCounter.incrementAndGet())
+class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation, val type: NpcType, override val server: Server) : EntityImpl(npcIdCounter.incrementAndGet())
 {
     override var name: String = ""
     override val direction: Int = 0
-    var graphics: String = ""
-    var level: Int = 1
+    override var icon: String = ""
+    override var level: Int
+        get() = this.stats.level
+        set(value)
+        {
+            this.stats.level = value
+        }
+
+    override val stats = NpcData(this)
+    override var hp: Int = 100
 
     fun loadData()
     {
@@ -25,9 +34,9 @@ class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation
     {
         when (function)
         {
-            "grafika" -> this.graphics = parameters[0] as String
+            "grafika" -> this.icon = parameters[0] as String
             "nazwa" -> this.name = parameters[0] as String
-            "poziom", "level" -> this.level = (parameters[0] as Long).toInt()
+            "poziom", "level" -> this.stats.level = (parameters[0] as Long).toInt()
         }
     }
 

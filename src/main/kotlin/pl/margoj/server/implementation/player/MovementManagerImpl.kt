@@ -21,7 +21,7 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
     override val canMove: Boolean
         get()
         {
-            return this.player.currentNpcTalk == null
+            return this.player.currentNpcTalk == null && this.player.currentBattle == null
         }
 
     fun queueMove(x: Int, y: Int, timestamp: Double)

@@ -39,7 +39,7 @@ internal class TaskBuilderImpl(val scheduler: SchedulerImpl, val owner: MargoJPl
         return this
     }
 
-    override fun delaySeconds(seconds: Int): TaskBuilder
+    override fun delaySeconds(seconds: Double): TaskBuilder
     {
         return this.delay(this.secondsToTicks(seconds))
     }
@@ -50,7 +50,7 @@ internal class TaskBuilderImpl(val scheduler: SchedulerImpl, val owner: MargoJPl
         return this
     }
 
-    override fun repeatSeconds(seconds: Int): TaskBuilder
+    override fun repeatSeconds(seconds: Double): TaskBuilder
     {
         return this.repeat(this.secondsToTicks(seconds))
     }
@@ -73,8 +73,8 @@ internal class TaskBuilderImpl(val scheduler: SchedulerImpl, val owner: MargoJPl
         return task.id
     }
 
-    private fun secondsToTicks(seconds: Int): Int
+    private fun secondsToTicks(seconds: Double): Int
     {
-        return this.scheduler.server.ticker.targetTps * seconds
+        return (this.scheduler.server.ticker.targetTps.toDouble() * seconds).toInt()
     }
 }

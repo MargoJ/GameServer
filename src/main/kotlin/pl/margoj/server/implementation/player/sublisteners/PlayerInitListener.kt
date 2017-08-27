@@ -97,13 +97,15 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
 
     private fun handleOnlinePlayer()
     {
-        this.player!!.entityTracker.reset()
+        val player = this.player!!
+        player.entityTracker.reset()
 
-        val tracker = this.player!!.itemTracker
+        val tracker = player.itemTracker
         tracker.enabled = false
         tracker.reset()
 
-        this.player!!.currentNpcTalk?.needsUpdate = true
+        player.currentNpcTalk?.needsUpdate = true
+        player.battleData?.reset()
     }
 
     private fun handleInit(out: OutgoingPacket)

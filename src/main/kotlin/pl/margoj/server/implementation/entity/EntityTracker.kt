@@ -134,7 +134,7 @@ class EntityTracker(val owner: PlayerImpl)
             npc.id = entity.id
             npc.nick = entity.name
             npc.questMark = 0 // TODO
-            npc.icon = entity.graphics
+            npc.icon = entity.icon
             npc.x = entity.location.x
             npc.y = entity.location.y
             npc.level = entity.level

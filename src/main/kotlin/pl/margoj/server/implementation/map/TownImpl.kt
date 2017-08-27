@@ -162,10 +162,10 @@ data class TownImpl(
             }
 
             val script = if (mapObject.script == null) null else this.server.npcScriptParser.getNpcScript(mapObject.script!!)
-            val npc = Npc(script, ImmutableLocation(this, mapObject.position.x, mapObject.position.y), NpcType.NPC) // TODO
+            val npc = Npc(script, ImmutableLocation(this, mapObject.position.x, mapObject.position.y), NpcType.NPC, this.server) // TODO
             npc.loadData()
 
-            npc.takeIf { mapObject.graphics != null }?.graphics = mapObject.graphics!!
+            npc.takeIf { mapObject.graphics != null }?.icon = mapObject.graphics!!
             npc.takeIf { mapObject.name != null }?.name = mapObject.name!!
             npc.takeIf { mapObject.level != null }?.level = mapObject.level!!
 
@@ -175,8 +175,8 @@ data class TownImpl(
 
         for ((point, id) in this.partList)
         {
-            val npc = Npc(null, ImmutableLocation(this, point.x, point.y), NpcType.TRANSPARENT)
-            npc.graphics = "parts/${this.id}_$id.png"
+            val npc = Npc(null, ImmutableLocation(this, point.x, point.y), NpcType.TRANSPARENT, this.server)
+            npc.icon = "parts/${this.id}_$id.png"
             npc.level = 0
             npc.name = "P $id"
             this.server.entityManager.registerEntity(npc)

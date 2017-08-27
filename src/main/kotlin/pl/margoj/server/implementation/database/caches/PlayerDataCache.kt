@@ -1,6 +1,7 @@
 package pl.margoj.server.implementation.database.caches
 
 import pl.margoj.server.api.map.Location
+import pl.margoj.server.api.player.Gender
 import pl.margoj.server.api.player.Profession
 import pl.margoj.server.api.utils.Parse
 import pl.margoj.server.implementation.database.DatabaseManager
@@ -15,7 +16,7 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Lo
         databaseManager,
         TableNames.PLAYERS,
         rawColumns = *arrayOf(
-                "id", "characterName", "profession", "experience", "level", "map", "x", "y", "baseStrength", "baseAgility", "baseIntellect", "statPoints",
+                "id", "characterName", "profession", "gender", "experience", "level", "hp", "map", "x", "y", "baseStrength", "baseAgility", "baseIntellect", "statPoints",
                 "gold", "ttl", "dead_until"
         )
 )
@@ -40,8 +41,10 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Lo
         return this.tryLoad(connection, ids) {
             val data = PlayerDataImpl(it.getLong("id"), it.getString("characterName"))
             data.profession = Profession.getById(it.getString("profession")[0])!!
+            data.gender = Gender.getById(it.getString("gender")[0])!!
             data.xp = it.getLong("experience")
             data.level = it.getInt("level")
+            data.hp = it.getInt("hp")
             val mapName = it.getString("map")
             if (mapName != null)
             {
@@ -69,8 +72,10 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Lo
             statement.setLong(i(), d.id)
             statement.setString(i(), d.characterName)
             statement.setString(i(), d.profession.id.toString())
+            statement.setString(i(), d.gender.id.toString())
             statement.setLong(i(), d.xp)
             statement.setInt(i(), d.level)
+            statement.setInt(i(), d.hp)
             statement.setString(i(), d.location.town!!.id)
             statement.setInt(i(), d.location.x)
             statement.setInt(i(), d.location.y)

@@ -1,5 +1,6 @@
 package pl.margoj.server.implementation.player
 
+import pl.margoj.server.api.battle.BattleStats
 import pl.margoj.server.api.chat.ChatMessage
 import pl.margoj.server.api.commands.CommandSender
 import pl.margoj.server.api.events.player.PlayerQuitEvent
@@ -21,11 +22,17 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
 
     override val name: String = this.data.characterName
 
+    override val level: Int get() = this.data.level
+
+    override val icon: String get() = this.data.icon
+
     override val location: Location get() = this.movementManager.location
 
     override val direction: Int get() = this.movementManager.playerDirection
 
     override val inventory: PlayerInventoryImpl get() = this.data.inventory!!
+
+    override val stats: BattleStats get() = this.data
 
     override var online: Boolean = false
         private set
@@ -33,6 +40,13 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
     override val movementManager = MovementManagerImpl(this)
 
     override val currencyManager = CurrencyManagerImpl(this)
+
+    override var hp: Int
+        get() = this.data.hp
+        set(value)
+        {
+            this.data.hp = value
+        }
 
     var currentNpcTalk: NpcTalk? = null
 
@@ -43,6 +57,17 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
     val itemTracker = ItemTracker(this)
 
     private var task: ((CommandSender) -> Unit)? = null
+
+    val canBeLoggedOff: Boolean
+        get()
+        {
+            if (this.currentBattle != null)
+            {
+                return this.currentBattle!!.finished
+            }
+
+            return true
+        }
 
     override fun addConfirmationTask(task: (CommandSender) -> Unit, message: String)
     {
@@ -108,6 +133,11 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
         {
             this.possibleInventorySources.add(this.location.town!!.inventory as MapInventoryImpl)
         }
+    }
+
+    fun recalculateWarriorStatistics()
+    {
+        this.connection.addModifier { it.addStatisticRecalculation(StatisticType.WARRIOR) }
     }
 
     fun connected()

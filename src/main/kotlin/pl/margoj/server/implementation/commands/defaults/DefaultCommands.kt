@@ -19,6 +19,7 @@ object DefaultCommands
         if(commandsManagerImpl.server.debugModeEnabled)
         {
             commandsManagerImpl.registerCoreListener(TestNpcCommand(), "testnpc")
+            commandsManagerImpl.registerCoreListener(TestBattleCommand(), "testbattle", "tb")
         }
     }
 }

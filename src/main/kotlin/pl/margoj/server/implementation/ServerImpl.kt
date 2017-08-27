@@ -29,6 +29,7 @@ import pl.margoj.server.implementation.resources.ResourceBundleManager
 import pl.margoj.server.implementation.resources.ResourceLoader
 import pl.margoj.server.implementation.sync.SchedulerImpl
 import pl.margoj.server.implementation.sync.TickerImpl
+import pl.margoj.server.implementation.tasks.BattleProcessTask
 import pl.margoj.server.implementation.tasks.PlayerKeepAliveTask
 import pl.margoj.server.implementation.tasks.TTLTakeTask
 import java.io.File
@@ -205,8 +206,9 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger,
         }
 
         // tasks
-        this.scheduler.systemTask().sync().repeatSeconds(1).withRunnable(PlayerKeepAliveTask(this, config.engineConfig.keepAliveSeconds)).submit()
-        this.scheduler.systemTask().sync().repeatSeconds(1).withRunnable(TTLTakeTask(this)).submit()
+        this.scheduler.systemTask().sync().repeatSeconds(1.0).withRunnable(PlayerKeepAliveTask(this, config.engineConfig.keepAliveSeconds)).submit()
+        this.scheduler.systemTask().sync().repeatSeconds(1.0).withRunnable(TTLTakeTask(this)).submit()
+        this.scheduler.systemTask().sync().repeat(5).withRunnable(BattleProcessTask(this)).submit()
 
         // register core commands
         DefaultCommands.registerDefaults(this.commandsManager)
