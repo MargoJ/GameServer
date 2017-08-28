@@ -5,6 +5,7 @@ import pl.margoj.server.api.chat.ChatMessage
 import pl.margoj.server.api.commands.CommandSender
 import pl.margoj.server.api.events.player.PlayerQuitEvent
 import pl.margoj.server.api.map.Location
+import pl.margoj.server.api.player.Gender
 import pl.margoj.server.api.player.Player
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.entity.EntityImpl
@@ -23,6 +24,8 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
     override val name: String = this.data.characterName
 
     override val level: Int get() = this.data.level
+
+    override val gender: Gender get() = this.data.gender
 
     override val icon: String get() = this.data.icon
 

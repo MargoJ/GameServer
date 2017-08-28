@@ -7,7 +7,6 @@ class NpcData(val npc: Npc) : BattleStats
 {
     override var level: Int = 0
 
-
     /// TODO!
     override var profession: Profession = Profession.WARRIOR
     override var strength: Int = 4

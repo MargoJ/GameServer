@@ -2,6 +2,7 @@ package pl.margoj.server.implementation.npc
 
 import pl.margoj.server.api.Server
 import pl.margoj.server.api.map.ImmutableLocation
+import pl.margoj.server.api.player.Gender
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.npc.parser.parsed.NpcParsedScript
 import pl.margoj.server.implementation.npc.parser.parsed.ScriptContext
@@ -12,6 +13,8 @@ class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation
     override var name: String = ""
     override val direction: Int = 0
     override var icon: String = ""
+    override val gender: Gender = Gender.UNKNOWN // TODO
+
     override var level: Int
         get() = this.stats.level
         set(value)

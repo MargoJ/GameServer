@@ -2,7 +2,10 @@ package pl.margoj.server.implementation.battle
 
 import org.apache.commons.lang3.Validate
 import pl.margoj.server.api.player.Player
+import pl.margoj.server.api.player.Profession
+import pl.margoj.server.implementation.battle.ability.BattleAbility
 import pl.margoj.server.implementation.battle.ability.NormalStrike
+import pl.margoj.server.implementation.battle.ability.Step
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.npc.Npc
 import java.util.Collections
@@ -28,10 +31,15 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
     var lastProcessTick = -1L
 
     /* data */
-    var currentTurn = 0
+    private var queuedMove: BattleAbility? = null
+    private var attackSpeedThreshold: Double = -1.0
+    private var currentTurnOrder = mutableListOf<EntityImpl>()
+
     var currentEntity: EntityImpl? = null
-    var currentTurnOrder = mutableListOf<EntityImpl>()
-    var attackSpeedThreshold: Double = -1.0
+        private set
+
+    var currentTurn = 0
+        private set
 
     init
     {
@@ -68,13 +76,32 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
 
             participant.currentBattle = this
 
-            val battleData = BattleData(
-                    entity = participant,
-                    battle = this,
-                    team = if (teamA.contains(participant)) BattleData.Team.TEAM_A else BattleData.Team.TEAM_B
-            )
+            val team = if (teamA.contains(participant)) BattleData.Team.TEAM_A else BattleData.Team.TEAM_B
+            val data = BattleData(participant, this, team)
 
-            participant.battleData = battleData
+            var row: Int
+
+            if (!data.hasRangedWeapon())
+            {
+                row = 2
+            }
+            else
+            {
+                row = when (participant.stats.profession)
+                {
+                    Profession.WARRIOR, Profession.PALADIN, Profession.BLADE_DANCER -> 2
+                    Profession.MAGE -> 1
+                    Profession.HUNTER, Profession.TRACKER -> 0
+                }
+            }
+
+            if (team == BattleData.Team.TEAM_B)
+            {
+                row = 5 - row
+            }
+            data.row = row
+
+            participant.battleData = data
         }
 
         this.updateAttackSpeedThreshold()
@@ -106,17 +133,39 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
 
     fun processTurn()
     {
-        do
+        while (true)
         {
+            if (this.queuedMove != null)
+            {
+                if (this.isAbilityValid(this.queuedMove!!))
+                {
+                    this.queuedMove!!.performNow()
+                }
+
+                this.queuedMove = null
+            }
+
+            this.updateCurrent()
+
             if (this.checkFinishCondition())
             {
                 this.finish()
                 return
             }
 
-            this.updateCurrent()
+            val canContinue = this.processOne()
+
+            if (this.checkFinishCondition())
+            {
+                this.finish()
+                return
+            }
+
+            if (!canContinue)
+            {
+                break
+            }
         }
-        while (this.processOne())
     }
 
     private fun updateCurrent()
@@ -175,7 +224,7 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
                 this.currentTurnOrder.add(participant)
             }
 
-            data.secondsLeft = 5 // TODO
+            data.secondsLeft = data.startsMove
         }
     }
 
@@ -195,7 +244,18 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
             }
             is Player ->
             {
-                if (entity.battleData!!.secondsLeft <= 0 || entity.battleData!!.auto)
+                var auto = entity.battleData!!.auto
+
+                if (entity.battleData!!.secondsLeft <= 0)
+                {
+                    auto = true
+
+                    if (entity.battleData!!.startsMove >= 10) // TODO
+                    {
+                        entity.battleData!!.startsMove -= 5
+                    }
+                }
+                if (auto)
                 {
                     this.processAuto(entity)
                     return true
@@ -210,18 +270,54 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
     fun processAuto(entity: EntityImpl)
     {
         // TODO
-        val strike = NormalStrike(this, entity)
-
         this.iterateOverAlive { participant ->
             if (participant.battleData!!.team != entity.battleData!!.team)
             {
-                strike.use(participant)
-                return@processAuto
+                if (entity.battleData!!.canReach(participant.battleData!!.row))
+                {
+                    NormalStrike(this, entity, participant).performNow()
+                    return@processAuto
+                }
             }
         }
 
-        this.addLog(BattleLogBuilder().build { it.text = "${entity.name}: utrata kolejki" }.toString())
-        this.moveDone(entity)
+        // couldn't find enemies
+        if (!Step(this, entity, entity).performNow())
+        {
+            this.addLog(BattleLogBuilder().build { it.text = "${entity.name}: utrata kolejki" }.toString())
+            this.moveDone(entity)
+        }
+    }
+
+
+    fun queueMove(ability: BattleAbility)
+    {
+        if (this.isAbilityValid(ability))
+        {
+            if (ability.user is Player)
+            {
+                ability.user.battleData!!.startsMove = 15 // TODO
+            }
+
+            this.queuedMove = ability
+        }
+    }
+
+    fun isAbilityValid(ability: BattleAbility): Boolean
+    {
+        if (this.finished || ability.user.currentBattle != this || ability.target.currentBattle != this)
+        {
+            return false
+        }
+        if (ability.user.battleData!!.dead || ability.target.battleData!!.dead)
+        {
+            return false
+        }
+        if (this.currentEntity != ability.user)
+        {
+            return false
+        }
+        return true
     }
 
     fun moveDone(entity: EntityImpl)

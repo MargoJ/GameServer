@@ -1,7 +1,12 @@
 package pl.margoj.server.implementation.battle
 
+import pl.margoj.mrf.item.ItemCategory
+import pl.margoj.mrf.item.ItemProperties
+import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.api.player.Player
+import pl.margoj.server.api.player.Profession
 import pl.margoj.server.implementation.entity.EntityImpl
+import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.network.protocol.jsons.BattleParticipant
 import pl.margoj.server.implementation.npc.Npc
 
@@ -33,6 +38,9 @@ class BattleData(val entity: EntityImpl, val battle: Battle, val team: Team)
     /** last time when a secondLeft has been decreased */
     var lastSecondUpdate = 0L
 
+    /** how much second did player have to make a turn */
+    var startsMove: Int = 15
+
     /** how much seconds is there left for current turn */
     var secondsLeft = 0
 
@@ -41,6 +49,15 @@ class BattleData(val entity: EntityImpl, val battle: Battle, val team: Team)
 
     /** when this participant was updated last time? */
     var lastUpdatedTick: Long = -1L
+
+    /** row where participant is standing **/
+    var row: Int = 0
+
+    /** in-battle energy */
+    var energy: Int = 0
+
+    /** in-battle mana */
+    var mana: Int = 0
 
     /** is this participant dead? */
     var dead = false
@@ -71,26 +88,77 @@ class BattleData(val entity: EntityImpl, val battle: Battle, val team: Team)
     fun createBattleParticipantObject(target: EntityImpl): BattleParticipant
     {
         val obj = BattleParticipant(this.id)
-        obj.name = entity.name
-        obj.level = entity.level
-        obj.profession = entity.stats.profession
-        obj.npc = if (entity is Npc) 1 else 0
-        obj.gender = if (entity is Player) entity.data.gender.id.toString() else "x"
+
+        if (!target.battleData!!.initialized)
+        {
+            obj.name = entity.name
+            obj.level = entity.level
+            obj.profession = entity.stats.profession
+            obj.npc = if (entity is Npc) 1 else 0
+            obj.gender = entity.gender.id.toString()
+            obj.team = if (this.team == Team.TEAM_A) 1 else 2
+            obj.icon = this.entity.icon
+        }
+
         obj.healthPercent = if (entity.battleData!!.dead) 0 else entity.healthPercent
-        obj.team = if (this.team == Team.TEAM_A) 1 else 2
-        obj.row = if (this.team == Team.TEAM_A) 2 else 3 // TODO
+        obj.row = this.row
+        obj.buffs = 0 // TODO
 
         if (target == this.entity)
         {
-            obj.energy = 123 // TODO
-            obj.mana = 456 // TODO
+            obj.energy = this.energy
+            obj.mana = this.mana
             obj.fast = if (this.auto) 1 else 0
         }
 
-        obj.icon = this.entity.icon
-        obj.buffs = 0 // TODO
-
         return obj
+    }
+
+    fun canReach(targetRow: Int): Boolean
+    {
+        if (this.hasRangedWeapon())
+        {
+            return true
+        }
+
+        if (this.team == Team.TEAM_A)
+        {
+            return this.row >= targetRow - 1
+        }
+        else
+        {
+            return this.row <= targetRow + 1
+        }
+    }
+
+    fun hasRangedWeapon(): Boolean
+    {
+        return when (this.entity)
+        {
+            is Npc ->
+            {
+                when (this.entity.stats.profession)
+                {
+                    Profession.MAGE, Profession.HUNTER, Profession.TRACKER -> true
+                    else -> false
+                }
+            }
+            is Player ->
+            {
+                when (getItemType(this.entity.inventory.equipment.weapon))
+                {
+                    ItemCategory.WANDS, ItemCategory.STAFF -> true
+                    ItemCategory.RANGE_WEAPON -> getItemType(this.entity.inventory.equipment.helper) == ItemCategory.ARROWS
+                    else -> false
+                }
+            }
+            else -> false
+        }
+    }
+
+    private fun getItemType(item: ItemStack?): ItemCategory?
+    {
+        return (item as? ItemStackImpl)?.item?.margoItem?.get(ItemProperties.CATEGORY)
     }
 
     enum class Team

@@ -5,6 +5,9 @@ import java.util.stream.Collectors
 
 class BattleLogBuilder
 {
+    var who: BattleData? = null
+    var target: BattleData? = null
+
     var damager: BattleData? = null
     var damaged: BattleData? = null
 
@@ -12,28 +15,37 @@ class BattleLogBuilder
     var damageTaken: Int? = null
 
     var text: String? = null
+    var step: Boolean = false
     var winner: List<EntityImpl>? = null
 
     override fun toString(): String
     {
         val builder = StringBuilder()
 
-        if (damager == null)
+        if (who != null)
         {
-            builder.append("0;")
+            builder.append(who!!.id).append(";")
         }
-        else
+        else if (damager != null)
         {
             builder.append(damager!!.id).append("=").append(damager!!.entity.healthPercent).append(";")
         }
-
-        if (damaged == null)
+        else
         {
             builder.append("0;")
         }
-        else
+
+        if (target != null)
+        {
+            builder.append(target!!.id).append(";")
+        }
+        else if (damaged != null)
         {
             builder.append(damaged!!.id).append("=").append(damaged!!.entity.healthPercent).append(";")
+        }
+        else
+        {
+            builder.append("0;")
         }
 
         fun <T> appendIfNotNull(any: T?, name: String, toString: (T) -> String = { it.toString() })
@@ -46,10 +58,19 @@ class BattleLogBuilder
             builder.append(name).append("=").append(toString(any)).append(";")
         }
 
+        fun appendIfTrue(any: Boolean, name: String)
+        {
+            if (any)
+            {
+                builder.append(name).append(";")
+            }
+        }
+
         appendIfNotNull(text, "txt")
         appendIfNotNull(damage, "+dmg")
         appendIfNotNull(damageTaken, "-dmg")
         appendIfNotNull(winner, "winner", { if (it.isEmpty()) "?" else it.stream().map { it.name }.collect(Collectors.joining(", ")) })
+        appendIfTrue(step, "step")
 
         if (builder.endsWith(";"))
         {

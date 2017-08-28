@@ -19,13 +19,15 @@ class PlayerBattleSendListener(connection: PlayerConnection) : PlayerPacketSubLi
             return true
         }
 
-        val fightObject = FightObject()
+        val fightObject: FightObject
 
         val player = this.player!!
         val battle = player.currentBattle
 
         if (battle != null)
         {
+            fightObject = FightObject()
+
             val data = player.battleData!!
 
             // init if needed
@@ -35,8 +37,6 @@ class PlayerBattleSendListener(connection: PlayerConnection) : PlayerPacketSubLi
                 fightObject.myTeam = if (data.team == BattleData.Team.TEAM_A) 1 else 2
                 fightObject.battleGround = "aa1.jpg"
                 fightObject.skills = emptyArray()
-
-                data.initialized = true
             }
 
             // update if needed
@@ -90,7 +90,7 @@ class PlayerBattleSendListener(connection: PlayerConnection) : PlayerPacketSubLi
             }
             else if (battle.currentEntity == this.player)
             {
-                fightObject.startMove = 15 // TODO
+                fightObject.startMove = data.startsMove
                 fightObject.move = data.secondsLeft
             }
             else
@@ -116,9 +116,12 @@ class PlayerBattleSendListener(connection: PlayerConnection) : PlayerPacketSubLi
                     fightObject.battleLog = Array(log.size, { log[it].second })
                 }
             }
+
+            data.initialized = true
         }
         else if (player.battleData != null && player.battleData!!.quitRequested)
         {
+            fightObject = FightObject()
             player.battleData!!.quitRequested = false
             fightObject.close = 1
         }

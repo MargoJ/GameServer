@@ -4,17 +4,29 @@ import pl.margoj.server.implementation.battle.Battle
 import pl.margoj.server.implementation.battle.BattleData
 import pl.margoj.server.implementation.battle.BattleLogBuilder
 import pl.margoj.server.implementation.entity.EntityImpl
+import pl.margoj.server.implementation.player.PlayerImpl
 
-class NormalStrike(battle: Battle, user: EntityImpl) : PlayerAbility(battle, user)
+class NormalStrike(battle: Battle, user: EntityImpl, target: EntityImpl) : BattleAbility(battle, user, target)
 {
-    override fun onUse(target: EntityImpl, userData: BattleData, targetData: BattleData): Boolean
+    override fun check(userData: BattleData, targetData: BattleData): Boolean
     {
         if (userData.team == targetData.team)
         {
             return false
         }
 
-        val damage = 100 // TODO
+        if (!userData.canReach(targetData.row))
+        {
+            (user as? PlayerImpl)?.displayAlert("Jesteś zbyt daleko by zaatakować!")
+            return false
+        }
+
+        return true
+    }
+
+    override fun onUse(userData: BattleData, targetData: BattleData)
+    {
+        val damage = 100
         target.damage(damage)
         targetData.updatedNow()
 
@@ -25,6 +37,5 @@ class NormalStrike(battle: Battle, user: EntityImpl) : PlayerAbility(battle, use
         log.damageTaken = damage
 
         battle.addLog(log.toString())
-        return true
     }
 }

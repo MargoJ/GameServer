@@ -7,6 +7,7 @@ import pl.margoj.server.api.player.Player
 import pl.margoj.server.implementation.battle.Battle
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.npc.Npc
+import pl.margoj.server.implementation.npc.NpcType
 import pl.margoj.server.implementation.player.PlayerImpl
 import java.util.Collections
 
@@ -22,7 +23,7 @@ class TestBattleCommand : CommandListener
         }
         else
         {
-            sender.server.entityManager.entities.find { it is Npc }
+            sender.server.entityManager.entities.find { it is Npc && it.type == NpcType.NPC }
         }) as? EntityImpl?
 
 
