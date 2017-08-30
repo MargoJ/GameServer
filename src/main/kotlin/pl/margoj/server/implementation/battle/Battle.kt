@@ -8,6 +8,8 @@ import pl.margoj.server.implementation.battle.ability.NormalStrike
 import pl.margoj.server.implementation.battle.ability.Step
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.npc.Npc
+import pl.margoj.server.implementation.player.PlayerImpl
+import pl.margoj.server.implementation.utils.MargoMath
 import java.util.Collections
 
 class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
@@ -21,11 +23,9 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
         private set
     var winner: BattleData.Team? = null
         private set
-
-    /* log */
-    var log: MutableMap<Int, String> = hashMapOf()
-    var logCount = 0
+    var loser: BattleData.Team? = null
         private set
+    var individualLogCount: Int = 0
 
     /* update */
     var lastProcessTick = -1L
@@ -246,7 +246,7 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
             {
                 var auto = entity.battleData!!.auto
 
-                if (entity.battleData!!.secondsLeft <= 0)
+                if (!auto && entity.battleData!!.secondsLeft <= 0)
                 {
                     auto = true
 
@@ -269,26 +269,47 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
 
     fun processAuto(entity: EntityImpl)
     {
-        // TODO
+        var target: EntityImpl? = null
         this.iterateOverAlive { participant ->
-            if (participant.battleData!!.team != entity.battleData!!.team)
+            if (entity.battleData!!.team == participant.battleData!!.team || !entity.battleData!!.canReach(participant.battleData!!.row))
             {
-                if (entity.battleData!!.canReach(participant.battleData!!.row))
-                {
-                    NormalStrike(this, entity, participant).performNow()
-                    return@processAuto
-                }
+                return@iterateOverAlive
+            }
+
+            if (target == null)
+            {
+                target = participant
+                return@iterateOverAlive
+            }
+
+            val isTargetMelee = !target!!.battleData!!.hasRangedWeapon()
+            val isParticipantMelee = !participant.battleData!!.hasRangedWeapon()
+
+            if (!isTargetMelee && isParticipantMelee)
+            {
+                target = participant
+                return@iterateOverAlive
+            }
+            else if (isTargetMelee && !isParticipantMelee)
+            {
+                return@iterateOverAlive
+            }
+
+            if (participant.level < target!!.level)
+            {
+                target = participant
             }
         }
 
-        // couldn't find enemies
-        if (!Step(this, entity, entity).performNow())
+        if (target == null)
         {
-            this.addLog(BattleLogBuilder().build { it.text = "${entity.name}: utrata kolejki" }.toString())
-            this.moveDone(entity)
+            this.performOrError(Step(this, entity, entity), { "${entity.name}: step failed" })
+        }
+        else
+        {
+            this.performOrError(NormalStrike(this, entity, target!!), { "${entity.name}: target failed: ${target!!.name}" })
         }
     }
-
 
     fun queueMove(ability: BattleAbility)
     {
@@ -347,7 +368,22 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
 
     fun addLog(log: String)
     {
-        this.log.put(this.logCount++, log)
+        for (participant in this.participants)
+        {
+            if (participant.currentBattle == this)
+            {
+                participant.battleData!!.addLog(log)
+            }
+        }
+    }
+
+    private fun performOrError(ability: BattleAbility, error: () -> String)
+    {
+        if (!ability.performNow())
+        {
+            this.addLog(BattleLogBuilder().build { it.text = error() }.toString())
+            this.moveDone(ability.user);
+        }
     }
 
     private fun checkFinishCondition(): Boolean
@@ -362,11 +398,15 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
             return true
         }
 
-        this.winner = when
+        if (this.isEveryoneDead(BattleData.Team.TEAM_A))
         {
-            this.isEveryoneDead(BattleData.Team.TEAM_A) -> BattleData.Team.TEAM_B
-            this.isEveryoneDead(BattleData.Team.TEAM_B) -> BattleData.Team.TEAM_A
-            else -> null
+            this.loser = BattleData.Team.TEAM_A
+            this.winner = BattleData.Team.TEAM_B
+        }
+        else if (this.isEveryoneDead(BattleData.Team.TEAM_B))
+        {
+            this.loser = BattleData.Team.TEAM_B
+            this.winner = BattleData.Team.TEAM_A
         }
 
         return this.winner != null
@@ -374,11 +414,7 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
 
     private fun isEveryoneDead(team: BattleData.Team): Boolean
     {
-        val list = when (team)
-        {
-            BattleData.Team.TEAM_A -> this.teamA
-            BattleData.Team.TEAM_B -> this.teamB
-        }
+        val list = this.getTeamParticipants(team)
 
         for (entity in list)
         {
@@ -389,6 +425,15 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
         }
 
         return true
+    }
+
+    private fun getTeamParticipants(team: BattleData.Team): List<EntityImpl>
+    {
+        return when (team)
+        {
+            BattleData.Team.TEAM_A -> this.teamA
+            BattleData.Team.TEAM_B -> this.teamB
+        }
     }
 
     private fun finish()
@@ -404,7 +449,90 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
 
         this.addLog(log.toString())
 
+        this.calcExp()
+
         this.finished = true
+    }
+
+    private fun calcExp()
+    {
+        if (this.winner == null || this.loser == null)
+        {
+            return
+        }
+
+        val areWinnersNpcs = this.getTeamParticipants(this.winner!!).all { it is Npc }
+        val areLosersNpcs = this.getTeamParticipants(this.loser!!).all { it is Npc }
+
+        if (areWinnersNpcs)
+        {
+            return
+        }
+
+        if (areLosersNpcs)
+        {
+            val winnerTeam = this.getTeamParticipants(this.winner!!)
+            var winnerTeamLevelAverage = 0
+            for (winner in winnerTeam)
+            {
+                winnerTeamLevelAverage += winner.level
+            }
+            winnerTeamLevelAverage /= winnerTeam.size
+
+            var totalExp = 0L
+
+            // TODO
+
+            var averageHpPercent = 0L
+            for (winner in winnerTeam)
+            {
+                averageHpPercent += winner.healthPercent
+            }
+            averageHpPercent /= winnerTeam.size
+
+            val hpLost = (100 - averageHpPercent)
+            val hpBonus = (hpLost.toDouble() / 15.0).toInt() * 0.10
+
+            for (npc in this.getTeamParticipants(this.loser!!))
+            {
+                var baseExp: Long
+
+                if (npc.level >= winnerTeamLevelAverage)
+                {
+                    baseExp = MargoMath.baseExpFromMob(npc.level)
+                }
+                else if (npc.level + 25 > winnerTeamLevelAverage)
+                {
+                    baseExp = MargoMath.baseExpFromMob(npc.level)
+                    val advantage = winnerTeamLevelAverage - npc.level
+                    val reductionPercent = advantage.toDouble() * 0.04
+                    val reductionExp = (reductionPercent * baseExp.toDouble()).toInt()
+
+                    totalExp += baseExp - reductionExp
+                }
+                else
+                {
+                    continue
+                }
+
+                totalExp = baseExp + (hpBonus * baseExp).toLong()
+
+                // TODO: elite2, hero
+            }
+
+            for (winner in winnerTeam)
+            {
+                // TODO
+                val winnerXp = totalExp
+
+                if (winner.currentBattle == this)
+                {
+                    winner.battleData!!.addLog(BattleLogBuilder().build { it.expGained = winnerXp }.toString())
+                }
+
+                (winner as? PlayerImpl)?.data?.addExp(winnerXp)
+            }
+        }
     }
 
     inline fun iterateOverAlive(consumer: (EntityImpl) -> Unit)

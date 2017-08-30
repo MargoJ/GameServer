@@ -55,7 +55,7 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
             2 -> // collisions
             {
                 server.ticker.registerWaitable {
-                    out.json.addProperty("cl", (this.player!!.location.town!! as TownImpl).margonemCollisionsString)
+                    out.json.addProperty("cl", (this.player!!.location.town!! as TownImpl).cachedMapData.collisionString)
                     connection.initLevel = 2
                 }.wait()
             }

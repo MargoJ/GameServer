@@ -86,6 +86,7 @@ class PlayerBattleSendListener(connection: PlayerConnection) : PlayerPacketSubLi
             // send move
             if (battle.finished)
             {
+
                 fightObject.move = -1
             }
             else if (battle.currentEntity == this.player)
@@ -99,13 +100,13 @@ class PlayerBattleSendListener(connection: PlayerConnection) : PlayerPacketSubLi
             }
 
             // send log
-            if (data.lastLog < battle.logCount - 1)
+            if (data.lastLog < data.logCount - 1)
             {
-                val log = ArrayList<Pair<Int, String>>(battle.logCount - data.lastLog)
+                val log = ArrayList<Pair<Int, String>>(data.logCount - data.lastLog)
 
-                while (data.lastLog < battle.logCount - 1)
+                while (data.lastLog < data.logCount - 1)
                 {
-                    val logFragment = battle.log[data.lastLog + 1]!!
+                    val logFragment = data.log[data.lastLog + 1]!!
                     log.add(Pair(data.lastLog + 1, logFragment))
                     data.lastLog++
                 }

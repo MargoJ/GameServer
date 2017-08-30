@@ -10,11 +10,14 @@ import pl.margoj.mrf.bundle.local.MountedResourceBundle
 import pl.margoj.server.implementation.ServerImpl
 import java.io.File
 import java.io.FileOutputStream
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 class ResourceBundleManager(val server: ServerImpl, val resourceDirectory: File, val mountDirectory: File)
 {
     private val resources_ = ArrayList<String>()
     private var currentMountPoint: File? = null
+    var currentBundleFile = File("cache/.current.mrf")
     var currentBundle: MountResourceBundle? = null
         private set
     var bundlesCacheIndex = File("cache/bundles_index.json")
@@ -90,7 +93,9 @@ class ResourceBundleManager(val server: ServerImpl, val resourceDirectory: File,
         FileUtils.deleteDirectory(currentMountPoint)
         currentMountPoint!!.mkdirs()
 
-        this.currentBundle = MargoMRFResourceBundle(file, this.currentMountPoint!!)
+        Files.copy(file.toPath(), this.currentBundleFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+
+        this.currentBundle = MargoMRFResourceBundle(this.currentBundleFile, this.currentMountPoint!!)
 
         FileOutputStream(File(this.currentMountPoint, "index.json")).use {
             IOUtils.copy(this.currentBundle!!.createIndex(this.currentBundle!!.resources), it)
@@ -127,7 +132,7 @@ class ResourceBundleManager(val server: ServerImpl, val resourceDirectory: File,
         }
 
         FileUtils.deleteDirectory(this.currentMountPoint)
-
+        this.currentBundleFile.delete()
 
         this.currentBundle = null
         server.logger.info("Zestaw zasobów został odładowany")

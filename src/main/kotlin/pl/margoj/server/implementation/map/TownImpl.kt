@@ -1,6 +1,5 @@
 package pl.margoj.server.implementation.map
 
-import com.google.gson.JsonElement
 import pl.margoj.mrf.map.Point
 import pl.margoj.mrf.map.metadata.MetadataElement
 import pl.margoj.mrf.map.metadata.ismain.IsMain
@@ -8,7 +7,6 @@ import pl.margoj.mrf.map.metadata.istown.IsTown
 import pl.margoj.mrf.map.metadata.parentmap.ParentMap
 import pl.margoj.mrf.map.metadata.pvp.MapPvP
 import pl.margoj.mrf.map.metadata.respawnmap.RespawnMap
-import pl.margoj.mrf.map.metadata.welcome.WelcomeMessage
 import pl.margoj.mrf.map.objects.MapObject
 import pl.margoj.mrf.map.objects.npc.NpcMapObject
 import pl.margoj.mrf.map.serialization.MapData
@@ -17,10 +15,8 @@ import pl.margoj.server.api.map.PvPStatus
 import pl.margoj.server.api.map.Town
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.inventory.map.MapInventoryImpl
-import pl.margoj.server.implementation.network.protocol.jsons.TownObject
 import pl.margoj.server.implementation.npc.Npc
 import pl.margoj.server.implementation.npc.NpcType
-import pl.margoj.server.implementation.utils.GsonUtils
 import java.io.File
 
 data class TownImpl(
@@ -31,6 +27,7 @@ data class TownImpl(
         override val width: Int,
         override val height: Int,
         override val collisions: Array<BooleanArray>,
+        override val water: Array<IntArray>,
         val metadata: Collection<MetadataElement>,
         val objects: Collection<MapObject<*>>,
         val image: File,
@@ -50,71 +47,6 @@ data class TownImpl(
     override lateinit var inventory: MapInventoryImpl
     private var npcs_ = ArrayList<Npc>()
     val npc: Collection<Npc> get() = this.npcs_
-
-    @Suppress("LoopToCallChain")
-    val margonemCollisionsString: String
-        get()
-        {
-            val collisionsChain = BooleanArray(this.width * this.height)
-
-            for (x in 0..(this.width - 1))
-            {
-                for (y in 0..(this.height - 1))
-                {
-                    collisionsChain[x + y * this.width] = this.collisions[x][y]
-                }
-            }
-
-            val out = StringBuilder()
-
-            var collisionsIndex = 0
-
-            while (collisionsIndex < collisionsChain.size)
-            {
-                var zerosMultiplier = 0
-
-                zeros_loop@
-                while (true)
-                {
-                    for (zerosShift in 0..5)
-                    {
-                        if (collisionsIndex + zerosShift >= collisionsChain.size || collisionsChain[collisionsIndex + zerosShift])
-                        {
-                            break@zeros_loop
-                        }
-                    }
-                    collisionsIndex += 6
-                    zerosMultiplier++
-                }
-
-                if (zerosMultiplier > 0)
-                {
-                    while (zerosMultiplier > 27)
-                    {
-                        out.append('z')
-                        zerosMultiplier -= 27
-                    }
-
-                    if (zerosMultiplier > 0)
-                    {
-                        out.append(('_'.toInt() + zerosMultiplier).toChar())
-                    }
-                }
-                else
-                {
-                    var mask = 0
-
-                    for (p in 0..5)
-                    {
-                        mask = mask or if (collisionsIndex >= collisionsChain.size) 0 else (if (collisionsChain[collisionsIndex++]) (1 shl p) else 0)
-                    }
-
-                    out.append((32 + mask).toChar())
-                }
-            }
-
-            return out.toString()
-        }
 
     override val pvp: PvPStatus
         get() = when (this.getMetadata(MapPvP::class.java))
