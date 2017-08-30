@@ -24,7 +24,20 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?, override val t
     private var catchupTime = 0L
     private var currentIterator: MutableIterator<Tickable>? = null
     private val asyncCounter = AtomicInteger()
-    private val asyncRunner = Executors.newCachedThreadPool { Thread(it, "MargoJ-Async-${asyncCounter.incrementAndGet()}") }
+    private val asyncRunner = Executors.newCachedThreadPool {
+        val wrapper = Runnable {
+            try
+            {
+                it.run()
+            }
+            catch (e: Throwable)
+            {
+                e.printStackTrace()
+            }
+        }
+
+        Thread(wrapper, "MargoJ-Async-${asyncCounter.incrementAndGet()}")
+    }
 
     override var currentTick = 0L
         private set

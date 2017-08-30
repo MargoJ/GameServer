@@ -1,4 +1,4 @@
-package pl.margoj.server.implementation.commands.defaults
+package pl.margoj.server.implementation.commands.defaults.dev
 
 import pl.margoj.server.api.commands.Arguments
 import pl.margoj.server.api.commands.CommandException

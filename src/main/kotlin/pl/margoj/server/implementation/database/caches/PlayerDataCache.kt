@@ -60,7 +60,7 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Lo
             data.statPoints = it.getInt("statPoints")
             data.gold = it.getLong("gold")
             data.ttl = it.getInt("ttl")
-            data.deadUntil = it.getDate("dead_until")
+            data.deadUntil = it.getTimestamp("dead_until")
             data.inventory = databaseManager.playerInventoryCache.loadOne(data.id)
             data
         }
@@ -85,7 +85,7 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Lo
             statement.setInt(i(), d.statPoints)
             statement.setLong(i(), d.gold)
             statement.setInt(i(), d.ttl)
-            statement.setDate(i(), if (d.deadUntil == null) null else java.sql.Date(d.deadUntil!!.time))
+            statement.setTimestamp(i(), if (d.deadUntil == null) null else java.sql.Timestamp(d.deadUntil!!.time))
             databaseManager.playerInventoryCache.saveOne(d.inventory!!)
         })
     }

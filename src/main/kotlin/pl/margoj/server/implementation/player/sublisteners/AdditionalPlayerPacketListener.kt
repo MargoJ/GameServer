@@ -23,6 +23,12 @@ class AdditionalPlayerPacketListener(connection: PlayerConnection) : PlayerPacke
             }
         }
 
+        if (player.data.isDead)
+        {
+            val left = player.data.deadUntil!!.time - System.currentTimeMillis()
+            out.json.addProperty("dead", left / 1000L)
+        }
+
         return true
     }
 }

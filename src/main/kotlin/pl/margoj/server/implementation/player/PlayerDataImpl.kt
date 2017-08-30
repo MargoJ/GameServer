@@ -49,6 +49,7 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
     override var ttl: Int = 0
     var lastTtlPointTaken = -1L
     override var deadUntil: Date? = null
+    override val isDead: Boolean get() = if (deadUntil == null) false else (deadUntil!!.time > System.currentTimeMillis())
 
     var location: Location = Location(null)
     var inventory: PlayerInventoryImpl? = null

@@ -1,4 +1,4 @@
-package pl.margoj.server.implementation.commands.defaults
+package pl.margoj.server.implementation.commands.defaults.admin
 
 import org.apache.commons.lang3.StringUtils
 import pl.margoj.server.api.commands.Arguments

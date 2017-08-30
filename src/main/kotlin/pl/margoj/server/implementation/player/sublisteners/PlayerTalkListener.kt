@@ -17,6 +17,11 @@ class PlayerTalkListener(connection: PlayerConnection) : PlayerPacketSubListener
     {
         if (query["c"] == null)
         {
+            if (!player!!.movementManager.canMove)
+            {
+                return true
+            }
+
             val id = query["id"]?.toInt()
             this.checkForMaliciousData(id == null, "invalid id")
             id!!

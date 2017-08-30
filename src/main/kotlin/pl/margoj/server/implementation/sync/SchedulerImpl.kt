@@ -7,19 +7,10 @@ import pl.margoj.server.api.sync.Tickable
 import pl.margoj.server.implementation.ServerImpl
 import java.util.Collections
 import java.util.LinkedList
-import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 
 class SchedulerImpl(val server: ServerImpl) : Scheduler, Tickable
 {
-    private companion object
-    {
-        val asyncTaskCounter = AtomicInteger()
-        val executor = Executors.newCachedThreadPool {
-            Thread(it, "MargoJAsyncTask-${asyncTaskCounter.getAndIncrement()}")
-        }!!
-    }
-
     private val tasks: MutableMap<Int, Task> = Collections.synchronizedMap(HashMap())
     private val taskId = AtomicInteger()
     private var processing = false
@@ -93,7 +84,7 @@ class SchedulerImpl(val server: ServerImpl) : Scheduler, Tickable
             when (task.mode)
             {
                 Task.Mode.SYNC -> task.action.run()
-                Task.Mode.ASYNC -> executor.execute(task.action)
+                Task.Mode.ASYNC -> server.ticker.runAsync(task.action)
             }
         }
         this.processing = false

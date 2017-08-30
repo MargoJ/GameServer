@@ -1,4 +1,4 @@
-package pl.margoj.server.implementation.commands.defaults
+package pl.margoj.server.implementation.commands.defaults.debug
 
 import org.apache.commons.io.IOUtils
 import pl.margoj.server.api.commands.Arguments

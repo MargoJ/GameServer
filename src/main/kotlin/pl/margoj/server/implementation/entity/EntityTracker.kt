@@ -1,7 +1,7 @@
 package pl.margoj.server.implementation.entity
 
-import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.map.Town
+import pl.margoj.server.api.player.Player
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.network.protocol.jsons.NpcObject
 import pl.margoj.server.implementation.network.protocol.jsons.OtherObject
@@ -31,8 +31,6 @@ class EntityTracker(val owner: PlayerImpl)
 
 
         val town = this.owner.location.town!!
-        val our = this.owner.location
-        val their = anotherEntity.location
 
         if (anotherEntity is Npc)
         {
@@ -41,14 +39,22 @@ class EntityTracker(val owner: PlayerImpl)
                 return true
             }
 
-            return this.canSee(our, their, town, WINDOW_SIZE * 3)
+            return this.canSee(this.owner, anotherEntity, town, WINDOW_SIZE * 3)
         }
 
-        return this.canSee(our, their, town, WINDOW_SIZE)
+        return this.canSee(this.owner, anotherEntity, town, WINDOW_SIZE)
     }
 
-    private fun canSee(our: Location, their: Location, town: Town, size: Int): Boolean
+    private fun canSee(we: EntityImpl, they: EntityImpl, town: Town, size: Int): Boolean
     {
+        if(they is Player && they.data.isDead)
+        {
+            return false
+        }
+
+        val our = we.location
+        val their = they.location
+
         return Math.abs(our.x - their.x) <= this.getRequiredDistance(size, our.x, town.width)
                 && Math.abs(our.y - their.y) <= this.getRequiredDistance(size, our.y, town.height)
     }

@@ -37,6 +37,8 @@ abstract class DatabaseObjectCache<I, T>
 
     val cached: Int get() = this.cache.size
 
+    internal val cachedEntries: Collection<T?> get() = this.cache.values
+
     fun loadOne(id: I): T?
     {
         logger.trace("$logPrefix.loadOne($id)")
