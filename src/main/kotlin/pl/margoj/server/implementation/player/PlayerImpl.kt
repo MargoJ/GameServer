@@ -149,7 +149,7 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
         this.server.ticker.registerTickable(this.itemTracker)
         this.online = true
 
-        this.server.gameLogger.info("${this.name}: zalogowano się do gry. Pozycja: ${this.location.toSimpleString()}")
+        this.server.gameLogger.info("${this.name}: zalogowano się do gry. IP: ${this.connection.ip}. Pozycja: ${this.location.toSimpleString()}")
     }
 
     fun disconnect()

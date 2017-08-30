@@ -20,6 +20,7 @@ class AddXPCommand : CommandListener
         args.ensureTrue({ xp != null && target.data.xp + xp > target.data.xp }, "${args.asString(0)} nie jest poprawną liczbą")
         xp!!
 
+        target.data.addExp(xp)
         sender.sendMessage("Dodano $xp xp!")
         sender.server.gameLogger.info("${sender.name}: .addxp: $xp ${target.name}")
     }

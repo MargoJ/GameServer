@@ -24,8 +24,21 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
 
     var initLevel = 0
     var lastPacket: Long = 0
-    var ip: String? = null
     var player: PlayerImpl? = null
+    var ip: String? = null
+        set(value)
+        {
+            if (field != value)
+            {
+                if (field != null)
+                {
+                    this.manager.server.gameLogger.warn("connection $aid(Player=${player?.name}): ip  $field -> $value !")
+                }
+
+                field = value
+            }
+        }
+
 
     init
     {
