@@ -84,6 +84,13 @@ data class RegisteredHandler(val handle: MethodHandle, val plugin: MargoJPlugin<
 {
     override fun compareTo(other: RegisteredHandler): Int
     {
-        return this.handlerAnnotation.prority - other.handlerAnnotation.prority
+        val priorityDifference = this.handlerAnnotation.prority - other.handlerAnnotation.prority
+
+        if (priorityDifference != 0)
+        {
+            return priorityDifference
+        }
+
+        return if (this.hashCode() == other.hashCode() && this.equals(other)) 0 else -1
     }
 }
