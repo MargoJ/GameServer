@@ -1,19 +1,25 @@
 package pl.margoj.server.implementation
 
+import org.apache.commons.lang3.Validate
 import org.apache.logging.log4j.Logger
 import pl.margoj.mrf.MargoResource
 import pl.margoj.server.api.MargoJConfig
 import pl.margoj.server.api.Server
+import pl.margoj.server.api.battle.BattleUnableToStartException
+import pl.margoj.server.api.entity.Entity
 import pl.margoj.server.api.events.ServerReadyEvent
 import pl.margoj.server.api.inventory.Item
 import pl.margoj.server.api.inventory.ItemStack
+import pl.margoj.server.api.player.Player
 import pl.margoj.server.implementation.auth.Authenticator
+import pl.margoj.server.implementation.battle.BattleImpl
 import pl.margoj.server.implementation.chat.ChatManagerImpl
 import pl.margoj.server.implementation.commands.CommandsManagerImpl
 import pl.margoj.server.implementation.commands.console.ConsoleCommandSenderImpl
 import pl.margoj.server.implementation.commands.defaults.DefaultCommands
 import pl.margoj.server.implementation.database.DatabaseManager
 import pl.margoj.server.implementation.database.DatabaseSaveThread
+import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.entity.EntityManagerImpl
 import pl.margoj.server.implementation.event.EventManagerImpl
 import pl.margoj.server.implementation.item.ItemImpl
@@ -270,6 +276,47 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger,
     override fun newItemStack(item: Item): ItemStack
     {
         return this.itemManager.newItemStack(item as ItemImpl)
+    }
+
+    override fun startBattle(teamA: List<Entity>, teamB: List<Entity>)
+    {
+        Validate.isTrue(teamA.all { it is EntityImpl }, "invalid entities")
+        Validate.isTrue(teamB.all { it is EntityImpl }, "invalid entities")
+        @Suppress("UNCHECKED_CAST")
+        teamA as List<EntityImpl>
+        @Suppress("UNCHECKED_CAST")
+        teamB as List<EntityImpl>
+
+        val battle = BattleImpl(this, teamA, teamB)
+        val failCause: MutableMap<Entity, BattleUnableToStartException.Cause> = HashMap()
+
+        for (entity in battle.participants)
+        {
+            if (entity is Player && !entity.online)
+            {
+                failCause.put(entity, BattleUnableToStartException.Cause.PLAYER_IS_OFFLINE)
+            }
+            else if (entity is Player && entity.data.isDead) // TODO
+            {
+                failCause.put(entity, BattleUnableToStartException.Cause.ENTITY_IS_DEAD)
+            }
+            else if (entity.currentBattle != null)
+            {
+                if (entity.battleData?.dead == true)
+                {
+                    continue
+                }
+
+                failCause.put(entity, BattleUnableToStartException.Cause.ENTITY_IN_BATTLE)
+            }
+        }
+
+        if (failCause.isNotEmpty())
+        {
+            throw BattleUnableToStartException(failCause)
+        }
+
+        battle.start()
     }
 
     companion object

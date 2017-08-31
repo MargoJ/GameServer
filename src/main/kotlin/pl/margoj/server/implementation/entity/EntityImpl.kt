@@ -1,12 +1,12 @@
 package pl.margoj.server.implementation.entity
 
 import pl.margoj.server.api.entity.Entity
-import pl.margoj.server.implementation.battle.Battle
+import pl.margoj.server.implementation.battle.BattleImpl
 import pl.margoj.server.implementation.battle.BattleData
 
 abstract class EntityImpl(override val id: Int) : Entity
 {
-    var currentBattle: Battle? = null
+    override var currentBattle: BattleImpl? = null
 
     var battleData: BattleData? = null
 

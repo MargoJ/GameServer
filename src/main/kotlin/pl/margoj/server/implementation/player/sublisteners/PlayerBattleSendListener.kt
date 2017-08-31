@@ -1,5 +1,6 @@
 package pl.margoj.server.implementation.player.sublisteners
 
+import pl.margoj.server.api.battle.BattleTeam
 import pl.margoj.server.implementation.battle.BattleData
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
@@ -34,7 +35,7 @@ class PlayerBattleSendListener(connection: PlayerConnection) : PlayerPacketSubLi
             if (!data.initialized)
             {
                 fightObject.init = 1
-                fightObject.myTeam = if (data.team == BattleData.Team.TEAM_A) 1 else 2
+                fightObject.myTeam = if (data.team == BattleTeam.TEAM_A) 1 else 2
                 fightObject.battleGround = "aa1.jpg"
                 fightObject.skills = emptyArray()
             }

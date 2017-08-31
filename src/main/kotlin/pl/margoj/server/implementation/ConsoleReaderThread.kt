@@ -1,6 +1,7 @@
 package pl.margoj.server.implementation
 
 import jline.console.ConsoleReader
+import pl.margoj.server.api.sync.Tickable
 import java.io.IOException
 
 class ConsoleReaderThread(private val server: ServerImpl, private var useJLine: Boolean) : Thread("MargoJ|ConsoleReaderThread")
@@ -38,7 +39,12 @@ class ConsoleReaderThread(private val server: ServerImpl, private var useJLine: 
                 {
                     try
                     {
-                        this.server.commandsManager.dispatchCommand(this.server.consoleCommandSender, line)
+                        this.server.ticker.tickOnce(object : Tickable {
+                            override fun tick(currentTick: Long)
+                            {
+                                server.commandsManager.dispatchCommand(server.consoleCommandSender, line)
+                            }
+                        })
                     }
                     catch (e: Throwable)
                     {

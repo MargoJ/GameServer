@@ -4,7 +4,7 @@ import pl.margoj.server.api.commands.Arguments
 import pl.margoj.server.api.commands.CommandListener
 import pl.margoj.server.api.commands.CommandSender
 import pl.margoj.server.api.player.Player
-import pl.margoj.server.implementation.battle.Battle
+import pl.margoj.server.implementation.battle.BattleImpl
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.npc.Npc
 import pl.margoj.server.implementation.npc.NpcType
@@ -38,7 +38,8 @@ class TestBattleCommand : CommandListener
         args.ensureNotNull(enemy, "Nie znaleziono przeciwnika")
         enemy!!
 
-        val battle = Battle(
+        val battle = BattleImpl(
+                server = sender.server,
                 teamA = Collections.singletonList(sender),
                 teamB = Collections.singletonList(enemy)
         )

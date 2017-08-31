@@ -43,6 +43,11 @@ class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation
         }
     }
 
+    override fun toString(): String
+    {
+        return "Npc(id=$id, name=$name, location=$location)"
+    }
+
     companion object
     {
         private val npcIdCounter = AtomicInteger(2_000_000)

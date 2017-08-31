@@ -1,10 +1,10 @@
 package pl.margoj.server.implementation.battle.ability
 
-import pl.margoj.server.implementation.battle.Battle
+import pl.margoj.server.implementation.battle.BattleImpl
 import pl.margoj.server.implementation.battle.BattleData
 import pl.margoj.server.implementation.entity.EntityImpl
 
-abstract class BattleAbility(val battle: Battle, val user: EntityImpl, val target: EntityImpl)
+abstract class BattleAbility(val battle: BattleImpl, val user: EntityImpl, val target: EntityImpl)
 {
     fun queue()
     {

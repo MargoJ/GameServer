@@ -2,6 +2,7 @@ package pl.margoj.server.implementation.battle
 
 import pl.margoj.mrf.item.ItemCategory
 import pl.margoj.mrf.item.ItemProperties
+import pl.margoj.server.api.battle.BattleTeam
 import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.api.player.Player
 import pl.margoj.server.api.player.Profession
@@ -10,7 +11,7 @@ import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.network.protocol.jsons.BattleParticipant
 import pl.margoj.server.implementation.npc.Npc
 
-class BattleData(val entity: EntityImpl, val battle: Battle, val team: Team)
+class BattleData(val entity: EntityImpl, val battle: BattleImpl, val team: BattleTeam)
 {
     init
     {
@@ -106,7 +107,7 @@ class BattleData(val entity: EntityImpl, val battle: Battle, val team: Team)
             obj.profession = entity.stats.profession
             obj.npc = if (entity is Npc) 1 else 0
             obj.gender = entity.gender.id.toString()
-            obj.team = if (this.team == Team.TEAM_A) 1 else 2
+            obj.team = if (this.team == BattleTeam.TEAM_A) 1 else 2
             obj.icon = this.entity.icon
         }
 
@@ -131,7 +132,7 @@ class BattleData(val entity: EntityImpl, val battle: Battle, val team: Team)
             return true
         }
 
-        if (this.team == Team.TEAM_A)
+        if (this.team == BattleTeam.TEAM_A)
         {
             return this.row >= targetRow - 1
         }
@@ -169,11 +170,5 @@ class BattleData(val entity: EntityImpl, val battle: Battle, val team: Team)
     private fun getItemType(item: ItemStack?): ItemCategory?
     {
         return (item as? ItemStackImpl)?.item?.margoItem?.get(ItemProperties.CATEGORY)
-    }
-
-    enum class Team
-    {
-        TEAM_A,
-        TEAM_B
     }
 }

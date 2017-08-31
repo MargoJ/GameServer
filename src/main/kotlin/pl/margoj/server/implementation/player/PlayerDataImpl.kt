@@ -1,6 +1,7 @@
 package pl.margoj.server.implementation.player
 
 import pl.margoj.mrf.item.ItemProperties
+import pl.margoj.server.api.events.player.PlayerExpChangeEvent
 import pl.margoj.server.api.events.player.PlayerLevelUpEvent
 import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.player.Gender
@@ -59,7 +60,17 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
 
     override fun addExp(xp: Long)
     {
-        this.xp += xp
+        val oldXp = this.xp
+        val newXp = this.xp + xp
+
+        val event = PlayerExpChangeEvent(this.player, oldXp, newXp, xp)
+        this.player.server.eventManager.call(event)
+        if (event.cancelled)
+        {
+            return
+        }
+
+        this.xp = event.newXp
 
         while (true)
         {

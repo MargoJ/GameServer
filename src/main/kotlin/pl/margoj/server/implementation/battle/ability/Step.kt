@@ -1,12 +1,13 @@
 package pl.margoj.server.implementation.battle.ability
 
-import pl.margoj.server.implementation.battle.Battle
+import pl.margoj.server.api.battle.BattleTeam
+import pl.margoj.server.implementation.battle.BattleImpl
 import pl.margoj.server.implementation.battle.BattleData
 import pl.margoj.server.implementation.battle.BattleLogBuilder
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.player.PlayerImpl
 
-class Step(battle: Battle, user: EntityImpl, target: EntityImpl) : BattleAbility(battle, user, target)
+class Step(battle: BattleImpl, user: EntityImpl, target: EntityImpl) : BattleAbility(battle, user, target)
 {
     override fun check(userData: BattleData, targetData: BattleData): Boolean
     {
@@ -21,12 +22,12 @@ class Step(battle: Battle, user: EntityImpl, target: EntityImpl) : BattleAbility
             return false
         }
 
-        if (userData.team == BattleData.Team.TEAM_A && userData.row >= 4)
+        if (userData.team == BattleTeam.TEAM_A && userData.row >= 4)
         {
             (user as? PlayerImpl)?.displayAlert("Nie możesz już zrobić kroku!")
             return false
         }
-        else if (userData.team == BattleData.Team.TEAM_B && userData.row <= 1)
+        else if (userData.team == BattleTeam.TEAM_B && userData.row <= 1)
         {
             (user as? PlayerImpl)?.displayAlert("Nie możesz już zrobić kroku!")
             return false
@@ -38,7 +39,7 @@ class Step(battle: Battle, user: EntityImpl, target: EntityImpl) : BattleAbility
     override fun onUse(userData: BattleData, targetData: BattleData)
     {
         battle.addLog(BattleLogBuilder().build { it.who = userData }.build { it.step = true }.toString())
-        userData.row += if (userData.team == BattleData.Team.TEAM_A) 1 else -1
+        userData.row += if (userData.team == BattleTeam.TEAM_A) 1 else -1
         userData.updatedNow()
     }
 }

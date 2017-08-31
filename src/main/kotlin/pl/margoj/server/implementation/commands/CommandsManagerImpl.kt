@@ -1,10 +1,8 @@
 package pl.margoj.server.implementation.commands
 
 import org.apache.commons.lang3.StringUtils
-import pl.margoj.server.api.commands.CommandException
-import pl.margoj.server.api.commands.CommandListener
-import pl.margoj.server.api.commands.CommandSender
-import pl.margoj.server.api.commands.CommandsManager
+import pl.margoj.server.api.commands.*
+import pl.margoj.server.api.events.CommandInvokeEvent
 import pl.margoj.server.api.plugin.MargoJPlugin
 import pl.margoj.server.implementation.ServerImpl
 import java.util.Arrays
@@ -26,10 +24,16 @@ class CommandsManagerImpl(val server: ServerImpl) : CommandsManager
             input = input.substring(1)
         }
         val parts = StringUtils.split(input, ' ')
-        val command = parts[0]
-        val args = parts.copyOfRange(1, parts.size)
 
-        if (!commandDispatched(sender, command, args))
+        val event = CommandInvokeEvent(sender, parts[0], StringArrayArguments(sender.server as ServerImpl, parts.copyOfRange(1, parts.size)))
+        this.server.eventManager.call(event)
+
+        if(event.cancelled)
+        {
+            return false
+        }
+
+        if (!commandDispatched(sender, event.command, event.args))
         {
             sender.sendMessage("Nie znaleziono podanej komendy, użyj .help aby wyświetlić pomoc", CommandSender.MessageSeverity.WARN)
             return false
@@ -38,13 +42,13 @@ class CommandsManagerImpl(val server: ServerImpl) : CommandsManager
         return true
     }
 
-    private fun commandDispatched(sender: CommandSender, command: String, args: Array<String>): Boolean
+    private fun commandDispatched(sender: CommandSender, command: String, args: Arguments): Boolean
     {
         val listener = this.allListeners.firstOrNull { it.commands.contains(command) } ?: return false
 
         try
         {
-            listener.listener.commandPerformed(command, sender, StringArrayArguments(sender.server as ServerImpl, args))
+            listener.listener.commandPerformed(command, sender, args)
         }
         catch (e: CommandException)
         {

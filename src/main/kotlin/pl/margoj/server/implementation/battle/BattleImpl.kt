@@ -1,8 +1,14 @@
 package pl.margoj.server.implementation.battle
 
 import org.apache.commons.lang3.Validate
+import pl.margoj.server.api.battle.Battle
+import pl.margoj.server.api.battle.BattleTeam
+import pl.margoj.server.api.events.battle.BattleFinishedEvent
+import pl.margoj.server.api.events.battle.BattleStartedEvent
+import pl.margoj.server.api.events.battle.BattleStartingEvent
 import pl.margoj.server.api.player.Player
 import pl.margoj.server.api.player.Profession
+import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.battle.ability.BattleAbility
 import pl.margoj.server.implementation.battle.ability.NormalStrike
 import pl.margoj.server.implementation.battle.ability.Step
@@ -12,20 +18,19 @@ import pl.margoj.server.implementation.player.PlayerImpl
 import pl.margoj.server.implementation.utils.MargoMath
 import java.util.Collections
 
-class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
+class BattleImpl internal constructor(val server: ServerImpl, override val teamA: List<EntityImpl>, override val teamB: List<EntityImpl>) : Battle
 {
-    val participants: List<EntityImpl>
+    override val participants: List<EntityImpl>
 
     /**status **/
-    var started = false
+    override var started = false
         private set
-    var finished = false
+    override var finished = false
         private set
-    var winner: BattleData.Team? = null
+    override var winner: BattleTeam? = null
         private set
-    var loser: BattleData.Team? = null
+    override var loser: BattleTeam? = null
         private set
-    var individualLogCount: Int = 0
 
     /* update */
     var lastProcessTick = -1L
@@ -65,8 +70,15 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
         return null
     }
 
-    fun start()
+    internal fun start()
     {
+        val event = BattleStartingEvent(this)
+        server.eventManager.call(event)
+        if (event.cancelled)
+        {
+            return
+        }
+
         for (participant in this.participants)
         {
             if (participant is Npc)
@@ -76,7 +88,7 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
 
             participant.currentBattle = this
 
-            val team = if (teamA.contains(participant)) BattleData.Team.TEAM_A else BattleData.Team.TEAM_B
+            val team = if (teamA.contains(participant)) BattleTeam.TEAM_A else BattleTeam.TEAM_B
             val data = BattleData(participant, this, team)
 
             var row: Int
@@ -95,7 +107,7 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
                 }
             }
 
-            if (team == BattleData.Team.TEAM_B)
+            if (team == BattleTeam.TEAM_B)
             {
                 row = 5 - row
             }
@@ -107,6 +119,8 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
         this.updateAttackSpeedThreshold()
 
         this.started = true
+
+        server.eventManager.call(BattleStartedEvent(this))
     }
 
     fun updateAttackSpeedThreshold()
@@ -398,21 +412,21 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
             return true
         }
 
-        if (this.isEveryoneDead(BattleData.Team.TEAM_A))
+        if (this.isEveryoneDead(BattleTeam.TEAM_A))
         {
-            this.loser = BattleData.Team.TEAM_A
-            this.winner = BattleData.Team.TEAM_B
+            this.loser = BattleTeam.TEAM_A
+            this.winner = BattleTeam.TEAM_B
         }
-        else if (this.isEveryoneDead(BattleData.Team.TEAM_B))
+        else if (this.isEveryoneDead(BattleTeam.TEAM_B))
         {
-            this.loser = BattleData.Team.TEAM_B
-            this.winner = BattleData.Team.TEAM_A
+            this.loser = BattleTeam.TEAM_B
+            this.winner = BattleTeam.TEAM_A
         }
 
         return this.winner != null
     }
 
-    private fun isEveryoneDead(team: BattleData.Team): Boolean
+    private fun isEveryoneDead(team: BattleTeam): Boolean
     {
         val list = this.getTeamParticipants(team)
 
@@ -427,12 +441,12 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
         return true
     }
 
-    private fun getTeamParticipants(team: BattleData.Team): List<EntityImpl>
+    override fun getTeamParticipants(team: BattleTeam): List<EntityImpl>
     {
         return when (team)
         {
-            BattleData.Team.TEAM_A -> this.teamA
-            BattleData.Team.TEAM_B -> this.teamB
+            BattleTeam.TEAM_A -> this.teamA
+            BattleTeam.TEAM_B -> this.teamB
         }
     }
 
@@ -442,8 +456,8 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
 
         log.winner = when (this.winner)
         {
-            BattleData.Team.TEAM_A -> this.teamA
-            BattleData.Team.TEAM_B -> this.teamB
+            BattleTeam.TEAM_A -> this.teamA
+            BattleTeam.TEAM_B -> this.teamB
             null -> Collections.emptyList()
         }
 
@@ -452,6 +466,14 @@ class Battle(val teamA: List<EntityImpl>, val teamB: List<EntityImpl>)
         this.calcExp()
 
         this.finished = true
+
+        val event = BattleFinishedEvent(
+                battle = this,
+                hasWinner = this.winner != null,
+                winnerTeam = this.winner,
+                loserTeam = this.loser
+        )
+        this.server.eventManager.call(event)
     }
 
     private fun calcExp()
