@@ -319,6 +319,16 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger,
         battle.start()
     }
 
+    override fun getPlayer(name: String): Player?
+    {
+        return this.players.firstOrNull { it.name == name }
+    }
+
+    override fun getPlayer(id: Int): Player?
+    {
+        return this.players.firstOrNull { it.id == id }
+    }
+
     companion object
     {
         const val VERSION = "1.0"

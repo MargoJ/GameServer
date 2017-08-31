@@ -15,7 +15,7 @@ class ChatManagerImpl(val server: ServerImpl) : ChatManager
 
         val event = PlayerChatEvent(player, escapedInput)
         server.eventManager.call(event)
-        if(event.cancelled)
+        if (event.cancelled)
         {
             return
         }

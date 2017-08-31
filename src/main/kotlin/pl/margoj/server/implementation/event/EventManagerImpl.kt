@@ -1,11 +1,12 @@
 package pl.margoj.server.implementation.event
 
 import pl.margoj.server.api.event.*
+import pl.margoj.server.api.event.EventListener
 import pl.margoj.server.api.plugin.MargoJPlugin
 import pl.margoj.server.implementation.ServerImpl
 import java.lang.invoke.MethodHandle
 import java.lang.invoke.MethodHandles
-import java.util.TreeSet
+import java.util.*
 
 class EventManagerImpl(val server: ServerImpl) : EventManager
 {
