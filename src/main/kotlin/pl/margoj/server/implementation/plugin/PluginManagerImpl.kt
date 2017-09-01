@@ -46,7 +46,7 @@ class PluginManagerImpl(override val server: ServerImpl) : PluginManager
 
         for (file in fileList)
         {
-            if(file.isDirectory)
+            if (file.isDirectory)
             {
                 continue
             }

@@ -5,9 +5,7 @@ import pl.margoj.server.api.commands.*
 import pl.margoj.server.api.events.CommandInvokeEvent
 import pl.margoj.server.api.plugin.MargoJPlugin
 import pl.margoj.server.implementation.ServerImpl
-import java.util.Arrays
-import java.util.TreeMap
-import java.util.TreeSet
+import java.util.*
 
 class CommandsManagerImpl(val server: ServerImpl) : CommandsManager
 {
@@ -28,7 +26,7 @@ class CommandsManagerImpl(val server: ServerImpl) : CommandsManager
         val event = CommandInvokeEvent(sender, parts[0], StringArrayArguments(sender.server as ServerImpl, parts.copyOfRange(1, parts.size)))
         this.server.eventManager.call(event)
 
-        if(event.cancelled)
+        if (event.cancelled)
         {
             return false
         }
