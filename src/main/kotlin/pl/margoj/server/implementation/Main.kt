@@ -37,6 +37,7 @@ fun main(args: Array<String>)
     optionParser.acceptsAll(Arrays.asList("nettylogger", "n")).withRequiredArg().ofType(Level::class.java).describedAs("Netty logging level")
     optionParser.acceptsAll(Arrays.asList("help", "?"), "Pokazuje ta strone pomocy")
     optionParser.acceptsAll(Arrays.asList("debug", "d"), "Wlacza tryb debuggowania")
+    optionParser.acceptsAll(Collections.singletonList("standalone"), "Wlacza serwer w trybie standalone (hostowanie clienta)")
 
     val options = optionParser.parse(*args)
 
@@ -85,7 +86,7 @@ fun main(args: Array<String>)
 
     val gameLogger = LogManager.getLogger("Game")
 
-    val server = ServerImpl(config, logger, gameLogger)
+    val server = ServerImpl(config, options.has("standalone"), logger, gameLogger)
     server.useJLine = useJLine
     server.debugModeEnabled = debug
     server.start()

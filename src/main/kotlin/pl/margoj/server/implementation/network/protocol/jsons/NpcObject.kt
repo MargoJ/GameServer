@@ -16,5 +16,6 @@ data class NpcObject(
         @SerializedName("wt")
         var subType: Int? = null,
         @SerializedName("grp")
-        var group: Int? = null
+        var group: Int? = null,
+        var del: Int? = null
 )

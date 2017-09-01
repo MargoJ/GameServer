@@ -34,11 +34,6 @@ class EntityTracker(val owner: PlayerImpl)
 
         if (anotherEntity is Npc)
         {
-            if (this.trackedEntities_.contains(anotherEntity))
-            {
-                return true
-            }
-
             return this.canSee(this.owner, anotherEntity, town, WINDOW_SIZE * 3)
         }
 
@@ -47,7 +42,20 @@ class EntityTracker(val owner: PlayerImpl)
 
     private fun canSee(we: EntityImpl, they: EntityImpl, town: Town, size: Int): Boolean
     {
-        if(they is Player && they.data.isDead)
+        if (they.isDead)
+        {
+            return false
+        }
+
+        if (they is Npc)
+        {
+            if (this.trackedEntities_.contains(they))
+            {
+                return true
+            }
+        }
+
+        if (they is Player && !they.online)
         {
             return false
         }
@@ -153,13 +161,24 @@ class EntityTracker(val owner: PlayerImpl)
 
     private fun disposeEntity(entity: EntityImpl, out: OutgoingPacket)
     {
-        entity.setTrackingData(this, null)
+        if (entity is PlayerImpl)
+        {
+            entity.setTrackingData(this, null)
 
-        val other = OtherObject()
-        other.id = entity.id
-        other.del = 1
+            val other = OtherObject()
+            other.id = entity.id
+            other.del = 1
 
-        out.addOther(other)
+            out.addOther(other)
+        }
+        else if(entity is Npc)
+        {
+            val npc = NpcObject()
+            npc.id = entity.id
+            npc.del = 1
+
+            out.addNpc(npc)
+        }
     }
 
     private fun updateEntity(entity: EntityImpl, out: OutgoingPacket)

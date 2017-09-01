@@ -42,7 +42,7 @@ import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-class ServerImpl(override val config: MargoJConfig, override val logger: Logger, override val gameLogger: Logger) : Server
+class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, override val logger: Logger, override val gameLogger: Logger) : Server
 {
     private var towns_ = hashMapOf<String, TownImpl>()
     private var items_ = hashMapOf<String, ItemImpl>()
@@ -98,35 +98,38 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger,
 
         val webFolder = File("web")
 
-        try
+        if(standalone)
         {
-            val installer = GameInstaller(webFolder, logger)
-
-            if (!installer.isUpdated())
+            try
             {
-                if (!installer.canUpdate())
+                val installer = GameInstaller(webFolder, logger)
+
+                if (!installer.isUpdated())
                 {
-                    for (i in 0..10)
+                    if (!installer.canUpdate())
                     {
-                        logger.warn("Nowa wersja clienta jest juz dostepna!")
+                        for (i in 0..10)
+                        {
+                            logger.warn("Nowa wersja clienta jest juz dostepna!")
+                        }
+                        logger.warn("Aby zezwoic na aktualizacje usun plik '${GameInstaller.VERSION_FILE}' znajdujacy sie w folderze 'web'")
                     }
-                    logger.warn("Aby zezwoic na aktualizacje usun plik '${GameInstaller.VERSION_FILE}' znajdujacy sie w folderze 'web'")
-                }
-                else
-                {
-                    logger.info("Przystepuje do aktualizacji clienta gry")
-                    installer.update()
+                    else
+                    {
+                        logger.info("Przystepuje do aktualizacji clienta gry")
+                        installer.update()
+                    }
                 }
             }
-        }
-        catch (e: IOException)
-        {
-            logger.warn("Wystapil blad podczas aktualizacji clienta", e)
-
-            if (!webFolder.exists())
+            catch (e: IOException)
             {
-                logger.error("Brak plikow clienta, wylaczam serwer...")
-                return
+                logger.warn("Wystapil blad podczas aktualizacji clienta", e)
+
+                if (!webFolder.exists())
+                {
+                    logger.error("Brak plikow clienta, wylaczam serwer...")
+                    return
+                }
             }
         }
 
@@ -147,8 +150,16 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger,
         httpServer.registerHandler(engineHandler)
         httpServer.registerHandler(TownHandler(this))
         httpServer.registerHandler(ItemsHandler(this))
-        httpServer.registerHandler(ResourceHandler(webFolder.absoluteFile))
         httpServer.registerHandler(TemporaryLoginHandler(this))
+
+        if(standalone)
+        {
+            httpServer.registerHandler(ResourceHandler(webFolder.absoluteFile))
+        }
+        else
+        {
+            httpServer.registerHandler(RedirectHandler(this))
+        }
 
         if (this.debugModeEnabled)
         {
@@ -296,13 +307,13 @@ class ServerImpl(override val config: MargoJConfig, override val logger: Logger,
             {
                 failCause.put(entity, BattleUnableToStartException.Cause.PLAYER_IS_OFFLINE)
             }
-            else if (entity is Player && entity.data.isDead) // TODO
+            else if (entity is Player && entity.isDead)
             {
                 failCause.put(entity, BattleUnableToStartException.Cause.ENTITY_IS_DEAD)
             }
             else if (entity.currentBattle != null)
             {
-                if (entity.battleData?.dead == true)
+                if (entity.battleData?.dead == true || entity.currentBattle!!.finished)
                 {
                     continue
                 }

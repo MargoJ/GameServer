@@ -8,6 +8,8 @@ abstract class EntityImpl(override val id: Int) : Entity
 {
     override var currentBattle: BattleImpl? = null
 
+    override val isDead: Boolean get() = if (deadUntil == null) false else (deadUntil!!.time > System.currentTimeMillis())
+
     var battleData: BattleData? = null
 
     override val healthPercent: Int

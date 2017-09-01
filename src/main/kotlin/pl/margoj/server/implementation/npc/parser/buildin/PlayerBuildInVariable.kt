@@ -10,7 +10,10 @@ class PlayerBuildInVariable(val player: PlayerImpl) : BuildInVariable()
         return when (variableName)
         {
             "nick" -> player.name
-            "level", "poziom" -> player.data.level
+            "level", "poziom" -> player.data.level.toLong()
+            "hp", "życie" -> player.hp.toLong()
+            "hpprocent" -> player.healthPercent.toLong()
+            "maxhp" -> player.data.maxHp.toLong()
             else -> "???"
         }
     }
@@ -67,6 +70,11 @@ class PlayerBuildInVariable(val player: PlayerImpl) : BuildInVariable()
 
                     return false
                 }
+            }
+            "ustaw hp" ->
+            {
+                player.hp = Math.max(0, Math.min((parameters[0] as Long).toInt(), player.data.maxHp))
+                return true
             }
             else -> throw IllegalStateException("'$functionName' not found")
         }

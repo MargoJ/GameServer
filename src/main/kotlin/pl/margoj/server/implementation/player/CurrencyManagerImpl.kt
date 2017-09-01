@@ -9,12 +9,8 @@ class CurrencyManagerImpl(val player: PlayerImpl) : CurrencyManager
     override var gold: Long
         set(value)
         {
-            if (!this.canFit(value))
-            {
-                throw IllegalStateException("can't fit gold, ${this.gold} -> $value")
-            }
+            player.data.gold = Math.min(value, goldLimit)
             this.requestCurrencyRecalculation()
-            player.data.gold = value
         }
         get()
         {

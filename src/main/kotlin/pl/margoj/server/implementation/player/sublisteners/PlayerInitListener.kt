@@ -87,8 +87,9 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
         if (location.town == null)
         {
             location.town = this.server.getTownById("pierwsza_mapa") // TODO
-            location.x = 8
-            location.y = 13
+            val town = location.town as TownImpl
+            location.x = town.cachedMapData.spawnPoint.x
+            location.y = town.cachedMapData.spawnPoint.y
         }
 
         player.server.eventManager.call(PlayerJoinEvent(player))

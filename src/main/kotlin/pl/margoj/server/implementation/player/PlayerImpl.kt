@@ -16,6 +16,7 @@ import pl.margoj.server.implementation.inventory.player.ItemTracker
 import pl.margoj.server.implementation.inventory.player.PlayerInventoryImpl
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.npc.NpcTalk
+import java.util.Date
 
 class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerImpl, val connection: PlayerConnection) : EntityImpl(data.id.toInt()), Player
 {
@@ -28,6 +29,8 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
     override val gender: Gender get() = this.data.gender
 
     override val icon: String get() = this.data.icon
+
+    override val deadUntil: Date? get() = this.data.deadUntil
 
     override val location: Location get() = this.movementManager.location
 

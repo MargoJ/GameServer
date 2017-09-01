@@ -17,7 +17,7 @@ class PlayerLogoutListener(connection: PlayerConnection) : PlayerPacketSubListen
         {
             "start" ->
             {
-                out.addJavascriptCode("document.cookie = 'user_id=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';")
+                out.addJavascriptCode("location.href = 'logout'")
                 out.addEngineAction(OutgoingPacket.EngineAction.RELOAD)
             }
             else ->

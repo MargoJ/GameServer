@@ -23,7 +23,7 @@ class TestBattleCommand : CommandListener
         }
         else
         {
-            sender.server.entityManager.entities.find { it is Npc && it.type == NpcType.NPC }
+            sender.server.entityManager.entities.filter { it is Npc && it.type == NpcType.NPC }[1]
         }) as? EntityImpl?
 
 

@@ -1,6 +1,5 @@
 package pl.margoj.server.implementation.commands.defaults.admin
 
-import pl.margoj.mrf.map.objects.mapspawn.MapSpawnObject
 import pl.margoj.server.api.commands.Arguments
 import pl.margoj.server.api.commands.CommandListener
 import pl.margoj.server.api.commands.CommandSender
@@ -50,58 +49,17 @@ class TeleportCommand : CommandListener
                 target = sender as? Player
             }
 
-            val (x, y) = this.findSpawnPoint(town)
-            targetX = x
-            targetY = y
+            targetX = town.cachedMapData.spawnPoint.x
+            targetY = town.cachedMapData.spawnPoint.y
         }
 
         args.ensureNotNull(target, "Nie znaleziono podanego gracza!")
         target!!
-
-        args.ensureTrue({ targetX != null && targetY != null }, "Nie znaleziono miejsca do teleportacji na mapie ${args.asString(0)}")
-        targetX!!
-        targetY!!
 
         val location = Location(town, targetX, targetY)
 
         sender.sendMessage("Teleportuje ${target.name} do ${location.toSimpleString()}")
         sender.server.gameLogger.info("${sender.name}: .tp ${town.id}[${town.name}] $targetX $targetY ${target.name}")
         target.teleport(location)
-    }
-
-    private fun findSpawnPoint(town: TownImpl): Pair<Int?, Int?>
-    {
-        var targetX: Int? = null
-        var targetY: Int? = null
-
-        val spawnPoint = town.objects.find { it is MapSpawnObject }
-        if (spawnPoint != null)
-        {
-            targetX = spawnPoint.position.x
-            targetY = spawnPoint.position.y
-        }
-        else
-        {
-            var x = 0
-            var y = 0
-
-            loop@
-            while (x < town.width)
-            {
-                while (y < town.height)
-                {
-                    if (!town.collisions[x][y])
-                    {
-                        targetX = x
-                        targetY = y
-                        break@loop
-                    }
-                    y++
-                }
-                x++
-            }
-        }
-
-        return Pair(targetX, targetY)
     }
 }

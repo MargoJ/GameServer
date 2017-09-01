@@ -1,5 +1,6 @@
 package pl.margoj.server.implementation.network.handlers
 
+import io.netty.handler.codec.http.cookie.ServerCookieDecoder
 import org.apache.commons.lang3.exception.ExceptionUtils
 import pl.margoj.server.api.utils.Parse
 import pl.margoj.server.implementation.ServerImpl
@@ -14,6 +15,8 @@ import pl.margoj.server.implementation.player.PlayerConnection
 
 class EngineHandler(private val server: ServerImpl) : HttpHandler
 {
+    private val cookieDecoder = ServerCookieDecoder.LAX
+
     override fun shouldHandle(path: String): Boolean
     {
         return path == "/engine"
@@ -29,7 +32,18 @@ class EngineHandler(private val server: ServerImpl) : HttpHandler
                 NoSemicolonSingleValueQueryStringDecoder("?" + request.contentAsString).parameters
         )
 
-        val aid = Parse.parseInt(packet.queryParams["aid"])
+        var aid: Int? = null
+        val cookiesHeader = request.headers["Cookie"]
+        if(cookiesHeader != null)
+        {
+            val cookies = cookieDecoder.decode(cookiesHeader)
+            val idCookie = cookies.find { it.name() == "user_id" }
+            if(idCookie != null)
+            {
+                aid = Parse.parseInt(idCookie.value())
+            }
+        }
+
         val handler = this.server.networkManager.getHandler(aid)
 
         val callback: (OutgoingPacket) -> Unit = { out ->

@@ -48,6 +48,7 @@ class FunctionOperatorParser : OperatorParser()
             this.registerFunction("zabierz", 1)
             this.registerFunction("dodaj złoto", 1)
             this.registerFunction("zabierz złoto", 1)
+            this.registerFunction("ustaw hp", 1)
 
             this.recalculateOperatorOrder()
         }

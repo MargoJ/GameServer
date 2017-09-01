@@ -7,6 +7,8 @@ import com.google.gson.JsonPrimitive
 import pl.margoj.mrf.map.metadata.pvp.MapPvP
 import pl.margoj.mrf.map.metadata.welcome.WelcomeMessage
 import pl.margoj.mrf.map.objects.gateway.GatewayObject
+import pl.margoj.mrf.map.objects.mapspawn.MapSpawnObject
+import pl.margoj.server.api.map.ImmutableLocation
 import pl.margoj.server.implementation.network.protocol.jsons.TownObject
 import pl.margoj.server.implementation.utils.GsonUtils
 
@@ -25,6 +27,9 @@ class CachedMapData(val town: TownImpl)
         private set
 
     lateinit var collisionString: String
+        private set
+
+    lateinit var spawnPoint: ImmutableLocation
         private set
 
     fun update()
@@ -73,6 +78,8 @@ class CachedMapData(val town: TownImpl)
         }
 
         this.collisionString = this.createCollisionString()
+
+        this.spawnPoint = this.findSpawnPoint() ?: throw IllegalStateException("no spawn point in map ${this.town.id}")
     }
 
     private fun createCollisionString(): String
@@ -155,11 +162,51 @@ class CachedMapData(val town: TownImpl)
             }
         }
 
-        if(waterString.isNotEmpty())
+        if (waterString.isNotEmpty())
         {
             waterString.setLength(waterString.length - 1)
         }
 
         return waterString.toString()
+    }
+
+    private fun findSpawnPoint(): ImmutableLocation?
+    {
+        var targetX: Int? = null
+        var targetY: Int? = null
+
+        val spawnPoint = town.objects.find { it is MapSpawnObject }
+        if (spawnPoint != null)
+        {
+            targetX = spawnPoint.position.x
+            targetY = spawnPoint.position.y
+        }
+        else
+        {
+            var x = 0
+            var y = 0
+
+            loop@
+            while (x < town.width)
+            {
+                while (y < town.height)
+                {
+                    if (!town.collisions[x][y])
+                    {
+                        targetX = x
+                        targetY = y
+                        break@loop
+                    }
+                    y++
+                }
+                x++
+            }
+        }
+
+        if(targetX == null || targetY == null)
+        {
+            return null
+        }
+        return ImmutableLocation(this.town, targetX, targetY)
     }
 }

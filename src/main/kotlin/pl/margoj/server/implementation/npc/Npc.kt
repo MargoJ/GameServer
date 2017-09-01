@@ -6,6 +6,7 @@ import pl.margoj.server.api.player.Gender
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.npc.parser.parsed.NpcParsedScript
 import pl.margoj.server.implementation.npc.parser.parsed.ScriptContext
+import java.util.Date
 import java.util.concurrent.atomic.AtomicInteger
 
 class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation, val type: NpcType, override val server: Server) : EntityImpl(npcIdCounter.incrementAndGet())
@@ -24,6 +25,8 @@ class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation
 
     override val stats = NpcData(this)
     override var hp: Int = 100
+
+    override var deadUntil: Date? = null
 
     fun loadData()
     {

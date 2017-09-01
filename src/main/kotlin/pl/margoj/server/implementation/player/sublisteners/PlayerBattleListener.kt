@@ -2,9 +2,13 @@ package pl.margoj.server.implementation.player.sublisteners
 
 import pl.margoj.server.implementation.battle.ability.NormalStrike
 import pl.margoj.server.implementation.battle.ability.Step
+import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
+import pl.margoj.server.implementation.npc.Npc
 import pl.margoj.server.implementation.player.PlayerConnection
+import pl.margoj.server.implementation.player.PlayerImpl
+import java.util.Collections
 
 class PlayerBattleListener(connection: PlayerConnection) : PlayerPacketSubListener(connection, onlyWithType = "fight", onlyOnPlayer = true)
 {
@@ -12,40 +16,85 @@ class PlayerBattleListener(connection: PlayerConnection) : PlayerPacketSubListen
     {
         val player = player!!
 
+        if (query["a"] == "attack")
+        {
+            val id = query["id"]?.toIntOrNull()
+            this.checkForMaliciousData(id == null, "Invalid id")
+            id!!
+
+            val targetEntity: EntityImpl?
+            if (id < 0)
+            {
+                targetEntity = this.server.entityManager.getEntityById(-id) as? Npc
+            }
+            else
+            {
+                targetEntity = this.server.entityManager.getEntityById(id) as? PlayerImpl
+            }
+
+            if (targetEntity == null || !player.location.isNear(targetEntity.location, true))
+            {
+                return true
+            }
+
+            if (targetEntity is PlayerImpl && !player.online)
+            {
+                return true
+            }
+
+            if (targetEntity.isDead)
+            {
+                player.displayAlert("Przeciwnik jest już martwy")
+                return true
+            }
+
+            if (targetEntity.currentBattle != null && !targetEntity.currentBattle!!.finished && targetEntity.battleData?.dead == false)
+            {
+                player.displayAlert("Przeciwnik walczy z kimś innym")
+                return true
+            }
+
+            server.startBattle(Collections.singletonList(player), Collections.singletonList(targetEntity)) // TODO
+            return true
+        }
+
         if (player.currentBattle == null)
         {
             return true
         }
 
+        val battle = player.currentBattle!!
+        val battleData = player.battleData!!
+
         when (query["a"])
         {
             "quit" ->
             {
-                if (!player.currentBattle!!.finished)
+                if (!battle.finished)
                 {
                     player.displayAlert("Musisz poczekać do końca bitwy!")
                     return true
                 }
 
-                player.battleData!!.quitRequested = true
+                battleData.quitRequested = true
                 player.currentBattle = null
             }
             "f" ->
             {
-                player.battleData!!.auto = true
-                player.battleData!!.needsAutoUpdate = true
+                battleData.auto = true
+                battleData.needsAutoUpdate = true
             }
             "strike" ->
             {
                 val targetId = query["id"]?.toLongOrNull() ?: return true
-                val target = player.currentBattle!!.findById(targetId) ?: return true
+                val target = battle.findById(targetId) ?: return true
 
-                val ability = NormalStrike(player.currentBattle!!, player, target)
+                val ability = NormalStrike(battle, player, target)
                 ability.queue()
             }
             "move" ->
             {
-                val ability = Step(player.currentBattle!!, player, player)
+                val ability = Step(battle, player, player)
                 ability.queue()
             }
             else -> player.displayAlert("nie wiem co probujesz zrobic ale to jeszcze nie zaimplementowane xD")
