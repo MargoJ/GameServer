@@ -65,7 +65,7 @@ class PlayerBattleSendListener(connection: PlayerConnection) : PlayerPacketSubLi
                     }
                     else
                     {
-                        participants.add(BattleParticipant(id = participant.id.toLong(), healthPercent = 0))
+                        participants.add(player.currentBattle!!.participants_[participant]!!.createBattleParticipantObject(player))
                     }
                 }
             }
@@ -87,7 +87,6 @@ class PlayerBattleSendListener(connection: PlayerConnection) : PlayerPacketSubLi
             // send move
             if (battle.finished)
             {
-
                 fightObject.move = -1
             }
             else if (battle.currentEntity == this.player)

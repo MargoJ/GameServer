@@ -27,7 +27,7 @@ class PlayerTalkListener(connection: PlayerConnection) : PlayerPacketSubListener
             this.checkForMaliciousData(id == null, "invalid id")
             id!!
 
-            val npc = this.player!!.server.entityManager.getEntityById(id) as? Npc
+            val npc = this.player!!.server.entityManager.getNpcById(id)
             this.checkForMaliciousData(npc == null || npc.type != NpcType.NPC, "invalid npc")
             npc!!
 

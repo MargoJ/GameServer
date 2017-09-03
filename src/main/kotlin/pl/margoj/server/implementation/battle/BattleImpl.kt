@@ -21,7 +21,9 @@ import java.util.Collections
 
 class BattleImpl internal constructor(val server: ServerImpl, override val teamA: List<EntityImpl>, override val teamB: List<EntityImpl>) : Battle
 {
-    override val participants: List<EntityImpl>
+    internal val participants_ = hashMapOf<EntityImpl, BattleData>()
+    override val participants: Collection<EntityImpl>
+        get() = this.participants_.keys
 
     /**status **/
     override var started = false
@@ -55,11 +57,41 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
         val participants = ArrayList<EntityImpl>(this.teamA.size + this.teamB.size)
         participants.addAll(this.teamA)
         participants.addAll(this.teamB)
-        this.participants = participants
+
+        for (participant in participants)
+        {
+            val team = if (teamA.contains(participant)) BattleTeam.TEAM_A else BattleTeam.TEAM_B
+            val data = BattleData(participant, this, team)
+
+            var row: Int
+
+            if (!data.hasRangedWeapon())
+            {
+                row = 2
+            }
+            else
+            {
+                row = when (participant.stats.profession)
+                {
+                    Profession.WARRIOR, Profession.PALADIN, Profession.BLADE_DANCER -> 2
+                    Profession.MAGE -> 1
+                    Profession.HUNTER, Profession.TRACKER -> 0
+                }
+            }
+
+            if (team == BattleTeam.TEAM_B)
+            {
+                row = 5 - row
+            }
+
+            data.row = row
+
+            this.participants_.put(participant, data)
+        }
     }
 
 
-    fun findById(targetId: Long): EntityImpl?
+    fun findById(targetId: Int): EntityImpl?
     {
         for (participant in this.participants)
         {
@@ -88,33 +120,7 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
             }
 
             participant.currentBattle = this
-
-            val team = if (teamA.contains(participant)) BattleTeam.TEAM_A else BattleTeam.TEAM_B
-            val data = BattleData(participant, this, team)
-
-            var row: Int
-
-            if (!data.hasRangedWeapon())
-            {
-                row = 2
-            }
-            else
-            {
-                row = when (participant.stats.profession)
-                {
-                    Profession.WARRIOR, Profession.PALADIN, Profession.BLADE_DANCER -> 2
-                    Profession.MAGE -> 1
-                    Profession.HUNTER, Profession.TRACKER -> 0
-                }
-            }
-
-            if (team == BattleTeam.TEAM_B)
-            {
-                row = 5 - row
-            }
-            data.row = row
-
-            participant.battleData = data
+            participant.battleData = this.participants_[participant]
         }
 
         this.updateAttackSpeedThreshold()
@@ -368,6 +374,7 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
             {
                 participant.hp = 0
                 participant.battleData!!.dead = true
+                participant.kill()
             }
         }
     }
@@ -518,14 +525,14 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
 
             for (npc in this.getTeamParticipants(this.loser!!))
             {
-                if(npc !is Npc)
+                if (npc !is Npc)
                 {
                     continue
                 }
 
                 var npcExp = MargoMath.baseExpFromMob(npc.level)
 
-                if(winnerTeamLevelAverage > npc.level + 25)
+                if (winnerTeamLevelAverage > npc.level + 25)
                 {
                     continue
                 }
@@ -540,11 +547,11 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
 
                 npcExp = npcExp + (hpBonus * npcExp).toLong()
 
-                if(npc.subType == NpcSubtype.ELITE2)
+                if (npc.subType == NpcSubtype.ELITE2)
                 {
                     npcExp *= 2
                 }
-                else if(npc.subType == NpcSubtype.HERO)
+                else if (npc.subType == NpcSubtype.HERO)
                 {
                     npcExp *= 15
                 }

@@ -2,11 +2,12 @@ package pl.margoj.server.implementation.entity
 
 import pl.margoj.server.api.battle.BattleUnableToStartException
 import pl.margoj.server.api.entity.Entity
-import pl.margoj.server.api.player.Player
-import pl.margoj.server.implementation.battle.BattleImpl
+import pl.margoj.server.api.utils.fastPow2
 import pl.margoj.server.implementation.battle.BattleData
+import pl.margoj.server.implementation.battle.BattleImpl
+import java.util.Date
 
-abstract class EntityImpl(override val id: Int) : Entity
+abstract class EntityImpl : Entity
 {
     override var currentBattle: BattleImpl? = null
 
@@ -19,7 +20,7 @@ abstract class EntityImpl(override val id: Int) : Entity
         {
             return when
             {
-                this.isDead ->  BattleUnableToStartException.Cause.ENTITY_IS_DEAD
+                this.isDead -> BattleUnableToStartException.Cause.ENTITY_IS_DEAD
                 this.currentBattle != null && !this.currentBattle!!.finished && this.battleData?.dead == false -> BattleUnableToStartException.Cause.ENTITY_IN_BATTLE
                 else -> null
             }
@@ -38,4 +39,15 @@ abstract class EntityImpl(override val id: Int) : Entity
         this.hp -= amount
         this.hp = Math.max(0, this.hp)
     }
+
+    val killTime: Long
+        get()
+        {
+            var minutes = (0.7 + (0.18 * this.level) - (0.00045 * this.level.fastPow2()))
+            if(minutes > 18.0)
+            {
+                minutes = 18.0
+            }
+            return minutes.toLong() * 60_000L
+        }
 }

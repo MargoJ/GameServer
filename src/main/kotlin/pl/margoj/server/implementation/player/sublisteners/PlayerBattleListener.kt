@@ -10,7 +10,6 @@ import pl.margoj.server.implementation.npc.Npc
 import pl.margoj.server.implementation.npc.NpcType
 import pl.margoj.server.implementation.player.PlayerConnection
 import pl.margoj.server.implementation.player.PlayerImpl
-import java.util.Collections
 
 class PlayerBattleListener(connection: PlayerConnection) : PlayerPacketSubListener(connection, onlyWithType = "fight", onlyOnPlayer = true)
 {
@@ -27,13 +26,13 @@ class PlayerBattleListener(connection: PlayerConnection) : PlayerPacketSubListen
             val targetEntity: EntityImpl?
             if (id < 0)
             {
-                targetEntity = this.server.entityManager.getEntityById(-id) as? Npc
+                targetEntity = this.server.entityManager.getNpcById(-id)
 
                 this.checkForMaliciousData(targetEntity is Npc && targetEntity.type != NpcType.MONSTER, "not a monster")
             }
             else
             {
-                targetEntity = this.server.entityManager.getEntityById(id) as? PlayerImpl
+                targetEntity = this.server.entityManager.getPlayerById(id)
             }
 
             if (targetEntity == null || !player.location.isNear(targetEntity.location, true))
@@ -41,7 +40,7 @@ class PlayerBattleListener(connection: PlayerConnection) : PlayerPacketSubListen
                 return true
             }
 
-            val unavailabilityCause = player.battleUnavailabilityCause
+            val unavailabilityCause = targetEntity.battleUnavailabilityCause
 
             if (unavailabilityCause == BattleUnableToStartException.Cause.PLAYER_IS_OFFLINE)
             {
@@ -92,7 +91,7 @@ class PlayerBattleListener(connection: PlayerConnection) : PlayerPacketSubListen
             }
             "strike" ->
             {
-                val targetId = query["id"]?.toLongOrNull() ?: return true
+                val targetId = query["id"]?.toIntOrNull() ?: return true
                 val target = battle.findById(targetId) ?: return true
 
                 val ability = NormalStrike(battle, player, target)

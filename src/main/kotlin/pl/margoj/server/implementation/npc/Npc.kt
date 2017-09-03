@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList
 import pl.margoj.server.api.Server
 import pl.margoj.server.api.map.ImmutableLocation
 import pl.margoj.server.api.player.Gender
+import pl.margoj.server.api.utils.fastPow2
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.map.TownImpl
 import pl.margoj.server.implementation.npc.parser.parsed.NpcParsedScript
@@ -12,8 +13,10 @@ import java.util.Collections
 import java.util.Date
 import java.util.concurrent.atomic.AtomicInteger
 
-class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation, override val server: Server) : EntityImpl(npcIdCounter.incrementAndGet())
+class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation, override val server: Server) : EntityImpl()
 {
+    var id: Int = npcIdCounter.incrementAndGet()
+
     override var name: String = ""
     override val direction: Int = 0
     override var icon: String = ""
@@ -37,7 +40,7 @@ class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation
     override val withGroup: List<EntityImpl>
         get()
         {
-            if(this.group <= 0)
+            if (this.group <= 0)
             {
                 return Collections.singletonList(this)
             }
@@ -49,7 +52,7 @@ class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation
 
             for (npc in town.npc)
             {
-                if(npc.type == NpcType.MONSTER && npc.group == this.group && npc != this && npc.battleUnavailabilityCause == null)
+                if (npc.type == NpcType.MONSTER && npc.group == this.group && npc != this && npc.battleUnavailabilityCause == null)
                 {
                     out.add(npc)
                 }
@@ -57,6 +60,11 @@ class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation
 
             return out.build()
         }
+
+    override fun kill()
+    {
+        this.deadUntil = Date(System.currentTimeMillis() + this.killTime)
+    }
 
     fun loadData()
     {
@@ -108,6 +116,6 @@ class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation
 
     companion object
     {
-        private val npcIdCounter = AtomicInteger(2_000_000)
+        private val npcIdCounter = AtomicInteger()
     }
 }

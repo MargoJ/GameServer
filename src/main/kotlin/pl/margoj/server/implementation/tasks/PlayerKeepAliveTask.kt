@@ -22,6 +22,7 @@ class PlayerKeepAliveTask(val server: ServerImpl, keepAliveSeconds: Int) : Runna
 
             if(!player.canBeLoggedOff)
             {
+                player.connection.lastPacket = System.currentTimeMillis()
                 continue
             }
 

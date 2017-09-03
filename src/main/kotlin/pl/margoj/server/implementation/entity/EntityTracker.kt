@@ -187,6 +187,7 @@ class EntityTracker(val owner: PlayerImpl)
         {
             return
         }
+        entity as PlayerImpl
 
         val trackingData = entity.getTrackingData(this)
         var updated = false
@@ -223,12 +224,12 @@ data class TrackingData(var x: Int, var y: Int, var lastDirection: Int)
     constructor(entity: EntityImpl) : this(entity.location.x, entity.location.y, entity.direction)
 }
 
-fun EntityImpl.getTrackingData(tracker: EntityTracker): TrackingData
+fun PlayerImpl.getTrackingData(tracker: EntityTracker): TrackingData
 {
     return tracker.trackingData[this]!!
 }
 
-fun EntityImpl.setTrackingData(tracker: EntityTracker, data: TrackingData?)
+fun PlayerImpl.setTrackingData(tracker: EntityTracker, data: TrackingData?)
 {
     if (data == null)
     {

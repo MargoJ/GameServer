@@ -125,7 +125,7 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
         j.addProperty("tutorial", -1)
         j.addProperty("clientver", 1461248638)
 
-        j.add("h", GsonUtils.gson.toJsonTree(this.player!!.data.recalculateStatistics(StatisticType.ALL)))
+        out.addStatisticRecalculation(StatisticType.ALL)
 
         connection.initLevel = 1
     }

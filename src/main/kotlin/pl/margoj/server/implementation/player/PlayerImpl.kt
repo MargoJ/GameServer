@@ -20,7 +20,7 @@ import pl.margoj.server.implementation.npc.NpcTalk
 import java.util.Collections
 import java.util.Date
 
-class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerImpl, val connection: PlayerConnection) : EntityImpl(data.id.toInt()), Player
+class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerImpl, val connection: PlayerConnection) : EntityImpl(), Player
 {
     override val id: Int = this.data.id.toInt()
 
@@ -148,6 +148,11 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
             this.movementManager.clearQueue()
             this.movementManager.updatePosition()
         }
+    }
+
+    override fun kill()
+    {
+        this.data.deadUntil = Date(System.currentTimeMillis() + this.killTime)
     }
 
     fun updatePossibleInventories()

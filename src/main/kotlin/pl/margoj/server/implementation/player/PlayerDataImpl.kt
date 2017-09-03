@@ -44,14 +44,14 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
     override var hp: Int = 0
         set(value)
         {
-            field = Math.min(value, this.maxHp)
+            field = value
             this.player_?.recalculateWarriorStatistics()
         }
         get()
         {
             if(field > this.maxHp)
             {
-                field = this.maxHp
+                return this.maxHp
             }
 
             return field
@@ -317,6 +317,11 @@ class StatisticType private constructor(val flag: Int = (1 shl counter++))
 
     fun and(statisticType: StatisticType): StatisticType
     {
+        if(this == ALL || statisticType == ALL)
+        {
+            return ALL
+        }
+
         return StatisticType(this.flag or statisticType.flag)
     }
 

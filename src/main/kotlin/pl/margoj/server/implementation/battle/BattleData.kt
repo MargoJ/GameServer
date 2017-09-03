@@ -24,7 +24,7 @@ class BattleData(val entity: EntityImpl, val battle: BattleImpl, val team: Battl
         private set
 
     /** in-battle id */
-    val id = (if (this.entity is Player) this.entity.id else -this.entity.id).toLong()
+    val id = (if (this.entity is Player) this.entity.id else (this.entity as Npc).id)
 
     /** did player press the quit button? */
     var quitRequested: Boolean = false
@@ -98,7 +98,7 @@ class BattleData(val entity: EntityImpl, val battle: BattleImpl, val team: Battl
 
     fun createBattleParticipantObject(target: EntityImpl): BattleParticipant
     {
-        val obj = BattleParticipant(this.id)
+        val obj = BattleParticipant(this.id.toLong())
 
         if (!target.battleData!!.initialized)
         {
