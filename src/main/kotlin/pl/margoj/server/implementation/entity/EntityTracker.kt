@@ -153,8 +153,8 @@ class EntityTracker(val owner: PlayerImpl)
             npc.y = entity.location.y
             npc.level = entity.level
             npc.type = entity.type.margoId
-            npc.subType = 0 // TODO
-            npc.group = 0 // TODO
+            npc.subType = entity.subType.margoId
+            npc.group = entity.group
             out.addNpc(npc)
         }
     }

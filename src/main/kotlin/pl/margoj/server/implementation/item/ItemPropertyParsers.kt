@@ -20,6 +20,7 @@ interface ItemPropertyParser<T, P : ItemProperty<T>>
         val ALL = listOf<ItemPropertyParser<*, *>>(
                 StringPropertyParser(),
                 IntPropertyParser(),
+                IntRangePropertyParser(),
                 DoublePropertyParser(),
                 LongPropertyParser(),
                 BooleanPropertyParser(),
@@ -58,6 +59,16 @@ class IntPropertyParser : ItemPropertyParser<Int, IntProperty>
             return
         }
         itemObject.statistics += "${property.propertyName}=$value;"
+    }
+}
+
+class IntRangePropertyParser : ItemPropertyParser<IntRange, IntRangeProperty>
+{
+    override val propertyType: Class<IntRangeProperty> = IntRangeProperty::class.java
+
+    override fun apply(property: IntRangeProperty, itemObject: ItemObject, value: IntRange, itemStack: ItemStack, item: ItemImpl)
+    {
+        itemObject.statistics += "${property.propertyName}=${value.first}-${value.endInclusive}"
     }
 }
 

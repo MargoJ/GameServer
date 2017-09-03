@@ -32,6 +32,11 @@ abstract class CodeStatement
             types.put("poziom", ::DelegatedFunctionStatement)
             types.put("level", ::DelegatedFunctionStatement)
             types.put("grafika", ::DelegatedFunctionStatement)
+            types.put("grafika", ::DelegatedFunctionStatement)
+            types.put("npc", ::DelegatedFunctionStatement)
+            types.put("potwór", ::DelegatedFunctionStatement)
+            types.put("typ", ::DelegatedFunctionStatement)
+            types.put("płeć", ::DelegatedFunctionStatement)
 
             types.put(MathStatement.ADD, ::MathStatement)
             types.put(MathStatement.SUBTRACT, ::MathStatement)

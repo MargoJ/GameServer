@@ -4,6 +4,7 @@ import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.npc.Npc
 import pl.margoj.server.implementation.npc.NpcTalk
+import pl.margoj.server.implementation.npc.NpcType
 import pl.margoj.server.implementation.player.PlayerConnection
 
 class PlayerTalkListener(connection: PlayerConnection) : PlayerPacketSubListener
@@ -27,7 +28,7 @@ class PlayerTalkListener(connection: PlayerConnection) : PlayerPacketSubListener
             id!!
 
             val npc = this.player!!.server.entityManager.getEntityById(id) as? Npc
-            this.checkForMaliciousData(npc == null, "invalid npc")
+            this.checkForMaliciousData(npc == null || npc.type != NpcType.NPC, "invalid npc")
             npc!!
 
             if (!player!!.location.isNear(npc.location, true))

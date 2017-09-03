@@ -38,13 +38,23 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
     override var agility: Int = 3
     override var intellect: Int = 3
     override var attackSpeed: Double = 1.00
+    override var damage: IntRange = 0..0
 
     override var maxHp: Int = 0
     override var hp: Int = 0
         set(value)
         {
+            field = Math.min(value, this.maxHp)
             this.player_?.recalculateWarriorStatistics()
-            field = value
+        }
+        get()
+        {
+            if(field > this.maxHp)
+            {
+                field = this.maxHp
+            }
+
+            return field
         }
 
     override var ttl: Int = 0
@@ -174,11 +184,33 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
             this.attackSpeed += (baseASAgilityMultiplier + additionalSAAgilityMultiplier).toDouble() * 0.02
 
             // items rest
+            this.damage = 0..0
+            var hasDamage = false
+
             this.player.inventory.equipment.allItems.stream().filter { it != null }.forEach {
                 val item = (it as ItemStackImpl).item.margoItem
                 this.maxHp += item[ItemProperties.HEALTH]
                 this.attackSpeed += (item[ItemProperties.ATTACK_SPEED].toDouble() / 100.0)
                 this.maxHp += (this.strength * item[ItemProperties.HEALTH_FOR_STRENGTH]).toInt()
+
+                // damage
+                val thisDamage = item[ItemProperties.DAMAGE]
+                if (thisDamage.first != 0 || thisDamage.endInclusive != 0)
+                {
+                    val thisDamageAvg = (thisDamage.first + thisDamage.endInclusive) / 2
+                    val ourDamageAvg = (this.damage.first + this.damage.endInclusive) / 2
+
+                    if (thisDamageAvg > ourDamageAvg)
+                    {
+                        this.damage = thisDamage
+                        hasDamage = true
+                    }
+                }
+            }
+
+            if (!hasDamage)
+            {
+                this.damage = Math.round(this.baseStrength * 0.7).toInt()..Math.round(this.baseStrength * 0.8).toInt()
             }
 
             out.exp = this.xp
@@ -197,13 +229,14 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
             out.warriorStats.hp = this.hp
             out.warriorStats.sa = this.attackSpeed.toBigDecimal()
 
+            out.warriorStats.dmg = (this.damage.first + this.damage.endInclusive) / 2
+
             out.warriorStats.crit = 1.04.toBigDecimal()
             out.warriorStats.ac = 0
             out.warriorStats.resfire = 0
             out.warriorStats.resfrost = 0
             out.warriorStats.reslight = 0
             out.warriorStats.act = 0
-            out.warriorStats.dmg = 5
             out.warriorStats.critmval = 1.20.toBigDecimal()
             out.warriorStats.critmval_f = 1.20.toBigDecimal()
             out.warriorStats.critmval_c = 1.20.toBigDecimal()

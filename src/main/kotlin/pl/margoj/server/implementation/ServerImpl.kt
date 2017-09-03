@@ -303,22 +303,10 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
 
         for (entity in battle.participants)
         {
-            if (entity is Player && !entity.online)
+            val cause = entity.battleUnavailabilityCause
+            if(cause != null)
             {
-                failCause.put(entity, BattleUnableToStartException.Cause.PLAYER_IS_OFFLINE)
-            }
-            else if (entity is Player && entity.isDead)
-            {
-                failCause.put(entity, BattleUnableToStartException.Cause.ENTITY_IS_DEAD)
-            }
-            else if (entity.currentBattle != null)
-            {
-                if (entity.battleData?.dead == true || entity.currentBattle!!.finished)
-                {
-                    continue
-                }
-
-                failCause.put(entity, BattleUnableToStartException.Cause.ENTITY_IN_BATTLE)
+                failCause.put(entity, cause)
             }
         }
 

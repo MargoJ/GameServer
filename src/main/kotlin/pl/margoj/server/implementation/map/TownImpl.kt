@@ -94,12 +94,13 @@ data class TownImpl(
             }
 
             val script = if (mapObject.script == null) null else this.server.npcScriptParser.getNpcScript(mapObject.script!!)
-            val npc = Npc(script, ImmutableLocation(this, mapObject.position.x, mapObject.position.y), NpcType.NPC, this.server) // TODO
+            val npc = Npc(script, ImmutableLocation(this, mapObject.position.x, mapObject.position.y), this.server)
             npc.loadData()
 
             npc.takeIf { mapObject.graphics != null }?.icon = mapObject.graphics!!
             npc.takeIf { mapObject.name != null }?.name = mapObject.name!!
             npc.takeIf { mapObject.level != null }?.level = mapObject.level!!
+            npc.takeIf { mapObject.group != null }?.group = mapObject.group!!
 
             this.server.entityManager.registerEntity(npc)
             this.npcs_.add(npc)
@@ -107,7 +108,8 @@ data class TownImpl(
 
         for ((point, id) in this.partList)
         {
-            val npc = Npc(null, ImmutableLocation(this, point.x, point.y), NpcType.TRANSPARENT, this.server)
+            val npc = Npc(null, ImmutableLocation(this, point.x, point.y), this.server)
+            npc.type = NpcType.TRANSPARENT
             npc.icon = "parts/${this.id}_$id.png"
             npc.level = 0
             npc.name = "P $id"
@@ -131,11 +133,11 @@ data class TownImpl(
 
         var possibleRespawnMap = this.server.getTownById(this.getMetadata(RespawnMap::class.java).value)
 
-        if(possibleRespawnMap == null && this.parentMap != null)
+        if (possibleRespawnMap == null && this.parentMap != null)
         {
             val parent = this.parentMap!! as TownImpl
 
-            if(!parent.updatedOnce)
+            if (!parent.updatedOnce)
             {
                 parent.updateParentMaps()
             }

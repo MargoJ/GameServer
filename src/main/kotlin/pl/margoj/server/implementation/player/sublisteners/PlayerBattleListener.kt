@@ -1,11 +1,13 @@
 package pl.margoj.server.implementation.player.sublisteners
 
+import pl.margoj.server.api.battle.BattleUnableToStartException
 import pl.margoj.server.implementation.battle.ability.NormalStrike
 import pl.margoj.server.implementation.battle.ability.Step
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.npc.Npc
+import pl.margoj.server.implementation.npc.NpcType
 import pl.margoj.server.implementation.player.PlayerConnection
 import pl.margoj.server.implementation.player.PlayerImpl
 import java.util.Collections
@@ -26,6 +28,8 @@ class PlayerBattleListener(connection: PlayerConnection) : PlayerPacketSubListen
             if (id < 0)
             {
                 targetEntity = this.server.entityManager.getEntityById(-id) as? Npc
+
+                this.checkForMaliciousData(targetEntity is Npc && targetEntity.type != NpcType.MONSTER, "not a monster")
             }
             else
             {
@@ -37,24 +41,26 @@ class PlayerBattleListener(connection: PlayerConnection) : PlayerPacketSubListen
                 return true
             }
 
-            if (targetEntity is PlayerImpl && !player.online)
+            val unavailabilityCause = player.battleUnavailabilityCause
+
+            if (unavailabilityCause == BattleUnableToStartException.Cause.PLAYER_IS_OFFLINE)
             {
                 return true
             }
 
-            if (targetEntity.isDead)
+            if (unavailabilityCause == BattleUnableToStartException.Cause.ENTITY_IS_DEAD)
             {
                 player.displayAlert("Przeciwnik jest już martwy")
                 return true
             }
 
-            if (targetEntity.currentBattle != null && !targetEntity.currentBattle!!.finished && targetEntity.battleData?.dead == false)
+            if (unavailabilityCause == BattleUnableToStartException.Cause.ENTITY_IN_BATTLE)
             {
                 player.displayAlert("Przeciwnik walczy z kimś innym")
                 return true
             }
 
-            server.startBattle(Collections.singletonList(player), Collections.singletonList(targetEntity)) // TODO
+            server.startBattle(player.withGroup, targetEntity.withGroup)
             return true
         }
 

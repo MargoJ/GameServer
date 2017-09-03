@@ -14,6 +14,7 @@ import pl.margoj.server.implementation.battle.ability.NormalStrike
 import pl.margoj.server.implementation.battle.ability.Step
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.npc.Npc
+import pl.margoj.server.implementation.npc.NpcSubtype
 import pl.margoj.server.implementation.player.PlayerImpl
 import pl.margoj.server.implementation.utils.MargoMath
 import java.util.Collections
@@ -517,29 +518,38 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
 
             for (npc in this.getTeamParticipants(this.loser!!))
             {
-                var baseExp: Long
-
-                if (npc.level >= winnerTeamLevelAverage)
-                {
-                    baseExp = MargoMath.baseExpFromMob(npc.level)
-                }
-                else if (npc.level + 25 > winnerTeamLevelAverage)
-                {
-                    baseExp = MargoMath.baseExpFromMob(npc.level)
-                    val advantage = winnerTeamLevelAverage - npc.level
-                    val reductionPercent = advantage.toDouble() * 0.04
-                    val reductionExp = (reductionPercent * baseExp.toDouble()).toInt()
-
-                    totalExp += baseExp - reductionExp
-                }
-                else
+                if(npc !is Npc)
                 {
                     continue
                 }
 
-                totalExp = baseExp + (hpBonus * baseExp).toLong()
+                var npcExp = MargoMath.baseExpFromMob(npc.level)
 
-                // TODO: elite2, hero
+                if(winnerTeamLevelAverage > npc.level + 25)
+                {
+                    continue
+                }
+                else if (winnerTeamLevelAverage > npc.level)
+                {
+                    val advantage = winnerTeamLevelAverage - npc.level
+                    val reductionPercent = advantage.toDouble() * 0.04
+                    val reductionExp = (reductionPercent * npcExp.toDouble()).toInt()
+
+                    npcExp -= reductionExp
+                }
+
+                npcExp = npcExp + (hpBonus * npcExp).toLong()
+
+                if(npc.subType == NpcSubtype.ELITE2)
+                {
+                    npcExp *= 2
+                }
+                else if(npc.subType == NpcSubtype.HERO)
+                {
+                    npcExp *= 15
+                }
+
+                totalExp += npcExp
             }
 
             for (winner in winnerTeam)

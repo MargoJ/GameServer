@@ -1,10 +1,11 @@
 package pl.margoj.server.implementation.battle.ability
 
-import pl.margoj.server.implementation.battle.BattleImpl
 import pl.margoj.server.implementation.battle.BattleData
+import pl.margoj.server.implementation.battle.BattleImpl
 import pl.margoj.server.implementation.battle.BattleLogBuilder
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.player.PlayerImpl
+import java.util.concurrent.ThreadLocalRandom
 
 class NormalStrike(battle: BattleImpl, user: EntityImpl, target: EntityImpl) : BattleAbility(battle, user, target)
 {
@@ -26,7 +27,8 @@ class NormalStrike(battle: BattleImpl, user: EntityImpl, target: EntityImpl) : B
 
     override fun onUse(userData: BattleData, targetData: BattleData)
     {
-        val damage = 100
+        val damage = ThreadLocalRandom.current().nextInt(user.stats.damage.first, user.stats.damage.endInclusive + 1)
+
         target.damage(damage)
         targetData.updatedNow()
 

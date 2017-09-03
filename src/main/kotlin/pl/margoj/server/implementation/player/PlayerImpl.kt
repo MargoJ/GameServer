@@ -1,6 +1,7 @@
 package pl.margoj.server.implementation.player
 
 import pl.margoj.server.api.battle.BattleStats
+import pl.margoj.server.api.battle.BattleUnableToStartException
 import pl.margoj.server.api.chat.ChatMessage
 import pl.margoj.server.api.commands.CommandSender
 import pl.margoj.server.api.events.player.PlayerQuitEvent
@@ -16,6 +17,7 @@ import pl.margoj.server.implementation.inventory.player.ItemTracker
 import pl.margoj.server.implementation.inventory.player.PlayerInventoryImpl
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.npc.NpcTalk
+import java.util.Collections
 import java.util.Date
 
 class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerImpl, val connection: PlayerConnection) : EntityImpl(data.id.toInt()), Player
@@ -61,6 +63,23 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
     val entityTracker = EntityTracker(this)
 
     val itemTracker = ItemTracker(this)
+
+    override val battleUnavailabilityCause: BattleUnableToStartException.Cause?
+        get()
+        {
+            if(!this.online)
+            {
+                return BattleUnableToStartException.Cause.PLAYER_IS_OFFLINE
+            }
+
+            return super.battleUnavailabilityCause
+        }
+
+    override val withGroup: List<EntityImpl>
+        get()
+        {
+            return Collections.singletonList(this) // TODO
+        }
 
     private var task: ((CommandSender) -> Unit)? = null
 
