@@ -68,6 +68,11 @@ class IntRangePropertyParser : ItemPropertyParser<IntRange, IntRangeProperty>
 
     override fun apply(property: IntRangeProperty, itemObject: ItemObject, value: IntRange, itemStack: ItemStack, item: ItemImpl)
     {
+        if(value == property.default)
+        {
+            return
+        }
+
         itemObject.statistics += "${property.propertyName}=${value.first}-${value.endInclusive}"
     }
 }
