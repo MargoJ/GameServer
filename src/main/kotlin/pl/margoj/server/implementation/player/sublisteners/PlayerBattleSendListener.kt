@@ -100,13 +100,13 @@ class PlayerBattleSendListener(connection: PlayerConnection) : PlayerPacketSubLi
             }
 
             // send log
-            if (data.lastLog < data.logCount - 1)
+            if (data.lastLog < data.battle.logCount - 1)
             {
-                val log = ArrayList<Pair<Int, String>>(data.logCount - data.lastLog)
+                val log = ArrayList<Pair<Int, String>>(data.battle.logCount - data.lastLog)
 
-                while (data.lastLog < data.logCount - 1)
+                while (data.lastLog < data.battle.logCount - 1)
                 {
-                    val logFragment = data.log[data.lastLog + 1]!!
+                    val logFragment = data.battle.log[data.lastLog + 1]!!
                     log.add(Pair(data.lastLog + 1, logFragment))
                     data.lastLog++
                 }

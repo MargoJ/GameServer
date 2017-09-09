@@ -18,11 +18,6 @@ class BattleData(val entity: EntityImpl, val battle: BattleImpl, val team: Battl
         this.reset()
     }
 
-    /* log */
-    var log: MutableMap<Int, String> = hashMapOf()
-    var logCount = 0
-        private set
-
     /** in-battle id */
     val id = (if (this.entity is Player) this.entity.id else (this.entity as Npc).id)
 
@@ -84,11 +79,6 @@ class BattleData(val entity: EntityImpl, val battle: BattleImpl, val team: Battl
         this.lastLog = -1
         this.needsAutoUpdate = true
         this.lastUpdateSendTick = -1L
-    }
-
-    fun addLog(log: String)
-    {
-        this.log.put(this.logCount++, log)
     }
 
     fun updatedNow()

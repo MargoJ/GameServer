@@ -25,6 +25,11 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
     override val participants: Collection<EntityImpl>
         get() = this.participants_.keys
 
+    /** log **/
+    var log: MutableMap<Int, String> = hashMapOf()
+    var logCount = 0
+        private set
+
     /**status **/
     override var started = false
         private set
@@ -390,13 +395,7 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
 
     fun addLog(log: String)
     {
-        for (participant in this.participants)
-        {
-            if (participant.currentBattle == this)
-            {
-                participant.battleData!!.addLog(log)
-            }
-        }
+        this.log.put(this.logCount++, log)
     }
 
     private fun performOrError(ability: BattleAbility, error: () -> String)
@@ -545,7 +544,7 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
                     npcExp -= reductionExp
                 }
 
-                npcExp = npcExp + (hpBonus * npcExp).toLong()
+                npcExp += (hpBonus * npcExp).toLong()
 
                 if (npc.subType == NpcSubtype.ELITE2)
                 {
@@ -559,18 +558,17 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
                 totalExp += npcExp
             }
 
+            var allXp = 0L
             for (winner in winnerTeam)
             {
                 // TODO
                 val winnerXp = totalExp
 
-                if (winner.currentBattle == this)
-                {
-                    winner.battleData!!.addLog(BattleLogBuilder().build { it.expGained = winnerXp }.toString())
-                }
-
+                allXp += winnerXp
                 (winner as? PlayerImpl)?.data?.addExp(winnerXp)
             }
+
+            this.addLog(BattleLogBuilder().build { it.expGained = allXp }.toString())
         }
     }
 
