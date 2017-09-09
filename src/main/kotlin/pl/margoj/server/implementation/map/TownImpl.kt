@@ -13,6 +13,7 @@ import pl.margoj.mrf.map.serialization.MapData
 import pl.margoj.server.api.map.ImmutableLocation
 import pl.margoj.server.api.map.PvPStatus
 import pl.margoj.server.api.map.Town
+import pl.margoj.server.api.utils.toTime
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.inventory.map.MapInventoryImpl
 import pl.margoj.server.implementation.npc.Npc
@@ -101,6 +102,7 @@ data class TownImpl(
             npc.takeIf { mapObject.name != null }?.name = mapObject.name!!
             npc.takeIf { mapObject.level != null }?.level = mapObject.level!!
             npc.takeIf { mapObject.group != null }?.group = mapObject.group!!
+            npc.takeIf { mapObject.spawnTime != null }?.customSpawnTime = mapObject.spawnTime!!.toTime()
 
             this.server.entityManager.registerEntity(npc)
             this.npcs_.add(npc)

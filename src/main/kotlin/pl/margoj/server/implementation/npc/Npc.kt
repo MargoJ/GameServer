@@ -4,7 +4,8 @@ import com.google.common.collect.ImmutableList
 import pl.margoj.server.api.Server
 import pl.margoj.server.api.map.ImmutableLocation
 import pl.margoj.server.api.player.Gender
-import pl.margoj.server.api.utils.fastPow2
+import pl.margoj.server.api.player.Profession
+import pl.margoj.server.api.utils.splitByChar
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.map.TownImpl
 import pl.margoj.server.implementation.npc.parser.parsed.NpcParsedScript
@@ -36,6 +37,7 @@ class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation
     var group: Int = 0
     var type: NpcType = NpcType.NPC
     var subType: NpcSubtype = NpcSubtype.NORMAL
+    var customSpawnTime: Long? = null
 
     override val withGroup: List<EntityImpl>
         get()
@@ -65,6 +67,12 @@ class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation
     {
         this.deadUntil = Date(System.currentTimeMillis() + this.killTime)
     }
+
+    override val killTime: Long
+        get()
+        {
+            return (this.customSpawnTime ?: super.killTime)
+        }
 
     fun loadData()
     {
@@ -101,10 +109,48 @@ class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation
                 this.gender = when (parameters[0] as String)
                 {
                     "m", "mężczyzna" -> Gender.MALE
-                    "k", "konieta" -> Gender.FEMALE
+                    "k", "kobieta" -> Gender.FEMALE
                     "x", "nieokreślona", "nieznana" -> Gender.UNKNOWN
                     else -> Gender.UNKNOWN
                 }
+            }
+            "profesja" ->
+            {
+                this.stats.profession = when (parameters[0] as String)
+                {
+                    "w", "wojownik" -> Profession.WARRIOR
+                    "p", "paladyn" -> Profession.PALADIN
+                    "b", "tancerz ostrzy" -> Profession.BLADE_DANCER
+                    "m", "mag" -> Profession.MAGE
+                    "h", "łowca" -> Profession.HUNTER
+                    "t", "tropiciel" -> Profession.TRACKER
+                    else -> Profession.WARRIOR
+                }
+            }
+            "siła", "str" ->
+            {
+                this.stats.strength = (parameters[0] as Long).toInt()
+            }
+            "zręczność", "agi" ->
+            {
+                this.stats.agility = (parameters[0] as Long).toInt()
+            }
+            "intelekt", "int" ->
+            {
+                this.stats.intellect = (parameters[0] as Long).toInt()
+            }
+            "sa" ->
+            {
+                this.stats.attackSpeed = (parameters[0] as Long).toDouble() / 100.0
+            }
+            "hp" ->
+            {
+                this.stats.maxHp = (parameters[0] as Long).toInt()
+            }
+            "atak" ->
+            {
+                val values = (parameters[0] as String).splitByChar('-')
+                this.stats.damage = values[0].toInt()..values[1].toInt()
             }
         }
     }

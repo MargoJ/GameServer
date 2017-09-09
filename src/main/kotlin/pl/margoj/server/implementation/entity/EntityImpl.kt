@@ -5,7 +5,6 @@ import pl.margoj.server.api.entity.Entity
 import pl.margoj.server.api.utils.fastPow2
 import pl.margoj.server.implementation.battle.BattleData
 import pl.margoj.server.implementation.battle.BattleImpl
-import java.util.Date
 
 abstract class EntityImpl : Entity
 {
@@ -40,7 +39,7 @@ abstract class EntityImpl : Entity
         this.hp = Math.max(0, this.hp)
     }
 
-    val killTime: Long
+    open val killTime: Long
         get()
         {
             var minutes = (0.7 + (0.18 * this.level) - (0.00045 * this.level.fastPow2()))

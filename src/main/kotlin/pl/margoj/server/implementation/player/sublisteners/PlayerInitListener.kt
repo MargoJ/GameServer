@@ -112,8 +112,9 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
     private fun handleInit(out: OutgoingPacket)
     {
         val j = out.json
+        val player = this.player!!
 
-        val town = this.player!!.location.town!! as TownImpl
+        val town = player.location.town!! as TownImpl
 
         j.add("town", town.cachedMapData.townElement)
 
@@ -124,6 +125,12 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
         j.addProperty("time", TimeUtils.getTimestampLong())
         j.addProperty("tutorial", -1)
         j.addProperty("clientver", 1461248638)
+
+        if (!player.initialized)
+        {
+            j.add("h", GsonUtils.gson.toJsonTree(player.data.recalculateStatistics(StatisticType.ALL)))
+            player.initialized = true
+        }
 
         out.addStatisticRecalculation(StatisticType.ALL)
 

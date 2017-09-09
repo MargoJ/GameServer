@@ -38,6 +38,17 @@ abstract class CodeStatement
             types.put("typ", ::DelegatedFunctionStatement)
             types.put("płeć", ::DelegatedFunctionStatement)
 
+            types.put("profesja", ::DelegatedFunctionStatement)
+            types.put("siła", ::DelegatedFunctionStatement)
+            types.put("str", ::DelegatedFunctionStatement)
+            types.put("zręczność", ::DelegatedFunctionStatement)
+            types.put("agi", ::DelegatedFunctionStatement)
+            types.put("intelekt", ::DelegatedFunctionStatement)
+            types.put("int", ::DelegatedFunctionStatement)
+            types.put("hp", ::DelegatedFunctionStatement)
+            types.put("sa", ::DelegatedFunctionStatement)
+            types.put("atak", ::DelegatedFunctionStatement)
+
             types.put(MathStatement.ADD, ::MathStatement)
             types.put(MathStatement.SUBTRACT, ::MathStatement)
             types.put(MathStatement.MULTIPLY, ::MathStatement)

@@ -15,6 +15,7 @@ import pl.margoj.server.implementation.inventory.AbstractInventoryImpl
 import pl.margoj.server.implementation.inventory.map.MapInventoryImpl
 import pl.margoj.server.implementation.inventory.player.ItemTracker
 import pl.margoj.server.implementation.inventory.player.PlayerInventoryImpl
+import pl.margoj.server.implementation.map.TownImpl
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.npc.NpcTalk
 import java.util.Collections
@@ -64,10 +65,12 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
 
     val itemTracker = ItemTracker(this)
 
+    internal var initialized = false
+
     override val battleUnavailabilityCause: BattleUnableToStartException.Cause?
         get()
         {
-            if(!this.online)
+            if (!this.online)
             {
                 return BattleUnableToStartException.Cause.PLAYER_IS_OFFLINE
             }
@@ -153,6 +156,12 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
     override fun kill()
     {
         this.data.deadUntil = Date(System.currentTimeMillis() + this.killTime)
+        this.data.hp = 1
+
+        val respawnLocation = this.location.town?.respawnMap as? TownImpl ?: return
+        val spawnPoint = respawnLocation.cachedMapData.spawnPoint
+
+        this.teleport(spawnPoint)
     }
 
     fun updatePossibleInventories()
