@@ -19,7 +19,8 @@ class CurrencyManagerImpl(val player: PlayerImpl) : CurrencyManager
 
     override fun canFit(gold: Long): Boolean
     {
-        return gold >= 0 && gold <= this.goldLimit
+        val targetGold = this.gold + gold
+        return targetGold >= 0 && targetGold <= this.goldLimit
     }
 
     fun requestCurrencyRecalculation()
@@ -42,7 +43,7 @@ class CurrencyManagerImpl(val player: PlayerImpl) : CurrencyManager
         }
         else
         {
-            this.player.displayScreenMessage("Stracono $gold złotych monet")
+            this.player.displayScreenMessage("Stracono ${-gold} złotych monet")
         }
     }
 }

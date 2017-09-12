@@ -14,6 +14,8 @@ class PlayerBuildInVariable(val player: PlayerImpl) : BuildInVariable()
             "hp", "życie" -> player.hp.toLong()
             "hpprocent" -> player.healthPercent.toLong()
             "maxhp" -> player.data.maxHp.toLong()
+            "gold", "złoto" -> player.currencyManager.gold
+            "goldlimit", "maxgold", "limitzłota" -> player.currencyManager.goldLimit
             else -> "???"
         }
     }
