@@ -8,6 +8,7 @@ import pl.margoj.server.implementation.database.DatabaseManager
 import pl.margoj.server.implementation.database.DatabaseObjectCache
 import pl.margoj.server.implementation.database.TableNames
 import pl.margoj.server.implementation.player.PlayerDataImpl
+import pl.margoj.server.implementation.player.options.PlayerOptions
 import java.sql.Connection
 import java.sql.PreparedStatement
 
@@ -17,7 +18,7 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Lo
         TableNames.PLAYERS,
         rawColumns = *arrayOf(
                 "id", "characterName", "profession", "gender", "experience", "level", "hp", "map", "x", "y", "baseStrength", "baseAgility", "baseIntellect", "statPoints",
-                "gold", "ttl", "dead_until"
+                "gold", "ttl", "dead_until", "player_options"
         )
 )
 {
@@ -62,6 +63,7 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Lo
             data.ttl = it.getInt("ttl")
             data.deadUntil = it.getTimestamp("dead_until")
             data.inventory = databaseManager.playerInventoryCache.loadOne(data.id)
+            data.playerOptions = PlayerOptions(it.getInt("player_options"))
             data
         }
     }
@@ -86,6 +88,7 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Lo
             statement.setLong(i(), d.gold)
             statement.setInt(i(), d.ttl)
             statement.setTimestamp(i(), if (d.deadUntil == null) null else java.sql.Timestamp(d.deadUntil!!.time))
+            statement.setInt(i(), d.playerOptions.intValue)
             databaseManager.playerInventoryCache.saveOne(d.inventory!!)
         })
     }

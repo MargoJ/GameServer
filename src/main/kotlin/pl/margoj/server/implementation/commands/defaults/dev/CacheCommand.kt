@@ -16,7 +16,7 @@ class CacheCommand : CommandListener
 
         init
         {
-            caches.put("players", { it.playerInventoryCache })
+            caches.put("players", { it.playerDataCache })
             caches.put("inventories", { it.playerInventoryCache })
             caches.put("items", { it.itemDataCache })
             caches.put("mapinventories", { it.mapInventoryDataCache })

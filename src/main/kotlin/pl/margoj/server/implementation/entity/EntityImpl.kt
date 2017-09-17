@@ -14,13 +14,19 @@ abstract class EntityImpl : Entity
 
     var battleData: BattleData? = null
 
+    val inActiveBattle: Boolean
+        get()
+        {
+            return this.currentBattle != null && !this.currentBattle!!.finished && this.battleData?.dead == false
+        }
+
     open val battleUnavailabilityCause: BattleUnableToStartException.Cause?
         get()
         {
             return when
             {
                 this.isDead -> BattleUnableToStartException.Cause.ENTITY_IS_DEAD
-                this.currentBattle != null && !this.currentBattle!!.finished && this.battleData?.dead == false -> BattleUnableToStartException.Cause.ENTITY_IN_BATTLE
+                this.inActiveBattle -> BattleUnableToStartException.Cause.ENTITY_IN_BATTLE
                 else -> null
             }
         }
@@ -43,7 +49,7 @@ abstract class EntityImpl : Entity
         get()
         {
             var minutes = (0.7 + (0.18 * this.level) - (0.00045 * this.level.fastPow2()))
-            if(minutes > 18.0)
+            if (minutes > 18.0)
             {
                 minutes = 18.0
             }

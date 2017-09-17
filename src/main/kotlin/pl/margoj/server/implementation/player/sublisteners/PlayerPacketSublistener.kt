@@ -46,6 +46,7 @@ abstract class PlayerPacketSubListener(
                 ::PlayerTalkListener,
                 ::PlayerBattleListener,
                 ::PlayerBattleSendListener,
+                ::PlayerSkillsListener,
                 ::AdditionalPlayerPacketListener,
 
                 // async

@@ -3,6 +3,7 @@ package pl.margoj.server.implementation.player.sublisteners
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.player.PlayerConnection
+import pl.margoj.server.implementation.player.StatisticType
 
 class AdditionalPlayerPacketListener(connection: PlayerConnection) : PlayerPacketSubListener(connection, onlyOnPlayer = true)
 {
@@ -27,6 +28,11 @@ class AdditionalPlayerPacketListener(connection: PlayerConnection) : PlayerPacke
         {
             val left = player.data.deadUntil!!.time - System.currentTimeMillis()
             out.json.addProperty("dead", left / 1000L)
+        }
+
+        if(player.data.playerOptions.needsUpdate)
+        {
+            out.addStatisticRecalculation(StatisticType.OPTIONS)
         }
 
         return true

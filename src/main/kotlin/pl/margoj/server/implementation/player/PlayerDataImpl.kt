@@ -14,6 +14,7 @@ import pl.margoj.server.api.utils.toBigDecimal
 import pl.margoj.server.implementation.inventory.player.PlayerInventoryImpl
 import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.network.protocol.jsons.HeroObject
+import pl.margoj.server.implementation.player.options.PlayerOptions
 import java.util.Date
 
 // TODO
@@ -64,6 +65,7 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
 
     var location: Location = Location(null)
     var inventory: PlayerInventoryImpl? = null
+    lateinit var playerOptions: PlayerOptions
 
     /* use CurrencyManager to manipulate this value */
     internal var gold: Long = 0L
@@ -157,7 +159,6 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
             out.permissions = 1
             out.nick = this.player.name
             out.prof = this.profession.id
-            out.opt = 0
 
             // base
             this.strength = this.baseStrength
@@ -245,6 +246,11 @@ class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
             out.warriorStats.block = 0
         }
 
+        if(StatisticType.WARRIOR in type || StatisticType.OPTIONS in type)
+        {
+            out.opt = this.playerOptions.intValue
+        }
+
         if (StatisticType.POSITION in type)
         {
             out.dir = this.player.movementManager.playerDirection
@@ -310,6 +316,7 @@ class StatisticType private constructor(val flag: Int = (1 shl counter++))
         val POSITION = StatisticType()
         val CURRENCY = StatisticType()
         val TTL = StatisticType()
+        val OPTIONS = StatisticType()
 
         // all
         val ALL = StatisticType(-1)
