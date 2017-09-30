@@ -1,7 +1,9 @@
 package pl.margoj.server.implementation
 
+import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.Validate
 import org.apache.logging.log4j.Logger
+import org.yaml.snakeyaml.Yaml
 import pl.margoj.mrf.MargoResource
 import pl.margoj.server.api.MargoJConfig
 import pl.margoj.server.api.Server
@@ -11,6 +13,7 @@ import pl.margoj.server.api.events.ServerReadyEvent
 import pl.margoj.server.api.inventory.Item
 import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.api.player.Player
+import pl.margoj.server.implementation.auth.AuthConfig
 import pl.margoj.server.implementation.auth.Authenticator
 import pl.margoj.server.implementation.battle.BattleImpl
 import pl.margoj.server.implementation.chat.ChatManagerImpl
@@ -39,6 +42,7 @@ import pl.margoj.server.implementation.tasks.BattleProcessTask
 import pl.margoj.server.implementation.tasks.PlayerKeepAliveTask
 import pl.margoj.server.implementation.tasks.TTLTakeTask
 import java.io.File
+import java.io.FileReader
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
@@ -66,11 +70,13 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
     override val entityManager = EntityManagerImpl(this)
     override val chatManager = ChatManagerImpl(this)
 
-    val authenticator = Authenticator()
     val networkManager = NetworkManager(this)
     val itemManager = ItemManager(this)
     val databaseManager = DatabaseManager(this)
     val npcScriptParser = NpcScriptParser()
+
+    lateinit var authenticator: Authenticator
+        private set
 
     lateinit var httpServer: HttpServer
         private set
@@ -88,6 +94,30 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
         logger.info("Uruchamiam serwer MargoJ v$version...")
         this.running = true
 
+        logger.info("Ładuje konfiguracje autoryzacji")
+
+        val file = File("auth.yml")
+
+        if (!file.exists())
+        {
+            try
+            {
+                FileUtils.copyURLToFile(ServerImpl::class.java.classLoader.getResource("auth.yml"), file)
+            }
+            catch (e: IOException)
+            {
+                e.printStackTrace()
+                return
+            }
+        }
+
+        FileReader(file).use {
+            val config = Yaml().loadAs(it, AuthConfig::class.java)
+
+            authenticator = Authenticator(this, config)
+            authenticator.init()
+        }
+
         logger.info("Ładuje pluginy...")
         val pluginsDirectory = File("plugins")
         if (!pluginsDirectory.exists())
@@ -98,7 +128,7 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
 
         val webFolder = File("web")
 
-        if(standalone)
+        if (standalone)
         {
             try
             {
@@ -150,9 +180,9 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
         httpServer.registerHandler(engineHandler)
         httpServer.registerHandler(TownHandler(this))
         httpServer.registerHandler(ItemsHandler(this))
-        httpServer.registerHandler(TemporaryLoginHandler(this))
+        httpServer.registerHandler(JoinHandler(this))
 
-        if(standalone)
+        if (standalone)
         {
             httpServer.registerHandler(ResourceHandler(webFolder.absoluteFile))
         }
@@ -304,7 +334,7 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
         for (entity in battle.participants)
         {
             val cause = entity.battleUnavailabilityCause
-            if(cause != null)
+            if (cause != null)
             {
                 failCause.put(entity, cause)
             }

@@ -2,6 +2,7 @@ package pl.margoj.server.implementation.player
 
 import org.apache.commons.lang3.exception.ExceptionUtils
 import pl.margoj.server.api.sync.Tickable
+import pl.margoj.server.implementation.auth.AuthSession
 import pl.margoj.server.implementation.network.http.HttpResponse
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.NetworkManager
@@ -13,7 +14,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 
-class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandler
+class PlayerConnection(val manager: NetworkManager, val authSession: AuthSession) : PacketHandler
 {
     private val logger = manager.server.logger
     private var disconnectReason: String? = null
@@ -21,6 +22,8 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
     internal var subListeners: Collection<PlayerPacketSubListener> = PlayerPacketSubListener.DEFAULTS.map { it(this) }
     internal val packetModifiers = CopyOnWriteArrayList<(OutgoingPacket) -> Unit>()
     internal var lastEvent: Double = 0.0
+
+    val aid = authSession.charId
 
     var initLevel = 0
     var lastPacket: Long = 0
@@ -60,6 +63,15 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
             out.addEngineAction(OutgoingPacket.EngineAction.STOP)
             out.addWarn(this.disconnectReason!!)
             this.disconnectReason = null
+            this.dispose()
+
+            this.manager.server.ticker.tickOnce(object : Tickable {
+                override fun tick(currentTick: Long)
+                {
+                    this@PlayerConnection.player?.disconnect()
+                }
+            })
+
             return callback(out)
         }
 
@@ -82,8 +94,10 @@ class PlayerConnection(val manager: NetworkManager, val aid: Int) : PacketHandle
 
     fun dispose()
     {
+        this.manager.server.authenticator.heartbeat.queue(this)
         this.player = null
         this.disposed = true
+        this.manager.resetPlayerConnection(this)
     }
 
     override fun toString(): String

@@ -1,0 +1,14 @@
+# Adres serwera autoryzacyjnego
+authserver: ""
+
+# ID Serwera
+serverid: ""
+
+# Secret key serwera
+secret: ""
+
+# Strona logowania
+loginpage: ""
+
+# Adres serwera do użycia we wtyczce
+server: ""

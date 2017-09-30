@@ -81,9 +81,6 @@ fun main(args: Array<String>)
     }
 
     val config = Yaml().loadAs(FileReader(file), MargoJConfigImpl::class.java)
-
-    println(config)
-
     val gameLogger = LogManager.getLogger("Game")
 
     val server = ServerImpl(config, options.has("standalone"), logger, gameLogger)

@@ -69,12 +69,13 @@ class HttpServer(private val logger: Logger, private val host: String, private v
         else
         {
             var foundAny = false
-            this.handlers.stream().forEach { handler ->
+            for (handler in this.handlers)
+            {
                 if (handler.shouldHandle(httpRequest.path))
                 {
                     handler.handle(httpRequest, httpResponse)
                     foundAny = true
-                    return@forEach
+                    break
                 }
             }
 
@@ -86,43 +87,60 @@ class HttpServer(private val logger: Logger, private val host: String, private v
             }
         }
         httpRequest.content.release()
-
-        for ((key, value) in ACCESS_CONTROL_HEADERS)
-        {
-            httpResponse.headers.put(key, value)
-        }
-
-        val headersResponse = StringBuilder()
-        val iterator = httpRequest.headers.iteratorAsString()
-        while (iterator.hasNext())
-        {
-            headersResponse.append(iterator.next().key).append(", ")
-        }
-
-        if(headersResponse.length > 0)
-        {
-            headersResponse.setLength(headersResponse.length - 2)
-        }
-
-        val accessControlRequest = httpRequest.headers.get("Access-Control-Request-Headers")
-        if(accessControlRequest != null && accessControlRequest.isNotEmpty())
-        {
-            headersResponse.append(", ").append(accessControlRequest)
-        }
-
-        httpResponse.headers.put(ACCESS_CONTROL_ALLOW_HEADERS, headersResponse)
     }
 
-    private companion object
+    companion object
     {
         val ALLOW = AsciiString("Allow")
+        val ORIGIN = AsciiString("Origin")
 
         val ACCESS_CONTROL_HEADERS = hashMapOf(
-                Pair(AsciiString("Access-Control-Allow-Origin"), "http://game1.margonem.pl"),
                 Pair(AsciiString("Access-Control-Allow-Credentials"), "true"),
                 Pair(AsciiString("Access-Control-Allow-Methods"), "POST, GET")
         )
 
         val ACCESS_CONTROL_ALLOW_HEADERS = AsciiString("Access-Control-Allow-Headers")
+        val ACCESS_CONTROL_ALLOW_ORIGIN = AsciiString("Access-Control-Allow-Origin")
+
+        fun applyCorsHeaders(httpResponse: HttpResponse)
+        {
+            val httpRequest = httpResponse.request
+
+            for ((key, value) in ACCESS_CONTROL_HEADERS)
+            {
+                httpResponse.headers.put(key, value)
+            }
+
+            val headersResponse = StringBuilder()
+            val iterator = httpRequest.headers.iteratorAsString()
+            while (iterator.hasNext())
+            {
+                headersResponse.append(iterator.next().key).append(", ")
+            }
+
+            if(headersResponse.isNotEmpty())
+            {
+                headersResponse.setLength(headersResponse.length - 2)
+            }
+
+            val accessControlRequest = httpRequest.headers.get("Access-Control-Request-Headers")
+            if(accessControlRequest != null && accessControlRequest.isNotEmpty())
+            {
+                headersResponse.append(", ").append(accessControlRequest)
+            }
+
+            httpResponse.headers.put(ACCESS_CONTROL_ALLOW_HEADERS, headersResponse)
+
+            val originHeader = httpRequest.headers[ORIGIN]
+
+            if(originHeader != null)
+            {
+                httpResponse.headers.put(ACCESS_CONTROL_ALLOW_ORIGIN, originHeader)
+            }
+            else
+            {
+                httpResponse.headers.put(ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+            }
+        }
     }
 }

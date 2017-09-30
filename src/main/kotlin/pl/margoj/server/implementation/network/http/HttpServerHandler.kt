@@ -25,11 +25,12 @@ class HttpServerHandler(private val server: HttpServer) : ChannelInboundHandlerA
         val ip = (ctx.channel().remoteAddress() as InetSocketAddress).address.hostAddress
         val query = NoSemicolonSingleValueQueryStringDecoder(request.uri())
 
-        val response = HttpResponse(true)
+        val httpRequest = HttpRequest(request, query.path, request.uri(), ip, request.method(), request.headers(), query.parameters, request.content())
+        val response = HttpResponse(httpRequest, true)
         val delayMetaData = DelayMetaData(response, this, ctx)
         response.delayMetaData = delayMetaData
 
-        server.handle(HttpRequest(request, query.path, request.uri(), ip, request.method(), request.headers(), query.parameters, request.content()), response)
+        server.handle(httpRequest, response)
 
         if (!HttpUtil.isKeepAlive(request))
         {
@@ -45,6 +46,8 @@ class HttpServerHandler(private val server: HttpServer) : ChannelInboundHandlerA
     fun sendResponse(response: HttpResponse, ctx: ChannelHandlerContext)
     {
         val httpResponse = DefaultFullHttpResponse(HttpVersion.HTTP_1_1, response.status, Unpooled.wrappedBuffer(response.response))
+        HttpServer.applyCorsHeaders(response)
+
         response.headers.forEach { key, value -> httpResponse.headers().set(key, value) }
         httpResponse.headers()[HttpHeaderNames.CONTENT_LENGTH] = httpResponse.content().readableBytes()
 

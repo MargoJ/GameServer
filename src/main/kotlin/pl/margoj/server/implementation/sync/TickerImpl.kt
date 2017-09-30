@@ -169,6 +169,18 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?, override val t
         }
     }
 
+    fun sync(tickable: Tickable)
+    {
+        if(this.isInMainThread)
+        {
+            tickable.tick(this.currentTick)
+        }
+        else
+        {
+            this.tickOnce(tickable)
+        }
+    }
+
     override fun tickOnce(tickable: Tickable)
     {
         this.registerTickable(OneTimeTickable(tickable))

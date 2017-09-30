@@ -14,12 +14,16 @@ class RedirectHandler(private val server: ServerImpl) : HttpHandler
 
     override fun handle(request: HttpRequest, response: HttpResponse)
     {
-        response.contentType = "text/plain"
+        response.contentType = "text/html"
 
+        // TODO
         val out = StringBuilder()
-                    .append("<script type=\"application/javascript\">")
-                    .append("location.href =\"http://game1.margonem.pl/\"")
-                    .append("</script>")
+                .append("<div class='__mj_connect_to' data-name='" + this.server.config.serverConfig!!.name + "' data-connect='" + this.server.authenticator.authConfig.server + "'></div>")
+                .append("Serwer do autoryzacji używa wtyczki MargoJ<br>")
+                .append("Możesz ją pobrać pod <a href=\"https://margoj.pl/extension/download.zip\">tym linkiem</a><br>")
+                .append("<br>")
+                .append("Jeśli posiadasz wtyczke i nie zostałeś połączony automatycznie ")
+                .append("połącz się za pomocą wtyczki do: <b>").append(this.server.authenticator.authConfig.server).append("</b>")
 
         response.contentType = "text/html"
         response.responseString = out.toString()

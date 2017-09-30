@@ -191,9 +191,9 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
     fun disconnect()
     {
         this.server.ticker.unregisterTickable(this.itemTracker)
-        this.connection.dispose()
-        this.server.networkManager.resetPlayerConnection(this.connection)
         this.server.entityManager.unregisterEntity(this)
+        this.connection.dispose()
+
         this.online = false
         this.server.eventManager.call(PlayerQuitEvent(this))
 

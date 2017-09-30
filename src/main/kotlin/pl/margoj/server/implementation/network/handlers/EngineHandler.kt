@@ -32,19 +32,19 @@ class EngineHandler(private val server: ServerImpl) : HttpHandler
                 NoSemicolonSingleValueQueryStringDecoder("?" + request.contentAsString).parameters
         )
 
-        var aid: Int? = null
+        var gameToken: String? = null
         val cookiesHeader = request.headers["Cookie"]
         if(cookiesHeader != null)
         {
             val cookies = cookieDecoder.decode(cookiesHeader)
-            val idCookie = cookies.find { it.name() == "user_id" }
-            if(idCookie != null)
+            val tokenCookie = cookies.find { it.name() == "margoj_game_token" }
+            if(tokenCookie != null)
             {
-                aid = Parse.parseInt(idCookie.value())
+                gameToken = tokenCookie.value()
             }
         }
 
-        val handler = this.server.networkManager.getHandler(aid)
+        val handler = this.server.networkManager.getHandler(gameToken)
 
         val callback: (OutgoingPacket) -> Unit = { out ->
             if (out.shouldStop)
@@ -59,16 +59,16 @@ class EngineHandler(private val server: ServerImpl) : HttpHandler
         {
             response.delayed = true
 
-            this.server.authenticator.authenticateAsync(aid.toString()) { success ->
-                if (success)
+            this.server.authenticator.authenticate(gameToken) { authSession ->
+                if (authSession != null)
                 {
-                    val connection = server.networkManager.createPlayerConnection(aid!!)
+                    val connection = server.networkManager.createPlayerConnection(authSession)
                     connection.ip = request.ipAddress
                     this.handle(response, connection, packet, OutgoingPacket(), callback)
                 }
                 else
                 {
-                    response.responseString = OutgoingPacket().addEngineAction(OutgoingPacket.EngineAction.STOP).addAlert("Błąd autoryzacji").toString()
+                    response.responseString = OutgoingPacket().addEngineAction(OutgoingPacket.EngineAction.STOP).addAlert("Błąd autoryzacji. <br> <a href=\"" + this.server.authenticator.authConfig.loginpage + "\">Zaloguj się</a>").toString()
                     response.keepAlive = false
                     response.sendDelayed()
                 }

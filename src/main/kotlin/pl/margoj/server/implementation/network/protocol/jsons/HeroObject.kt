@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 import java.math.BigDecimal
 
 data class HeroObject(
-        var id: Int? = null,
+        var id: Long? = null,
         var blockade: Int? = null,
         @SerializedName("uprawnienia")
         var permissions: Int? = null,

@@ -6,6 +6,7 @@ import io.netty.util.AsciiString
 import java.nio.charset.StandardCharsets
 
 data class HttpResponse(
+        var request: HttpRequest,
         var keepAlive: Boolean,
         var response: ByteArray = ByteArray(0),
         var status: HttpResponseStatus = HttpResponseStatus.OK,

@@ -17,7 +17,7 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Lo
         databaseManager,
         TableNames.PLAYERS,
         rawColumns = *arrayOf(
-                "id", "characterName", "profession", "gender", "experience", "level", "hp", "map", "x", "y", "baseStrength", "baseAgility", "baseIntellect", "statPoints",
+                "id", "accountId", "characterName", "profession", "gender", "experience", "level", "hp", "map", "x", "y", "baseStrength", "baseAgility", "baseIntellect", "statPoints",
                 "gold", "ttl", "dead_until", "player_options"
         )
 )
@@ -40,7 +40,7 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Lo
     override fun loadFromDatabase(connection: Connection, ids: Collection<Long>): List<PlayerDataImpl?>
     {
         return this.tryLoad(connection, ids) {
-            val data = PlayerDataImpl(it.getLong("id"), it.getString("characterName"))
+            val data = PlayerDataImpl(it.getLong("id"), it.getLong("accountId"), it.getString("characterName"))
             data.profession = Profession.getById(it.getString("profession")[0])!!
             data.gender = Gender.getById(it.getString("gender")[0])!!
             data.xp = it.getLong("experience")
@@ -72,6 +72,7 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Lo
     {
         this.trySave(connection, data, { d, statement, i, last ->
             statement.setLong(i(), d.id)
+            statement.setLong(i(), d.accountId)
             statement.setString(i(), d.characterName)
             statement.setString(i(), d.profession.id.toString())
             statement.setString(i(), d.gender.id.toString())

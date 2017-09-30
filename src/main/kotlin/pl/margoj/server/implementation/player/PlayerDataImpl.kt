@@ -18,7 +18,7 @@ import pl.margoj.server.implementation.player.options.PlayerOptions
 import java.util.Date
 
 // TODO
-class PlayerDataImpl(val id: Long, val characterName: String) : PlayerData
+class PlayerDataImpl(val id: Long, val accountId: Long, val characterName: String) : PlayerData
 {
     var player_: PlayerImpl? = null
     val player: PlayerImpl get() = this.player_!!

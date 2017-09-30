@@ -3,6 +3,7 @@ package pl.margoj.server.implementation.player.sublisteners
 import pl.margoj.server.api.events.player.PlayerJoinEvent
 import pl.margoj.server.api.utils.Parse
 import pl.margoj.server.api.utils.TimeUtils
+import pl.margoj.server.implementation.database.TableNames
 import pl.margoj.server.implementation.map.TownImpl
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
@@ -34,16 +35,26 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
             {
                 if (this.player == null)
                 {
-                    val data = server.databaseManager.playerDataCache.loadOne(connection.aid.toLong())
+                    var data = server.databaseManager.playerDataCache.loadOne(connection.aid)
 
-                    if (data == null)
+                    if(data == null)
                     {
-                        out.addAlert("Nie jesteś zalogowany!")
-                        out.addEngineAction(OutgoingPacket.EngineAction.STOP)
-                        return false
+                        this.server.gameLogger.info("Rejestruje nową postać: ${this.connection.authSession.charName}")
+
+                        server.databaseManager.withConnection {
+                            val statement = it.prepareStatement("INSERT INTO `${TableNames.PLAYERS}`(`id`, `accountId`, `characterName`, `profession`, `gender`) VALUES(?, ?, ?, ?, ?)")
+                            statement.setLong(1, this.connection.aid)
+                            statement.setLong(2, this.connection.authSession.accountId)
+                            statement.setString(3, this.connection.authSession.charName)
+                            statement.setString(4, this.connection.authSession.charProfession)
+                            statement.setString(5, this.connection.authSession.charGender)
+                            statement.executeUpdate()
+                        }
                     }
 
-                    server.ticker.registerWaitable { this.handleNewPlayer(data) }.wait()
+                    data = server.databaseManager.playerDataCache.loadOne(connection.aid)
+
+                    server.ticker.registerWaitable { this.handleNewPlayer(data!!) }.wait()
                 }
                 else
                 {
@@ -77,6 +88,7 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
     private fun handleNewPlayer(data: PlayerDataImpl)
     {
         val player = PlayerImpl(data, this.server, this.connection)
+
         data.player_ = player
         data.inventory!!.player_ = player
         this.connection.player = player

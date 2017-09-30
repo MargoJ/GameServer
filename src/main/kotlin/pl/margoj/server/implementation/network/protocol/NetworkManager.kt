@@ -1,26 +1,30 @@
 package pl.margoj.server.implementation.network.protocol
 
 import pl.margoj.server.implementation.ServerImpl
+import pl.margoj.server.implementation.auth.AuthSession
 import pl.margoj.server.implementation.player.PlayerConnection
+import java.util.concurrent.atomic.AtomicInteger
 
 class NetworkManager(val server: ServerImpl)
 {
-    private val connections = hashMapOf<Int, PlayerConnection>()
-    private val noAuth = NoAuthPacketHandler(this)
+    private val idsCounter = AtomicInteger()
+    private val connections = hashMapOf<String, PlayerConnection>()
+    val allConnections: Collection<PlayerConnection> get() = this.connections.values
 
-    fun getHandler(aid: Int?): PacketHandler?
+    fun getHandler(gameToken: String?): PacketHandler?
     {
-        return if (aid == null) this.noAuth else this.connections[aid]
+        return this.connections[gameToken]
     }
 
-    fun createPlayerConnection(aid: Int): PlayerConnection
+    fun createPlayerConnection(authSession: AuthSession): PlayerConnection
     {
-        if (this.connections.containsKey(aid))
+        val gameToken = authSession.gameToken
+        if (this.connections.containsKey(gameToken))
         {
-            throw IllegalStateException("Connection with id $aid already exists")
+            throw IllegalStateException("Connection with id $gameToken already exists")
         }
-        val connection = PlayerConnection(this, aid)
-        this.connections[aid] = connection
+        val connection = PlayerConnection(this, authSession)
+        this.connections[gameToken] = connection
         return connection
     }
 
