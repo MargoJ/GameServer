@@ -48,11 +48,15 @@ abstract class EntityImpl : Entity
     open val killTime: Long
         get()
         {
+            if(this.level >= 200)
+            {
+                return 18L * 60_000L
+            }
             var minutes = (0.7 + (0.18 * this.level) - (0.00045 * this.level.fastPow2()))
             if (minutes > 18.0)
             {
                 minutes = 18.0
             }
-            return minutes.toLong() * 60_000L
+            return (minutes * 60_000.0).toLong()
         }
 }

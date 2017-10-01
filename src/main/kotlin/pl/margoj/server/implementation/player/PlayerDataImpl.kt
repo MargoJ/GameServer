@@ -143,6 +143,8 @@ class PlayerDataImpl(val id: Long, val accountId: Long, val characterName: Strin
             statPoints++
         }
 
+        this.hp = Integer.MAX_VALUE
+
         connection.addModifier { it.addStatisticRecalculation(StatisticType.WARRIOR) }
 
         this.player.server.eventManager.call(PlayerLevelUpEvent(this.player, oldLevel, newLevel))
@@ -211,7 +213,8 @@ class PlayerDataImpl(val id: Long, val accountId: Long, val characterName: Strin
 
             if (!hasDamage)
             {
-                this.damage = Math.round(this.baseStrength * 0.7).toInt()..Math.round(this.baseStrength * 0.8).toInt()
+                val damage = Math.min(Math.round(this.baseStrength * 1.5), 95).toInt()
+                this.damage = damage..damage
             }
 
             out.exp = this.xp

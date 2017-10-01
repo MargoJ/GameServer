@@ -35,7 +35,7 @@ class PlayerConnection(val manager: NetworkManager, val authSession: AuthSession
             {
                 if (field != null)
                 {
-                    this.manager.server.gameLogger.warn("connection $aid(Player=${player?.name}): ip  $field -> $value !")
+//                    this.manager.server.gameLogger.warn("connection $aid(Player=${player?.name}): ip  $field -> $value !")
                 }
 
                 field = value

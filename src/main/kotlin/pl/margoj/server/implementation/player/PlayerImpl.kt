@@ -190,11 +190,11 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
 
     fun disconnect()
     {
+        this.connection.dispose()
+        this.online = false
+
         this.server.ticker.unregisterTickable(this.itemTracker)
         this.server.entityManager.unregisterEntity(this)
-        this.connection.dispose()
-
-        this.online = false
         this.server.eventManager.call(PlayerQuitEvent(this))
 
         this.server.gameLogger.info("${this.name}: wylogowano się z gry. Pozycja: ${this.location.toSimpleString()}")

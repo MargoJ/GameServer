@@ -22,7 +22,7 @@ class GraphicsHandler(private val server: ServerImpl, private val directory: Fil
     {
         val file = this.getItemFile(request.path)
 
-        if (file == null || !file.exists())
+        if (file == null || !file.exists() || file.isDirectory)
         {
             response.status = HttpResponseStatus.NOT_FOUND
             response.responseString = "Image not found"

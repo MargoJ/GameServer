@@ -71,7 +71,7 @@ class PlayerPreMovementPacketListener(connection: PlayerConnection) : PlayerPack
 
     private fun handleWalk(player: PlayerImpl)
     {
-        if(!player.movementManager.canMove)
+        if (!player.movementManager.canMove)
         {
             return
         }
@@ -86,11 +86,23 @@ class PlayerPreMovementPacketListener(connection: PlayerConnection) : PlayerPack
             return
         }
 
-        if (gateway.levelRestriction.enabled)
+        val levelRestriction = gateway.levelRestriction
+        if (levelRestriction.enabled)
         {
-            if (player.data.level < gateway.levelRestriction.minLevel || player.data.level > gateway.levelRestriction.maxLevel)
+            if (player.data.level < levelRestriction.minLevel || player.data.level > levelRestriction.maxLevel)
             {
-                player.displayAlert("Przejście dostępne jest od ${gateway.levelRestriction.minLevel} do ${gateway.levelRestriction.maxLevel} poziomu!")
+                val message = StringBuilder("Przejście dostępne jest ")
+                if (levelRestriction.minLevel != 0)
+                {
+                    message.append("od ").append(levelRestriction.minLevel).append(" ")
+                }
+                if (levelRestriction.maxLevel <= 1000)
+                {
+                    message.append("do ").append(levelRestriction.maxLevel).append(" ")
+                }
+                message.append("poziomu!")
+
+                player.displayAlert(message.toString())
                 return
             }
         }

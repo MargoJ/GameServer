@@ -107,7 +107,7 @@ class Heartbeat(val authenticator: Authenticator) : Runnable
             }
         }
 
-        this.authenticator.server.logger.info("Heartbeat successful")
+        this.authenticator.server.logger.trace("Heartbeat successful")
     }
 
     private data class HeartbeatPayload
