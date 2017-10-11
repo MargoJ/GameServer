@@ -2,6 +2,7 @@ package pl.margoj.server.implementation.entity
 
 import pl.margoj.server.api.map.Town
 import pl.margoj.server.api.player.Player
+import pl.margoj.server.api.player.Profession
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.network.protocol.jsons.NpcObject
 import pl.margoj.server.implementation.network.protocol.jsons.OtherObject
@@ -171,7 +172,7 @@ class EntityTracker(val owner: PlayerImpl)
 
             out.addOther(other)
         }
-        else if(entity is Npc)
+        else if (entity is Npc)
         {
             val npc = NpcObject()
             npc.id = entity.id
@@ -212,6 +213,20 @@ class EntityTracker(val owner: PlayerImpl)
             trackingData.lastDirection = entity.direction
         }
 
+        if (trackingData.lastProfession != entity.stats.profession)
+        {
+            updated = true
+            other.profession = entity.stats.profession
+            trackingData.lastProfession = entity.stats.profession
+        }
+
+        if (trackingData.lastLevel != entity.level)
+        {
+            updated = true
+            other.level = entity.level
+            trackingData.lastLevel = entity.level
+        }
+
         if (updated)
         {
             out.addOther(other)
@@ -219,9 +234,9 @@ class EntityTracker(val owner: PlayerImpl)
     }
 }
 
-data class TrackingData(var x: Int, var y: Int, var lastDirection: Int)
+data class TrackingData(var x: Int, var y: Int, var lastDirection: Int, var lastProfession: Profession, var lastLevel: Int)
 {
-    constructor(entity: EntityImpl) : this(entity.location.x, entity.location.y, entity.direction)
+    constructor(entity: EntityImpl) : this(entity.location.x, entity.location.y, entity.direction, entity.stats.profession, entity.level)
 }
 
 fun PlayerImpl.getTrackingData(tracker: EntityTracker): TrackingData

@@ -28,8 +28,13 @@ class PlayerTalkListener(connection: PlayerConnection) : PlayerPacketSubListener
             id!!
 
             val npc = this.player!!.server.entityManager.getNpcById(id)
-            this.checkForMaliciousData(npc == null || npc.type != NpcType.NPC, "invalid npc")
+            this.checkForMaliciousData(npc == null, "invalid npc")
             npc!!
+
+            if(npc.type != NpcType.NPC)
+            {
+                return true
+            }
 
             if (!player!!.location.isNear(npc.location, true))
             {

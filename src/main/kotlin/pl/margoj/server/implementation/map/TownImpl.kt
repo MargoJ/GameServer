@@ -9,6 +9,7 @@ import pl.margoj.mrf.map.metadata.pvp.MapPvP
 import pl.margoj.mrf.map.metadata.respawnmap.RespawnMap
 import pl.margoj.mrf.map.objects.MapObject
 import pl.margoj.mrf.map.objects.npc.NpcMapObject
+import pl.margoj.mrf.map.objects.text.TextMapObject
 import pl.margoj.mrf.map.serialization.MapData
 import pl.margoj.server.api.map.ImmutableLocation
 import pl.margoj.server.api.map.PvPStatus
@@ -89,23 +90,31 @@ data class TownImpl(
 
         for (mapObject in this.objects)
         {
-            if (mapObject !is NpcMapObject)
+            if (mapObject is NpcMapObject)
             {
-                continue
+                val script = if (mapObject.script == null) null else this.server.npcScriptParser.getNpcScript(mapObject.script!!)
+                val npc = Npc(script, ImmutableLocation(this, mapObject.position.x, mapObject.position.y), this.server)
+                npc.loadData()
+
+                npc.takeIf { mapObject.graphics != null }?.icon = mapObject.graphics!!
+                npc.takeIf { mapObject.name != null }?.name = mapObject.name!!
+                npc.takeIf { mapObject.level != null }?.level = mapObject.level!!
+                npc.takeIf { mapObject.group != null }?.group = mapObject.group!!
+                npc.takeIf { mapObject.spawnTime != null }?.customSpawnTime = mapObject.spawnTime!!.toTime()
+
+                this.server.entityManager.registerEntity(npc)
+                this.npcs_.add(npc)
             }
+            else if (mapObject is TextMapObject)
+            {
+                val npc = Npc(null, ImmutableLocation(this, mapObject.position.x, mapObject.position.y), this.server)
+                npc.type = NpcType.INTERACTIVE
+                npc.name = mapObject.text
+                npc.icon = "reserved/transparent.png"
 
-            val script = if (mapObject.script == null) null else this.server.npcScriptParser.getNpcScript(mapObject.script!!)
-            val npc = Npc(script, ImmutableLocation(this, mapObject.position.x, mapObject.position.y), this.server)
-            npc.loadData()
-
-            npc.takeIf { mapObject.graphics != null }?.icon = mapObject.graphics!!
-            npc.takeIf { mapObject.name != null }?.name = mapObject.name!!
-            npc.takeIf { mapObject.level != null }?.level = mapObject.level!!
-            npc.takeIf { mapObject.group != null }?.group = mapObject.group!!
-            npc.takeIf { mapObject.spawnTime != null }?.customSpawnTime = mapObject.spawnTime!!.toTime()
-
-            this.server.entityManager.registerEntity(npc)
-            this.npcs_.add(npc)
+                this.server.entityManager.registerEntity(npc)
+                this.npcs_.add(npc)
+            }
         }
 
         for ((point, id) in this.partList)

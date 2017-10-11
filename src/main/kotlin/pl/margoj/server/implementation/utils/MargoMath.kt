@@ -82,4 +82,10 @@ object MargoMath
 
         return Math.pow(level.toDouble(), c).toLong()
     }
+
+    fun calculateDamageReduction(damage: Int, armor: Int): Int
+    {
+        // TODO: Not sure if that's the correct formula
+        return Math.floor(Math.sqrt((armor.toDouble() / damage.toDouble())) * 0.81f * damage).toInt()
+    }
 }

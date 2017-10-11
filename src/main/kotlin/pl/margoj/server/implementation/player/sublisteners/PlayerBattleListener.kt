@@ -33,6 +33,12 @@ class PlayerBattleListener(connection: PlayerConnection) : PlayerPacketSubListen
             else
             {
                 targetEntity = this.server.entityManager.getPlayerById(id)
+
+                if(targetEntity == player)
+                {
+                    player.displayAlert("Chcesz stoczyć wewnętrzną walkę? xD") // <3
+                    return true
+                }
             }
 
             if (targetEntity == null || !player.location.isNear(targetEntity.location, true))

@@ -17,7 +17,6 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?, override val t
     private val condition = lock.newCondition()
     private val registerQueue = LinkedList<Tickable>()
     private val unregisterQueue = LinkedList<Tickable>()
-    private val iteratingNow = AtomicBoolean()
     private var waitTime = Ticker.NANOS_IN_SECOND / targetTps
     private var lastTick = 0L
     private var tickSection = 0L
@@ -109,7 +108,6 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?, override val t
                 }
             }
 
-            this.iteratingNow.set(true)
             this.currentIterator = this.tickables.iterator()
 
             while (this.currentIterator!!.hasNext())
@@ -130,7 +128,6 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?, override val t
             }
 
             this.currentIterator = null
-            this.iteratingNow.set(false)
         }
 
         lock.withLock {
@@ -141,32 +138,18 @@ class TickerImpl(val server: ServerImpl, var mainThread: Thread?, override val t
 
     override fun registerTickable(tickable: Tickable)
     {
-        if (this.iteratingNow.get())
-        {
-            this.registerQueue.add(tickable)
-        }
-        else
-        {
-            this.tickables.add(tickable)
-        }
+        this.registerQueue.add(tickable)
     }
 
     override fun unregisterTickable(tickable: Tickable): Boolean
     {
-        if (this.iteratingNow.get())
+        if(!this.tickables.contains(tickable))
         {
-            if (!this.tickables.contains(tickable))
-            {
-                return false
-            }
+            return false
+        }
 
-            this.unregisterQueue.add(tickable)
-            return true
-        }
-        else
-        {
-            return this.tickables.remove(tickable)
-        }
+        this.unregisterQueue.add(tickable)
+        return true
     }
 
     fun sync(tickable: Tickable)

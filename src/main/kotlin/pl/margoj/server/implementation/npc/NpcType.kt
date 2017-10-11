@@ -6,5 +6,7 @@ enum class NpcType(val margoId: Int)
 
     MONSTER(2),
 
-    TRANSPARENT(4)
+    TRANSPARENT(4),
+
+    INTERACTIVE(5) // ??
 }
