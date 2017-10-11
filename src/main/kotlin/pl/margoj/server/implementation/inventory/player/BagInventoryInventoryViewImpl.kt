@@ -1,8 +1,10 @@
 package pl.margoj.server.implementation.inventory.player
 
+import pl.margoj.mrf.item.ItemProperties
 import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.api.inventory.player.PlayerBagInventory
 import pl.margoj.server.implementation.inventory.WrappedInventory
+import pl.margoj.server.implementation.item.ItemImpl
 import pl.margoj.server.implementation.item.ItemStackImpl
 
 class BagInventoryInventoryViewImpl(override val owner: PlayerInventoryImpl, val startingY: Int) : PlayerBagInventory, WrappedInventory
@@ -48,8 +50,32 @@ class BagInventoryInventoryViewImpl(override val owner: PlayerInventoryImpl, val
         return true
     }
 
+    override fun isFull(): Boolean
+    {
+        val size = (this.owner.getBag(this.startingY / 6)?.item as? ItemImpl)?.margoItem?.get(ItemProperties.SIZE) ?: return false
+        var count = 0
+
+        for(i in firstIndex..lastIndex)
+        {
+            if(this.owner[i] != null)
+            {
+                if(++count >= size)
+                {
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
     override fun tryToPut(item: ItemStack): Boolean
     {
+        if(this.isFull())
+        {
+            return false
+        }
+
         for (i in firstIndex..lastIndex)
         {
             if (this.owner[i] == null)

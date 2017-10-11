@@ -1,7 +1,9 @@
 package pl.margoj.server.implementation.player.sublisteners
 
 import pl.margoj.mrf.item.ItemCategory
+import pl.margoj.mrf.item.ItemProperties
 import pl.margoj.server.api.inventory.map.MAP_LAYERS
+import pl.margoj.server.implementation.item.ItemImpl
 import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
@@ -56,7 +58,6 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
                 0 ->
                 {
                     // move in bag
-                    // TODO: validate position
                     val x = query["x"]?.toInt()
                     val margoY = query["y"]?.toInt()
 
@@ -65,6 +66,9 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
                     margoY!!
 
                     val (y, bagId) = inventory.margoYToRealYAndBagId(margoY)
+
+                    val targetBag = inventory.getBag(bagId)
+                    this.checkForMaliciousData(targetBag == null || y > 5, "invalid bag")
 
                     val equipedBag = inventory.isEquipedBag(item)
                     if (equipedBag != null)
@@ -82,6 +86,13 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
                     }
 
                     val bag = inventory.getBagInventory(bagId)
+
+                    if(item !in bag && bag.isFull())
+                    {
+                        player.displayAlert("Brak wolnego miejsca w tej torbie!")
+                        return true
+                    }
+
                     if (bag.getItemAt(x, y) == null)
                     {
                         bag.setItemAt(x, y, item)
@@ -149,7 +160,11 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
                         val targetBag = inventory.getBag(realBagId)
                         if (targetBag != null)
                         {
-                            inventory.getBagInventory(realBagId).tryToPut(item)
+                            if(!inventory.getBagInventory(realBagId).tryToPut(item))
+                            {
+                                player.displayAlert("Brak wolnego miejsca w tej torbie!")
+                                return true
+                            }
                         }
                     }
                 }
