@@ -40,6 +40,9 @@ class PlayerDataImpl(val id: Long, val accountId: Long, val characterName: Strin
     override var intellect: Int = 3
     override var attackSpeed: Double = 1.00
     override var damage: IntRange = 0..0
+    override var armor: Int = 0
+    override var block: Int = 0
+    override var evade: Int = 0
 
     override var maxHp: Int = 0
     override var hp: Int = 0
@@ -50,7 +53,7 @@ class PlayerDataImpl(val id: Long, val accountId: Long, val characterName: Strin
         }
         get()
         {
-            if(field > this.maxHp)
+            if (field > this.maxHp)
             {
                 return this.maxHp
             }
@@ -188,15 +191,26 @@ class PlayerDataImpl(val id: Long, val accountId: Long, val characterName: Strin
 
             // items rest
             this.damage = 0..0
+            this.armor = 0
+            this.block = 0
+            this.evade = this.agility / 30
+
+            // from items
             var hasDamage = false
 
             this.player.inventory.equipment.allItems.stream().filter { it != null }.forEach {
                 val item = (it as ItemStackImpl).item.margoItem
+
+                // simple stats
                 this.maxHp += item[ItemProperties.HEALTH]
                 this.attackSpeed += (item[ItemProperties.ATTACK_SPEED].toDouble() / 100.0)
                 this.maxHp += (this.strength * item[ItemProperties.HEALTH_FOR_STRENGTH]).toInt()
 
-                // damage
+                this.armor += item[ItemProperties.ARMOR]
+                this.block += item[ItemProperties.BLOCK]
+                this.evade += item[ItemProperties.EVADE]
+
+                // find the bigest damage
                 val thisDamage = item[ItemProperties.DAMAGE]
                 if (thisDamage.first != 0 || thisDamage.endInclusive != 0)
                 {
@@ -211,6 +225,7 @@ class PlayerDataImpl(val id: Long, val accountId: Long, val characterName: Strin
                 }
             }
 
+            // default damage
             if (!hasDamage)
             {
                 val damage = Math.min(Math.round(this.baseStrength * 1.5), 95).toInt()
@@ -235,8 +250,11 @@ class PlayerDataImpl(val id: Long, val accountId: Long, val characterName: Strin
 
             out.warriorStats.dmg = (this.damage.first + this.damage.endInclusive) / 2
 
+            out.warriorStats.ac = this.armor
+            out.warriorStats.block = this.block
+            out.warriorStats.evade = this.evade
+
             out.warriorStats.crit = 1.04.toBigDecimal()
-            out.warriorStats.ac = 0
             out.warriorStats.resfire = 0
             out.warriorStats.resfrost = 0
             out.warriorStats.reslight = 0
@@ -246,10 +264,9 @@ class PlayerDataImpl(val id: Long, val accountId: Long, val characterName: Strin
             out.warriorStats.critmval_c = 1.20.toBigDecimal()
             out.warriorStats.critmval_l = 1.20.toBigDecimal()
             out.warriorStats.mana = 0
-            out.warriorStats.block = 0
         }
 
-        if(StatisticType.WARRIOR in type || StatisticType.OPTIONS in type)
+        if (StatisticType.WARRIOR in type || StatisticType.OPTIONS in type)
         {
             out.opt = this.playerOptions.intValue
         }
@@ -327,7 +344,7 @@ class StatisticType private constructor(val flag: Int = (1 shl counter++))
 
     fun and(statisticType: StatisticType): StatisticType
     {
-        if(this == ALL || statisticType == ALL)
+        if (this == ALL || statisticType == ALL)
         {
             return ALL
         }

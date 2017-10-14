@@ -1,13 +1,14 @@
-package pl.margoj.server.implementation.battle.ability
+package pl.margoj.server.implementation.battle.ability.fight
 
 import pl.margoj.server.implementation.battle.BattleData
 import pl.margoj.server.implementation.battle.BattleImpl
-import pl.margoj.server.implementation.battle.BattleLogBuilder
+import pl.margoj.server.implementation.battle.ability.BattleAbility
+import pl.margoj.server.implementation.battle.pipeline.BattlePipelines
+import pl.margoj.server.implementation.battle.pipeline.strike.StrikePipelineData
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.player.PlayerImpl
-import java.util.concurrent.ThreadLocalRandom
 
-class NormalStrike(battle: BattleImpl, user: EntityImpl, target: EntityImpl) : BattleAbility(battle, user, target)
+abstract class StrikeAbility(battle: BattleImpl, user: EntityImpl, target: EntityImpl) : BattleAbility(battle, user, target)
 {
     override fun check(userData: BattleData, targetData: BattleData): Boolean
     {
@@ -27,17 +28,9 @@ class NormalStrike(battle: BattleImpl, user: EntityImpl, target: EntityImpl) : B
 
     override fun onUse(userData: BattleData, targetData: BattleData)
     {
-        val damage = ThreadLocalRandom.current().nextInt(user.stats.damage.first, user.stats.damage.endInclusive + 1)
+        val data = StrikePipelineData(this)
+        BattlePipelines.STRIKE_PIPELINE.process(data)
 
-        target.damage(damage)
-        targetData.updatedNow()
-
-        val log = BattleLogBuilder()
-        log.damager = userData
-        log.damaged = targetData
-        log.damage = damage
-        log.damageTaken = damage
-
-        battle.addLog(log.toString())
+        userData.battle.addLog(data.log.toString())
     }
 }

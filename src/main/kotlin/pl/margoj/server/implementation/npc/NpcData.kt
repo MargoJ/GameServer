@@ -13,5 +13,8 @@ class NpcData(val npc: Npc) : BattleStats
     override var intellect: Int = 3
     override var attackSpeed: Double = 1.0
     override var damage: IntRange = 0..0
+    override var armor: Int = 0
+    override var block: Int = 0
+    override var evade: Int = 0
     override var maxHp: Int = 1
 }

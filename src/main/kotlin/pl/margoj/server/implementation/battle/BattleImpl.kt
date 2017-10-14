@@ -10,8 +10,8 @@ import pl.margoj.server.api.player.Player
 import pl.margoj.server.api.player.Profession
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.battle.ability.BattleAbility
-import pl.margoj.server.implementation.battle.ability.NormalStrike
 import pl.margoj.server.implementation.battle.ability.Step
+import pl.margoj.server.implementation.battle.ability.fight.NormalStrikeAbility
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.npc.Npc
 import pl.margoj.server.implementation.npc.NpcSubtype
@@ -245,7 +245,7 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
         this.iterateOverAlive { participant ->
             val data = participant.battleData!!
 
-            if (data.turnAttackSpeed > this.attackSpeedThreshold)
+            if (data.turnAttackSpeed >= this.attackSpeedThreshold)
             {
                 this.currentTurnOrder.add(participant)
             }
@@ -333,7 +333,7 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
         }
         else
         {
-            this.performOrError(NormalStrike(this, entity, target!!), { "${entity.name}: target failed: ${target!!.name}" })
+            this.performOrError(NormalStrikeAbility(this, entity, target!!), { "${entity.name}: target failed: ${target!!.name}" })
         }
     }
 
@@ -455,6 +455,11 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
             BattleTeam.TEAM_A -> this.teamA
             BattleTeam.TEAM_B -> this.teamB
         }
+    }
+
+    fun getDataOf(participant: EntityImpl): BattleData?
+    {
+        return this.participants_[participant]
     }
 
     private fun finish()

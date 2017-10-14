@@ -127,31 +127,19 @@ class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation
                     else -> Profession.WARRIOR
                 }
             }
-            "siła", "str" ->
-            {
-                this.stats.strength = (parameters[0] as Long).toInt()
-            }
-            "zręczność", "agi" ->
-            {
-                this.stats.agility = (parameters[0] as Long).toInt()
-            }
-            "intelekt", "int" ->
-            {
-                this.stats.intellect = (parameters[0] as Long).toInt()
-            }
-            "sa" ->
-            {
-                this.stats.attackSpeed = (parameters[0] as Long).toDouble() / 100.0
-            }
-            "hp" ->
-            {
-                this.stats.maxHp = (parameters[0] as Long).toInt()
-            }
+            "siła", "str" -> this.stats.strength = (parameters[0] as Long).toInt()
+            "zręczność", "agi" -> this.stats.agility = (parameters[0] as Long).toInt()
+            "intelekt", "int" -> this.stats.intellect = (parameters[0] as Long).toInt()
+            "sa" -> this.stats.attackSpeed = (parameters[0] as Long).toDouble() / 100.0
+            "hp" -> this.stats.maxHp = (parameters[0] as Long).toInt()
             "atak" ->
             {
                 val values = (parameters[0] as String).splitByChar('-')
                 this.stats.damage = values[0].toInt()..values[1].toInt()
             }
+            "pancerz" -> this.stats.armor = (parameters[0] as Long).toInt()
+            "blok" -> this.stats.block = (parameters[0] as Long).toInt()
+            "unik" -> this.stats.block = (parameters[0] as Long).toInt()
         }
     }
 

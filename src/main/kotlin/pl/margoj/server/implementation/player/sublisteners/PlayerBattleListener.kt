@@ -1,15 +1,14 @@
 package pl.margoj.server.implementation.player.sublisteners
 
 import pl.margoj.server.api.battle.BattleUnableToStartException
-import pl.margoj.server.implementation.battle.ability.NormalStrike
 import pl.margoj.server.implementation.battle.ability.Step
+import pl.margoj.server.implementation.battle.ability.fight.NormalStrikeAbility
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.npc.Npc
 import pl.margoj.server.implementation.npc.NpcType
 import pl.margoj.server.implementation.player.PlayerConnection
-import pl.margoj.server.implementation.player.PlayerImpl
 
 class PlayerBattleListener(connection: PlayerConnection) : PlayerPacketSubListener(connection, onlyWithType = "fight", onlyOnPlayer = true)
 {
@@ -100,7 +99,7 @@ class PlayerBattleListener(connection: PlayerConnection) : PlayerPacketSubListen
                 val targetId = query["id"]?.toIntOrNull() ?: return true
                 val target = battle.findById(targetId) ?: return true
 
-                val ability = NormalStrike(battle, player, target)
+                val ability = NormalStrikeAbility(battle, player, target)
                 ability.queue()
             }
             "move" ->

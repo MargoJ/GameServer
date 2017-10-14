@@ -85,7 +85,23 @@ object MargoMath
 
     fun calculateDamageReduction(damage: Int, armor: Int): Int
     {
+        if(damage == 0)
+        {
+            return 0
+        }
+
+        val ratio = armor.toDouble() / damage.toDouble()
+
+        if(ratio <= 0.0)
+        {
+            return 0
+        }
+        else if(ratio > 1.6)
+        {
+            return damage
+        }
+
         // TODO: Not sure if that's the correct formula
-        return Math.floor(Math.sqrt((armor.toDouble() / damage.toDouble())) * 0.81f * damage).toInt()
+        return Math.min(damage, Math.floor(Math.sqrt(ratio) * 0.81f * damage).toInt())
     }
 }

@@ -14,6 +14,9 @@ class BattleLogBuilder
     var damage: Int? = null
     var damageTaken: Int? = null
 
+    var damageBlocked: Int? = null
+    var damageEvaded = false
+
     var expGained: Long? = null
 
     var text: String? = null
@@ -69,8 +72,13 @@ class BattleLogBuilder
         }
 
         appendIfNotNull(text, "txt")
+
         appendIfNotNull(damage, "+dmg")
         appendIfNotNull(damageTaken, "-dmg")
+
+        appendIfNotNull(damageBlocked, "-blok")
+        appendIfTrue(damageEvaded, "-evade")
+
         appendIfNotNull(expGained, "+exp")
         appendIfNotNull(winner, "winner", { if (it.isEmpty()) "?" else it.stream().map { it.name }.collect(Collectors.joining(", ")) })
         appendIfTrue(step, "step")
