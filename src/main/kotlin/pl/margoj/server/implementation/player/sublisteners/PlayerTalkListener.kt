@@ -2,7 +2,6 @@ package pl.margoj.server.implementation.player.sublisteners
 
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
-import pl.margoj.server.implementation.npc.Npc
 import pl.margoj.server.implementation.npc.NpcTalk
 import pl.margoj.server.implementation.npc.NpcType
 import pl.margoj.server.implementation.player.PlayerConnection
@@ -66,7 +65,7 @@ class PlayerTalkListener(connection: PlayerConnection) : PlayerPacketSubListener
             {
                 try
                 {
-                    talk.update(option.label)
+                    talk.update(option.label, option.parameters)
                 }
                 catch (e: Exception)
                 {

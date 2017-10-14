@@ -20,6 +20,6 @@ class SystemLabelConstantParser : ConstantParser<SystemLabel>()
             return null
         }
 
-        return SystemLabel(label.substring(1))
+        return SystemLabel.find(label.substring(1))
     }
 }

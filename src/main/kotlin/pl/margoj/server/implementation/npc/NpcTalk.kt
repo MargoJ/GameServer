@@ -30,16 +30,26 @@ class NpcTalk(val player: Player, val npc: Npc?, val npcScript: NpcParsedScript)
         context.setVariable("gracz", PlayerBuildInVariable(this.player as PlayerImpl))
         context.setVariable("serwer", ServerBuildInVariable(this.player.server))
 
-        this.update(CodeLabel("start"))
+        this.update(CodeLabel("start"), null)
     }
 
-    fun update(label: Label)
+    fun update(label: Label, parameters: Array<Any>?)
     {
         this.text = ""
         this.options.clear()
 
         context.delegate = this::delegate
         context.nextLabel = this::nextLabel
+
+        if (parameters != null)
+        {
+            var i = 0
+            while (i < parameters.size)
+            {
+                context.setVariable("argument${i + 1}", parameters[i])
+                i++
+            }
+        }
 
         context.nextLabel!!.invoke(label, context)
 
@@ -72,26 +82,19 @@ class NpcTalk(val player: Player, val npc: Npc?, val npcScript: NpcParsedScript)
             }
             "opcja" ->
             {
-                var type = 2
                 val label = parameters[1] as Label
 
-                if (label is SystemLabel)
+                val labelParameters: Array<Any> = if (parameters.size <= 2)
                 {
-                    type = this.getTypeForSystemLabel(label)
+                    EMPTY_ANY_ARRAY
+                }
+                else
+                {
+                    Array(parameters.size - 2) { i -> parameters[2 + i] }
                 }
 
-                this.options.add(Option(optionId++, type, parameters[0] as String, label))
+                this.options.add(Option(optionId++, label.type, parameters[0] as String, label, labelParameters))
             }
-        }
-    }
-
-    private fun getTypeForSystemLabel(label: SystemLabel): Int
-    {
-        return when (label.name)
-        {
-            "koniec" -> 2
-            "zakończ" -> 6
-            else -> throw IllegalStateException("invalid label $label")
         }
     }
 
@@ -132,6 +135,11 @@ class NpcTalk(val player: Player, val npc: Npc?, val npcScript: NpcParsedScript)
 
         out.json.add("d", array)
     }
+
+    private companion object
+    {
+        private val EMPTY_ANY_ARRAY = arrayOf<Any>()
+    }
 }
 
-data class Option(val id: Int, val type: Int, val text: String, val label: Label)
+data class Option(val id: Int, val type: Int, val text: String, val label: Label, val parameters: Array<Any>)

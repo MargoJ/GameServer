@@ -15,6 +15,7 @@ class ServerBuildInVariable(val server: ServerImpl) : BuildInVariable()
             "data" -> dateFormat.format(Date())
             "godzina" -> timeFormat.format(Date())
             "graczeOnline" -> server.players.map(::PlayerBuildInVariable)
+            "przedmioty" -> server.items.map(::ItemBuildInVariable)
             else -> "???"
         }
     }
