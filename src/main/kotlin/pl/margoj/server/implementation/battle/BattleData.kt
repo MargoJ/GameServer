@@ -6,6 +6,7 @@ import pl.margoj.server.api.battle.BattleTeam
 import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.api.player.Player
 import pl.margoj.server.api.player.Profession
+import pl.margoj.server.implementation.battle.buff.Buff
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.network.protocol.jsons.BattleParticipant
@@ -67,11 +68,20 @@ class BattleData(val entity: EntityImpl, val battle: BattleImpl, val team: Battl
     var battleAttackSpeed: Double = entity.stats.attackSpeed + 1.0
         set(value)
         {
-            this.battle.updateAttackSpeedThreshold()
+            if (value != field)
+            {
+                field = value
+                BattleImpl.logger.trace("${this.battle.battleId}: SA change: $field -> $value")
+
+                this.battle.updateAttackSpeedThreshold()
+            }
         }
 
     /** turn attack speed, used to calculate whose turn is now */
     var turnAttackSpeed = 0.0
+
+    private var buffs_: HashMap<Class<*>, Buff> = hashMapOf()
+    val buffs: Collection<Buff> get() = this.buffs_.values
 
     fun reset()
     {
@@ -103,7 +113,12 @@ class BattleData(val entity: EntityImpl, val battle: BattleImpl, val team: Battl
 
         obj.healthPercent = if (entity.battleData!!.dead) 0 else entity.healthPercent
         obj.row = this.row
-        obj.buffs = 0 // TODO
+        obj.buffs = 0
+
+        for ((_, buff) in this.buffs_)
+        {
+            obj.buffs = obj.buffs!! or buff.margoId
+        }
 
         if (target == this.entity)
         {
@@ -155,6 +170,27 @@ class BattleData(val entity: EntityImpl, val battle: BattleImpl, val team: Battl
             }
             else -> false
         }
+    }
+
+    fun addBuff(buff: Buff, turns: Int)
+    {
+        BattleImpl.logger.trace("${this.battle.battleId}: ${this.entity}: adding buff $buff for $turns turns")
+
+        buff.activeUntil = this.battle.currentTurn + turns
+        this.buffs_.put(buff.javaClass, buff)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T: Buff> getBuff(`class`: Class<T>): T?
+    {
+        return this.buffs_[`class`] as T?
+    }
+
+    fun removeBuff(buff: Buff)
+    {
+        BattleImpl.logger.trace("${this.battle.battleId}: ${this.entity}: removing buff $buff")
+
+        this.buffs_.values.remove(buff)
     }
 
     private fun getItemType(item: ItemStack?): ItemCategory?

@@ -110,6 +110,7 @@ class PlayerDataImpl(val id: Long, val accountId: Long, val characterName: Strin
     {
         val connection = this.player.connection
         connection.addModifier { it.addScreenMessage("Awansowałeś na poziom $newLevel") }
+        this.player.server.gameLogger.info("${this.player.name}: awans na poziom $newLevel")
 
         if (newLevel < 25)
         {

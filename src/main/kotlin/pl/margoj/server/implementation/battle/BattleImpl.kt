@@ -1,6 +1,7 @@
 package pl.margoj.server.implementation.battle
 
 import org.apache.commons.lang3.Validate
+import org.apache.logging.log4j.LogManager
 import pl.margoj.server.api.battle.Battle
 import pl.margoj.server.api.battle.BattleTeam
 import pl.margoj.server.api.events.battle.BattleFinishedEvent
@@ -12,18 +13,29 @@ import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.battle.ability.BattleAbility
 import pl.margoj.server.implementation.battle.ability.Step
 import pl.margoj.server.implementation.battle.ability.fight.NormalStrikeAbility
+import pl.margoj.server.implementation.battle.pipeline.BattlePipelines
+import pl.margoj.server.implementation.battle.pipeline.move.MovePipelineData
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.npc.Npc
 import pl.margoj.server.implementation.npc.NpcSubtype
 import pl.margoj.server.implementation.player.PlayerImpl
 import pl.margoj.server.implementation.utils.MargoMath
 import java.util.Collections
+import java.util.concurrent.atomic.AtomicInteger
 
 class BattleImpl internal constructor(val server: ServerImpl, override val teamA: List<EntityImpl>, override val teamB: List<EntityImpl>) : Battle
 {
+    companion object
+    {
+        private var battleCounter = AtomicInteger(0)
+        val logger = LogManager.getLogger("Battle")
+    }
+
     internal val participants_ = hashMapOf<EntityImpl, BattleData>()
     override val participants: Collection<EntityImpl>
         get() = this.participants_.keys
+
+    val battleId = battleCounter.incrementAndGet()
 
     /** log **/
     var log: MutableMap<Int, String> = hashMapOf()
@@ -95,7 +107,6 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
         }
     }
 
-
     fun findById(targetId: Int): EntityImpl?
     {
         for (participant in this.participants)
@@ -110,6 +121,8 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
 
     internal fun start()
     {
+        logger.trace("${this.battleId}: start")
+
         val event = BattleStartingEvent(this)
         server.eventManager.call(event)
         if (event.cancelled)
@@ -137,6 +150,8 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
 
     fun updateAttackSpeedThreshold()
     {
+        logger.trace("${this.battleId}: updateAttackSpeedThreshold: start")
+
         val previous = this.attackSpeedThreshold
         var maxAttackSpeed = Double.MIN_VALUE
 
@@ -144,13 +159,19 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
             maxAttackSpeed = Math.max(maxAttackSpeed, participant.battleData!!.battleAttackSpeed)
         }
 
+        logger.trace("${this.battleId}: updateAttackSpeedThreshold: previous $previous, current $maxAttackSpeed")
+
         if (previous != maxAttackSpeed)
         {
             val changeFactor = maxAttackSpeed / previous
+            logger.trace("${this.battleId}: updateAttackSpeedThreshold: changeFactor: $changeFactor")
 
             for (participant in this.participants)
             {
+                val from = participant.battleData!!.turnAttackSpeed
                 participant.battleData!!.turnAttackSpeed /= changeFactor
+                val to = participant.battleData!!.turnAttackSpeed
+                logger.trace("${this.battleId}: updateAttackSpeedThreshold: $participant: $from -> $to")
             }
         }
 
@@ -236,11 +257,15 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
             val first = this.currentTurnOrder[0]
             this.currentTurnOrder.removeAt(0)
             this.currentEntity = first
+
+            logger.trace("${this.battleId}: updateCurrent: $first")
         }
     }
 
     private fun calculateTurnOrder()
     {
+        logger.trace("${this.battleId}: calculateTurnOrder")
+
         this.currentTurnOrder.clear()
         this.iterateOverAlive { participant ->
             val data = participant.battleData!!
@@ -295,6 +320,8 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
 
     fun processAuto(entity: EntityImpl)
     {
+        logger.trace("${this.battleId}: processAuto $entity")
+
         var target: EntityImpl? = null
         this.iterateOverAlive { participant ->
             if (entity.battleData!!.team == participant.battleData!!.team || !entity.battleData!!.canReach(participant.battleData!!.row))
@@ -339,6 +366,8 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
 
     fun queueMove(ability: BattleAbility)
     {
+        logger.trace("${this.battleId}: queueMove $ability")
+
         if (this.isAbilityValid(ability))
         {
             if (ability.user is Player)
@@ -369,7 +398,10 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
 
     fun moveDone(entity: EntityImpl)
     {
+        logger.trace("${this.battleId}: moveDone $entity")
+
         Validate.isTrue(entity == this.currentEntity, "Invalid entity")
+        BattlePipelines.MOVE_PIPELINE.process(MovePipelineData(entity, this.getDataOf(entity)!!, MovePipelineData.Position.MOVE_END))
         this.currentEntity = null
 
         entity.battleData!!.turnAttackSpeed -= this.attackSpeedThreshold
@@ -386,10 +418,14 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
 
     fun turnDone()
     {
+        logger.trace("${this.battleId}: turnDone: ${this.currentTurn} -> ${this.currentTurn + 1}")
+
         this.currentTurn++
 
         this.iterateOverAlive { participant ->
             participant.battleData!!.turnAttackSpeed += participant.battleData!!.battleAttackSpeed
+
+            BattlePipelines.MOVE_PIPELINE.process(MovePipelineData(participant, participant.battleData!!, MovePipelineData.Position.TURN_END))
         }
     }
 
@@ -464,6 +500,9 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
 
     private fun finish()
     {
+        logger.info("${this.battleId}: finish")
+        this.server.gameLogger.info("walka zakończona: ${this.battleId}")
+
         val log = BattleLogBuilder()
 
         log.winner = when (this.winner)
@@ -570,7 +609,12 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
                 val winnerXp = totalExp
 
                 allXp += winnerXp
-                (winner as? PlayerImpl)?.data?.addExp(winnerXp)
+
+                if (winner is PlayerImpl)
+                {
+                    this.server.gameLogger.info("walka ${this.battleId}: +${winnerXp} XP dla ${winner.name}")
+                    winner.data.addExp(winnerXp)
+                }
             }
 
             this.addLog(BattleLogBuilder().build { it.expGained = allXp }.toString())

@@ -8,7 +8,7 @@ class ArmorFragment : StrikePipelineFragment
 {
     override fun process(fragment: StrikePipelineData)
     {
-        val physicalReduction = MargoMath.calculateDamageReduction(fragment.physicalDamage, fragment.ability.target.stats.armor)
+        val physicalReduction = MargoMath.calculateDamageReduction(fragment.physicalDamage, fragment.strikeAbility.target.stats.armor)
         fragment.armorPhysicalReduction = physicalReduction
         fragment.physicalDamage -= physicalReduction
     }

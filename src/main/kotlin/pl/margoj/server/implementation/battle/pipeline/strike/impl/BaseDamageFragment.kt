@@ -8,7 +8,7 @@ class BaseDamageFragment : StrikePipelineFragment
 {
     override fun process(fragment: StrikePipelineData)
     {
-        val ability = fragment.ability
+        val ability = fragment.ability!!
         val damageRange = ability.user.stats.damage
         val damage = ThreadLocalRandom.current().nextInt(damageRange.first, damageRange.endInclusive + 1)
 

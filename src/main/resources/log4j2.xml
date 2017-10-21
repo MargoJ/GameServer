@@ -33,5 +33,6 @@
         <Logger name="Game" level="info">
             <AppenderRef ref="GameFile"/>
         </Logger>
+        <Logger name="Battle" level="trace"/>
     </Loggers>
 </Configuration>

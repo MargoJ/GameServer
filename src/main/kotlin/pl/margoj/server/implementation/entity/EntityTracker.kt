@@ -2,6 +2,7 @@ package pl.margoj.server.implementation.entity
 
 import pl.margoj.server.api.map.Town
 import pl.margoj.server.api.player.Player
+import pl.margoj.server.api.player.PlayerRank
 import pl.margoj.server.api.player.Profession
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.network.protocol.jsons.NpcObject
@@ -133,7 +134,12 @@ class EntityTracker(val owner: PlayerImpl)
             other.x = entity.location.x
             other.y = entity.location.y
             other.direction = entity.movementManager.playerDirection
-            other.rights = 0 // TODO
+            other.rights = when(entity.rank) {
+                PlayerRank.ADMINISTRATOR -> 1
+                PlayerRank.SUPER_GAME_MASTER -> 16
+                PlayerRank.GAME_MASTER -> 2
+                PlayerRank.USER -> 0
+            }
             other.level = entity.data.level
             other.profession = entity.data.profession
             other.attributes = 0 // TODO

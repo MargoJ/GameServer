@@ -4,6 +4,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import com.mashape.unirest.http.Unirest
 import com.mashape.unirest.http.exceptions.UnirestException
+import pl.margoj.server.api.player.PlayerRank
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.utils.GsonUtils
 import java.util.concurrent.atomic.AtomicInteger
@@ -71,7 +72,8 @@ class Authenticator(val server: ServerImpl, val authConfig: AuthConfig)
                 sessionId = json["current_session_id"].asLong,
                 charName = character["name"].asString,
                 charProfession = character["profession"].asString,
-                charGender = character["gender"].asString
+                charGender = character["gender"].asString,
+                rank = PlayerRank.valueOf(character["role"].asString)
         )
 
         callback(authSession)

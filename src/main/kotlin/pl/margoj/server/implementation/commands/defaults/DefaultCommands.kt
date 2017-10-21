@@ -16,6 +16,7 @@ object DefaultCommands
         // all commands
         commandsManagerImpl.registerCoreListener(HelpCommand(), "help", "h")
         commandsManagerImpl.registerCoreListener(ConfirmCommand(), "confirm")
+        commandsManagerImpl.registerCoreListener(ListCommand(), "list")
 
         // administration commands
         commandsManagerImpl.registerCoreListener(AddXPCommand(), "addxp")

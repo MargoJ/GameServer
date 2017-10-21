@@ -7,9 +7,9 @@ class EvadeFragment : StrikePipelineFragment
 {
     override fun process(fragment: StrikePipelineData)
     {
-        val damager = fragment.ability.user
-        val damaged = fragment.ability.target
-        val chance = (40.0 * Math.min(50, damaged.stats.evade).toDouble() / damager.level.toDouble()) / 100.0f
+        val damager = fragment.ability!!.user
+        val damaged = fragment.ability!!.target
+        val chance = Math.min(40.0 * Math.min(50, damaged.stats.evade).toDouble() / damager.level.toDouble() / 100.0f, 0.5)
 
         if (Math.random() < chance)
         {

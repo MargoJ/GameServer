@@ -13,4 +13,9 @@ class StrikePipelineData(val strikeAbility: StrikeAbility) : PipelineData(strike
     var evaded = false
 
     var physicalDamage = 0
+
+    override fun toString(): String
+    {
+        return "StrikePipelineData(strikeAbility=$strikeAbility, armorPhysicalReduction=$armorPhysicalReduction, blocked=$blocked, blockedPhysicalAmount=$blockedPhysicalAmount, evaded=$evaded, physicalDamage=$physicalDamage)"
+    }
 }

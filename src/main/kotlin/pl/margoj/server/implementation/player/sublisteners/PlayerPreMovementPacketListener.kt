@@ -118,7 +118,7 @@ class PlayerPreMovementPacketListener(connection: PlayerConnection) : PlayerPack
         }
 
         val target = Location(targetMap, gateway.target.x, gateway.target.y)
-        player.server.gameLogger.info("${player.name}: przejscie z ${player.location.toSimpleString()} do ${target.toSimpleString()}, gateway=$gateway)")
+        player.server.gameLogger.info("${player.name}: przejscie z ${player.location.toSimpleString()} do ${target.toSimpleString()})")
         player.teleport(target)
     }
 }

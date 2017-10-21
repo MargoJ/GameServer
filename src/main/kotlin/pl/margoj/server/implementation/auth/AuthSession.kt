@@ -1,5 +1,7 @@
 package pl.margoj.server.implementation.auth
 
+import pl.margoj.server.api.player.PlayerRank
+
 data class AuthSession(
         val gameToken: String,
         val accountId: Long,
@@ -7,7 +9,8 @@ data class AuthSession(
         val sessionId: Long,
         val charName: String,
         val charProfession: String,
-        val charGender: String
+        val charGender: String,
+        val rank: PlayerRank
 )
 {
     var invalidated = false

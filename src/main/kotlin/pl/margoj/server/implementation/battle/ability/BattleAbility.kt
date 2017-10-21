@@ -1,7 +1,9 @@
 package pl.margoj.server.implementation.battle.ability
 
-import pl.margoj.server.implementation.battle.BattleImpl
 import pl.margoj.server.implementation.battle.BattleData
+import pl.margoj.server.implementation.battle.BattleImpl
+import pl.margoj.server.implementation.battle.pipeline.BattlePipelines
+import pl.margoj.server.implementation.battle.pipeline.move.MovePipelineData
 import pl.margoj.server.implementation.entity.EntityImpl
 
 abstract class BattleAbility(val battle: BattleImpl, val user: EntityImpl, val target: EntityImpl)
@@ -25,6 +27,9 @@ abstract class BattleAbility(val battle: BattleImpl, val user: EntityImpl, val t
 
         if (result)
         {
+            BattleImpl.logger.trace("${this.battle.battleId}: peformNow ${this}")
+
+            BattlePipelines.MOVE_PIPELINE.process(MovePipelineData(this.user, this.battle.getDataOf(this.user)!!, MovePipelineData.Position.MOVE_START))
             this.onUse(user.battleData!!, target.battleData!!)
             battle.moveDone(this.user)
         }

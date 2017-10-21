@@ -8,6 +8,7 @@ import pl.margoj.server.api.events.player.PlayerQuitEvent
 import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.player.Gender
 import pl.margoj.server.api.player.Player
+import pl.margoj.server.api.player.PlayerRank
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.entity.EntityTracker
@@ -56,6 +57,8 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
         {
             this.data.hp = value
         }
+
+    override val rank: PlayerRank get() = this.connection.authSession.rank
 
     var currentNpcTalk: NpcTalk? = null
 

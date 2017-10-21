@@ -9,9 +9,9 @@ class FinalDamageFragement : StrikePipelineFragment
     {
         fragment.log.damageTaken = fragment.physicalDamage
 
-        val target = fragment.ability.target
+        val target = fragment.ability!!.target
         target.damage(fragment.physicalDamage)
 
-        fragment.ability.battle.getDataOf(target)!!.updatedNow()
+        fragment.ability!!.battle.getDataOf(target)!!.updatedNow()
     }
 }

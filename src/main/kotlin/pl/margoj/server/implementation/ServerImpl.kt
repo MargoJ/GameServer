@@ -328,7 +328,31 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
         @Suppress("UNCHECKED_CAST")
         teamB as List<EntityImpl>
 
+        fun groupToString(group: Collection<EntityImpl>): String
+        {
+            val string = StringBuilder()
+
+            for (entityImpl in group)
+            {
+                if(entityImpl !is Player)
+                {
+                    string.append("[NPC]")
+                }
+                string.append(entityImpl.name).append("(").append(entityImpl.level).append(entityImpl.stats.profession.id).append(")").append(", ")
+            }
+
+            if(string.isNotEmpty())
+            {
+                string.setLength(string.length - 2)
+            }
+
+            return string.toString()
+        }
+
         val battle = BattleImpl(this, teamA, teamB)
+
+        this.gameLogger.info("Rozpoczna się walka pomiędzy ${groupToString(teamA)} a ${groupToString(teamB)} (ID: ${battle.battleId})")
+
         val failCause: MutableMap<Entity, BattleUnableToStartException.Cause> = HashMap()
 
         for (entity in battle.participants)
@@ -342,8 +366,11 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
 
         if (failCause.isNotEmpty())
         {
+            this.gameLogger.info("Walka ${battle.battleId} przerwana ($failCause)")
             throw BattleUnableToStartException(failCause)
         }
+
+        this.gameLogger.info("Walka ${battle.battleId} rozpoczęta")
 
         battle.start()
     }

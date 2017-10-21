@@ -30,6 +30,7 @@ abstract class StrikeAbility(battle: BattleImpl, user: EntityImpl, target: Entit
     {
         val data = StrikePipelineData(this)
         BattlePipelines.STRIKE_PIPELINE.process(data)
+        BattleImpl.logger.trace("${userData.battle.battleId}: strike result: $data")
 
         userData.battle.addLog(data.log.toString())
     }
