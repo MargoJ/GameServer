@@ -67,6 +67,18 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
                 return this.resetPosition()
             }
 
+            val xChange = newLocation.x - this.location.x
+            val yChange = newLocation.y - this.location.y
+
+            this.playerDirection = when
+            {
+                xChange == 0 && yChange == 1 -> 0
+                xChange == -1 && yChange == 0 -> 1
+                xChange == 1 && yChange == 0 -> 2
+                xChange == 0 && yChange == -1 -> 3
+                else -> 0
+            }
+
             newLocation.copyValuesTo(this.location)
 
             last = current
@@ -106,14 +118,14 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
 
     fun canMoveTo(newLocation: Location): Boolean
     {
-        if(!this.location.isNear(newLocation))
+        if (!this.location.isNear(newLocation))
         {
             return false
         }
 
         val town = this.location.town!! as TownImpl
 
-        if(!town.inBounds(Point(newLocation.x, newLocation.y)))
+        if (!town.inBounds(Point(newLocation.x, newLocation.y)))
         {
             player.server.gameLogger.warn("${player.name}: niedozwolone przejśćie: ${newLocation.toSimpleString()}, miejsce poza mapą!")
             return false
@@ -121,7 +133,7 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
 
         val canNoclip = this.player.server.debugModeEnabled // TODO: PERMISSIONS
 
-        if(!canNoclip)
+        if (!canNoclip)
         {
             if (town.collisions[newLocation.x][newLocation.y])
             {
@@ -130,12 +142,12 @@ class MovementManagerImpl(val player: PlayerImpl) : MovementManager
 
             for (npc in town.npc)
             {
-                if(npc.type == NpcType.TRANSPARENT)
+                if (npc.type == NpcType.TRANSPARENT)
                 {
                     continue
                 }
 
-                if(npc.location == newLocation)
+                if (npc.location == newLocation)
                 {
                     return false
                 }

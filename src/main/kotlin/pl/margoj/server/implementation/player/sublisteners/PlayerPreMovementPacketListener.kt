@@ -17,15 +17,15 @@ class PlayerPreMovementPacketListener(connection: PlayerConnection) : PlayerPack
     {
         val player = player!!
         val pdir = query["pdir"]
-        if (pdir != null)
+        val ml = query["ml"]
+        val mts = query["mts"]
+
+        if (pdir != null && ml == null && mts == null)
         {
             val intDirection = Parse.parseInt(pdir)
             this.checkForMaliciousData(intDirection == null || intDirection < 0 || intDirection > 3, "invalid direction")
             player.movementManager.playerDirection = intDirection!!
         }
-
-        val ml = query["ml"]
-        val mts = query["mts"]
 
         if (ml != null && mts != null)
         {
