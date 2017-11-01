@@ -173,7 +173,7 @@ class PlayerDataImpl(val id: Long, val accountId: Long, val characterName: Strin
 
             // items base
             this.player.inventory.equipment.allItems.stream().filter { it != null }.forEach {
-                val item = (it as ItemStackImpl).item.margoItem
+                val item = it as ItemStackImpl
                 val all = item[ItemProperties.ALL_ATTRIBUTES]
 
                 this.strength += item[ItemProperties.STRENGTH] + all
@@ -200,7 +200,7 @@ class PlayerDataImpl(val id: Long, val accountId: Long, val characterName: Strin
             var hasDamage = false
 
             this.player.inventory.equipment.allItems.stream().filter { it != null }.forEach {
-                val item = (it as ItemStackImpl).item.margoItem
+                val item = it as ItemStackImpl
 
                 // simple stats
                 this.maxHp += item[ItemProperties.HEALTH]

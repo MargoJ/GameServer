@@ -73,7 +73,7 @@ class ItemManager(val server: ServerImpl)
 
         val item = itemStack.item
 
-        val restricted = item.margoItem[ItemProperties.NO_DESCRIPTION]
+        val restricted = itemStack[ItemProperties.NO_DESCRIPTION]
 
         for (property in ItemProperty.properties)
         {
@@ -98,7 +98,7 @@ class ItemManager(val server: ServerImpl)
                 continue
             }
 
-            parser.apply(property as ItemProperty<Any?>, itemObject, itemStack.additionalProperties[property] ?: item.margoItem[property], itemStack, item)
+            parser.apply(property as ItemProperty<Any?>, itemObject, itemStack[property], itemStack, item)
         }
 
         return itemObject

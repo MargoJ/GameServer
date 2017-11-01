@@ -42,6 +42,11 @@ class ItemDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Long
             itemManager.loadNewItem {
                 item = ItemStackImpl(databaseManager.server.itemManager, databaseManager.server.getItemById(it.getString("item_id")) as ItemImpl, it.getLong("id"))
             }
+            val blob = it.getBlob("properties")
+            if (blob != null)
+            {
+                item!!.deserializeAdditionalProperties(blob.getBytes(1, blob.length().toInt()))
+            }
             item!!
         }
     }
@@ -51,7 +56,18 @@ class ItemDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Long
         this.trySave(connection, data, { d, statement, i, last ->
             statement.setLong(i(), d.id)
             statement.setString(i(), d.item.id)
-            statement.setBlob(i(), null as Blob?)
+
+            val propertiesBytes = d.serializeAdditionalProperties()
+            if (propertiesBytes != null)
+            {
+                val blob = connection.createBlob()
+                blob.setBytes(1, propertiesBytes)
+                statement.setBlob(i(), blob)
+            }
+            else
+            {
+                statement.setBlob(i(), null as Blob?)
+            }
         })
     }
 

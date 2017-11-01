@@ -3,6 +3,7 @@ package pl.margoj.server.implementation.commands.defaults
 import pl.margoj.server.implementation.commands.CommandsManagerImpl
 import pl.margoj.server.implementation.commands.defaults.admin.*
 import pl.margoj.server.implementation.commands.defaults.debug.TestBattleCommand
+import pl.margoj.server.implementation.commands.defaults.debug.TestMarkCommand
 import pl.margoj.server.implementation.commands.defaults.debug.TestNpcCommand
 import pl.margoj.server.implementation.commands.defaults.dev.CacheCommand
 import pl.margoj.server.implementation.commands.defaults.standard.ConfirmCommand
@@ -35,6 +36,7 @@ object DefaultCommands
         {
             commandsManagerImpl.registerCoreListener(TestNpcCommand(), "testnpc")
             commandsManagerImpl.registerCoreListener(TestBattleCommand(), "testbattle", "tb")
+            commandsManagerImpl.registerCoreListener(TestMarkCommand(), "testmark", "tm")
         }
     }
 }
