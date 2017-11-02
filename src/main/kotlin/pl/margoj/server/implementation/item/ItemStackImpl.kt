@@ -87,7 +87,7 @@ class ItemStackImpl(itemManager: ItemManager, override val item: ItemImpl, overr
         }
 
         val baos = ByteArrayOutputStream() // doesn't need be closed
-        ItemSerializer.writeProperties(this.additionalProperties, DataOutputStream(baos))
+        ItemSerializer.writeProperties(this.additionalProperties, DataOutputStream(baos), true)
         return baos.toByteArray()
     }
 

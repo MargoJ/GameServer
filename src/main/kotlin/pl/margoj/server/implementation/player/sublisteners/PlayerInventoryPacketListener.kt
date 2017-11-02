@@ -1,6 +1,7 @@
 package pl.margoj.server.implementation.player.sublisteners
 
 import pl.margoj.mrf.item.ItemCategory
+import pl.margoj.mrf.item.ItemProperties
 import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.api.inventory.map.MAP_LAYERS
 import pl.margoj.server.api.inventory.player.ItemRequirementsNotMetException
@@ -37,13 +38,31 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
             {
                 -2 ->
                 {
+                    // destroy item
+                    if(item[ItemProperties.CATEGORY] == ItemCategory.QUEST)
+                    {
+                        player.displayAlert("Tego przedmiotu nie można zniszczyć w tej chwili, jest on potrzebny do ukończenia trwającego questa.")
+                        return true
+                    }
+
                     player.server.gameLogger.info("${player.name}: item zniszczony: ${item.item.toSimpleString()}")
 
-                    // destroy item
                     inventory[item.ownerIndex!!] = null
                 }
                 -1 ->
                 {
+                    if(item[ItemProperties.SOUL_BOUND] || item[ItemProperties.PERM_BOUND])
+                    {
+                        player.displayAlert("Nie można upuszczać przedmiotów związanych z graczem!")
+                        return true
+                    }
+
+                    if(item[ItemProperties.CATEGORY] == ItemCategory.QUEST)
+                    {
+                        player.displayAlert("Tego przedmiotu nie można upuścić w tej chwili, jest on potrzebny do ukończenia trwającego questa.")
+                        return true
+                    }
+
                     // drop item
                     val location = player.location
                     if (!location.town!!.inventory.addItem(location.x, location.y, item))

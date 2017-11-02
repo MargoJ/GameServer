@@ -146,7 +146,10 @@ class RarityPropertyParser : ItemPropertyParser<ItemRarity, RarityProperty>
 
     override fun apply(property: RarityProperty, itemObject: ItemObject, value: ItemRarity, itemStack: ItemStack, item: ItemImpl)
     {
-        itemObject.statistics += "${value.statType};"
+        if (value.statType != null)
+        {
+            itemObject.statistics += "${value.statType};"
+        }
     }
 }
 

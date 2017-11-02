@@ -19,7 +19,7 @@ class PlayerEquipmentViewImpl(override val owner: PlayerInventoryImpl) : PlayerE
     {
         item as ItemStackImpl
 
-        if(!item[ItemProperties.CATEGORY].usable)
+        if (!item[ItemProperties.CATEGORY].usable)
         {
             return null
         }
@@ -30,9 +30,9 @@ class PlayerEquipmentViewImpl(override val owner: PlayerInventoryImpl) : PlayerE
         val professionRequirement = item[ItemProperties.PROFESSION_REQUIREMENT]
         var professionRequirementMet = true
 
-        if(professionRequirement.any)
+        if (professionRequirement.any)
         {
-            professionRequirementMet = when(this.owner.player.stats.profession)
+            professionRequirementMet = when (this.owner.player.stats.profession)
             {
                 Profession.WARRIOR -> professionRequirement.warrior
                 Profession.PALADIN -> professionRequirement.paladin
@@ -43,12 +43,14 @@ class PlayerEquipmentViewImpl(override val owner: PlayerInventoryImpl) : PlayerE
             }
         }
 
-        if(!levelRequirementMet || !professionRequirementMet)
+        if (!levelRequirementMet || !professionRequirementMet)
         {
             throw ItemRequirementsNotMetException(!levelRequirementMet, !professionRequirementMet)
         }
 
-        return when (item.item.margoItem.itemCategory)
+        var equipped = true
+
+        val returnValue = when (item.item.margoItem.itemCategory)
         {
             ItemCategory.HELMET -> this.equipTo({ this.helmet }, { this.helmet = item })
             ItemCategory.RINGS -> this.equipTo({ this.ring }, { this.ring = item })
@@ -68,8 +70,21 @@ class PlayerEquipmentViewImpl(override val owner: PlayerInventoryImpl) : PlayerE
             ItemCategory.SHIELDS -> this.equipTo({ this.helper }, { this.helper = item })
 
             ItemCategory.BOOTS -> this.equipTo({ this.boots }, { this.boots = item })
-            else -> null
+
+            else ->
+            {
+                equipped = false
+                null
+            }
         }
+
+        if(equipped && item[ItemProperties.BINDS])
+        {
+            item.setProperty(ItemProperties.BINDS, false)
+            item.setProperty(ItemProperties.SOUL_BOUND, true)
+        }
+
+        return returnValue
     }
 
     override fun tryToPut(item: ItemStack): Boolean
