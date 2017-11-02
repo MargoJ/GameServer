@@ -14,13 +14,14 @@ import pl.margoj.server.implementation.player.PlayerImpl
 
 class NpcTalk(val player: Player, val npc: Npc?, val npcScript: NpcParsedScript)
 {
-    lateinit var name: String
-    lateinit var text: String
+    var name: String? = null
+    var text: String? = null
     val options: MutableList<Option> = ArrayList(5)
     var finished = false
         private set
 
     private var optionId = 1
+    private var any = false
 
     val context = ScriptContext(player, npc)
     var needsUpdate: Boolean = true
@@ -109,6 +110,16 @@ class NpcTalk(val player: Player, val npc: Npc?, val npcScript: NpcParsedScript)
 
     fun handlePacket(out: OutgoingPacket)
     {
+        if (this.name == null || this.text == null)
+        {
+            this.finished = true
+
+            if (!this.any)
+            {
+                return
+            }
+        }
+
         val array = JsonArray()
 
         fun addElement(type: Int, first: String, second: String)
@@ -120,13 +131,15 @@ class NpcTalk(val player: Player, val npc: Npc?, val npcScript: NpcParsedScript)
 
         if (!finished)
         {
-            addElement(0, this.name, npc?.id?.toString() ?: "0")
-            addElement(1, this.text, "")
+            addElement(0, this.name!!, npc?.id?.toString() ?: "0")
+            addElement(1, this.text!!, "")
 
             for ((id, type, text) in this.options)
             {
                 addElement(type, text, id.toString())
             }
+
+            this.any = true
         }
         else
         {
