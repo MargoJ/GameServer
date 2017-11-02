@@ -1,9 +1,9 @@
 package pl.margoj.server.implementation.player.sublisteners
 
 import pl.margoj.mrf.item.ItemCategory
-import pl.margoj.mrf.item.ItemProperties
+import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.api.inventory.map.MAP_LAYERS
-import pl.margoj.server.implementation.item.ItemImpl
+import pl.margoj.server.api.inventory.player.ItemRequirementsNotMetException
 import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
@@ -102,12 +102,21 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
                 {
                     // equip
                     val currentItemIndex = item.ownerIndex!!
-                    // TODO: check requirements
-                    val previousEqupment = inventory.equipment.tryEquip(item)
 
-                    if (previousEqupment != null)
+                    val previousEquipment: ItemStack?
+                    try
                     {
-                        inventory[currentItemIndex] = previousEqupment
+                        previousEquipment = inventory.equipment.use(item)
+                    }
+                    catch(e: ItemRequirementsNotMetException)
+                    {
+                        player.displayAlert("Nie spełniasz wymagań koniecznych do używania tego przedmiotu!")
+                        return true
+                    }
+
+                    if (previousEquipment != null)
+                    {
+                        inventory[currentItemIndex] = previousEquipment
                     }
                 }
                 9 ->

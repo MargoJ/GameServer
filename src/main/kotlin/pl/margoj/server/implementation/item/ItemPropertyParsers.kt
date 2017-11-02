@@ -28,7 +28,8 @@ interface ItemPropertyParser<T, P : ItemProperty<T>>
                 CategoryPropertyParser(),
                 RarityPropertyParser(),
                 IconPropertyParser(),
-                PricePropertyParser()
+                PricePropertyParser(),
+                ProfessionRequirementPropertyParser()
         )
     }
 }
@@ -171,5 +172,29 @@ class PricePropertyParser : ItemPropertyParser<Long, PriceProperty>
     override fun apply(property: PriceProperty, itemObject: ItemObject, value: Long, itemStack: ItemStack, item: ItemImpl)
     {
         itemObject.price = value
+    }
+}
+
+class ProfessionRequirementPropertyParser : ItemPropertyParser<ProfessionRequirementProperty.ProfessionRequirement, ProfessionRequirementProperty>
+{
+    override val propertyType: Class<ProfessionRequirementProperty> = ProfessionRequirementProperty::class.java
+
+    override fun apply(property: ProfessionRequirementProperty, itemObject: ItemObject, value: ProfessionRequirementProperty.ProfessionRequirement, itemStack: ItemStack, item: ItemImpl)
+    {
+        if(!value.any)
+        {
+            return
+        }
+
+        val builder = StringBuilder()
+
+        builder.takeIf { value.warrior }?.append("w")
+        builder.takeIf { value.paladin }?.append("p")
+        builder.takeIf { value.bladedancer }?.append("b")
+        builder.takeIf { value.mage }?.append("m")
+        builder.takeIf { value.hunter }?.append("h")
+        builder.takeIf { value.tracker }?.append("t")
+
+        itemObject.statistics += "${property.propertyName}=$builder;"
     }
 }

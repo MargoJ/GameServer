@@ -15,6 +15,7 @@ class TestMarkCommand : CommandListener
         val item = sender.inventory.equipment.purse!! as ItemStackImpl
         item.setProperty(ItemProperties.NAME, "marked: ${System.currentTimeMillis()}")
         item.setProperty(ItemProperties.DESCRIPTION, "marked desc: ${System.currentTimeMillis()}")
+        item.setProperty(ItemProperties.LOOT, "KrekBuk,m,3,${System.currentTimeMillis() / 1000L},Test")
         sender.sendMessage("ok")
     }
 }

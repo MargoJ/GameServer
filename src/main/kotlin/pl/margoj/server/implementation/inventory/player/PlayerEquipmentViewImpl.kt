@@ -1,8 +1,11 @@
 package pl.margoj.server.implementation.inventory.player
 
 import pl.margoj.mrf.item.ItemCategory
+import pl.margoj.mrf.item.ItemProperties
 import pl.margoj.server.api.inventory.ItemStack
+import pl.margoj.server.api.inventory.player.ItemRequirementsNotMetException
 import pl.margoj.server.api.inventory.player.PlayerEquipment
+import pl.margoj.server.api.player.Profession
 import pl.margoj.server.implementation.inventory.WrappedInventory
 import pl.margoj.server.implementation.item.ItemStackImpl
 
@@ -12,9 +15,38 @@ class PlayerEquipmentViewImpl(override val owner: PlayerInventoryImpl) : PlayerE
 
     override val allItems: List<ItemStackImpl?> by lazy { this.owner.allItems.subList(0, this.size - 1) }
 
-    override fun tryEquip(item: ItemStack): ItemStack?
+    override fun use(item: ItemStack): ItemStack?
     {
         item as ItemStackImpl
+
+        if(!item[ItemProperties.CATEGORY].usable)
+        {
+            return null
+        }
+
+        val levelRequirement = item[ItemProperties.LEVEL_REQUIREMENT]
+        val levelRequirementMet = levelRequirement == 0 || this.owner.player.level >= levelRequirement
+
+        val professionRequirement = item[ItemProperties.PROFESSION_REQUIREMENT]
+        var professionRequirementMet = true
+
+        if(professionRequirement.any)
+        {
+            professionRequirementMet = when(this.owner.player.stats.profession)
+            {
+                Profession.WARRIOR -> professionRequirement.warrior
+                Profession.PALADIN -> professionRequirement.paladin
+                Profession.BLADE_DANCER -> professionRequirement.bladedancer
+                Profession.MAGE -> professionRequirement.mage
+                Profession.HUNTER -> professionRequirement.hunter
+                Profession.TRACKER -> professionRequirement.tracker
+            }
+        }
+
+        if(!levelRequirementMet || !professionRequirementMet)
+        {
+            throw ItemRequirementsNotMetException(!levelRequirementMet, !professionRequirementMet)
+        }
 
         return when (item.item.margoItem.itemCategory)
         {
@@ -42,8 +74,8 @@ class PlayerEquipmentViewImpl(override val owner: PlayerInventoryImpl) : PlayerE
 
     override fun tryToPut(item: ItemStack): Boolean
     {
-        val old = tryEquip(item) ?: return true
-        this.tryEquip(old)
+        val old = use(item) ?: return true
+        this.use(old)
         return false
     }
 
