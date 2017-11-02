@@ -66,6 +66,9 @@ data class TownImpl(
     override val isMain: Boolean
         get() = this.getMetadata(IsMain::class.java).value
 
+    override val spawnPoint: ImmutableLocation
+        get() = this.cachedMapData.spawnPoint
+
     @Suppress("UNCHECKED_CAST")
     fun <T : MetadataElement> getMetadata(clazz: Class<T>): T
     {

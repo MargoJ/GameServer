@@ -10,6 +10,8 @@ class ExpressionConstantParser : ConstantParser<Expression>()
 {
     companion object
     {
+        val INSTANCE = ExpressionConstantParser()
+
         val OPERATOR_ORDER = arrayOf<List<String>>(
                 arrayListOf("&&", "||", " i ", " oraz ", " lub "),
                 arrayListOf("nie "),

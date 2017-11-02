@@ -6,6 +6,7 @@ import pl.margoj.server.api.chat.ChatMessage
 import pl.margoj.server.api.commands.CommandSender
 import pl.margoj.server.api.events.player.PlayerQuitEvent
 import pl.margoj.server.api.map.Location
+import pl.margoj.server.api.map.Town
 import pl.margoj.server.api.player.Gender
 import pl.margoj.server.api.player.Player
 import pl.margoj.server.api.player.PlayerRank
@@ -156,8 +157,14 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
         }
     }
 
+    override fun teleport(map: Town)
+    {
+        this.teleport(map.spawnPoint)
+    }
+
     override fun kill()
     {
+        super.kill()
         this.data.deadUntil = Date(System.currentTimeMillis() + this.killTime)
         this.data.hp = 1
 

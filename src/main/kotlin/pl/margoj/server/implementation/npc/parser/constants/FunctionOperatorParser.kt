@@ -19,6 +19,9 @@ class FunctionOperatorParser : OperatorParser()
                 val argumentsCount: Int
         ) : Comparable<FunctionData>
         {
+            val operatorString: String
+                get() = " " + this.name + (if (this.argumentsCount != 0) " " else "")
+
             override fun compareTo(other: FunctionData): Int
             {
                 val diff = other.name.count { it == ' ' } - this.name.count { it == ' ' }
@@ -37,7 +40,7 @@ class FunctionOperatorParser : OperatorParser()
 
         fun recalculateOperatorOrder()
         {
-            ExpressionConstantParser.OPERATOR_ORDER[3] = this.functionData.map { " ${it.name} " }
+            ExpressionConstantParser.OPERATOR_ORDER[3] = this.functionData.map { it.operatorString }
         }
 
         init
@@ -49,14 +52,18 @@ class FunctionOperatorParser : OperatorParser()
             this.registerFunction("dodaj złoto", 1)
             this.registerFunction("zabierz złoto", 1)
             this.registerFunction("ustaw hp", 1)
-
+            this.registerFunction("rozpocznij walkę", 0)
+            this.registerFunction("teleportuj na mape", 1)
+            this.registerFunction("teleportuj na koordynaty", 2)
+            this.registerFunction("teleportuj do", 3)
+            this.registerFunction("zabij", 0)
             this.recalculateOperatorOrder()
         }
     }
 
     override fun canParse(operator: String): Boolean
     {
-        return functionData.any { operator == " ${it.name} " }
+        return functionData.any { operator == it.operatorString }
     }
 
     override fun parse(parser: CodeParser, line: String, operatorStartPosition: Int, operatorEndPosition: Int, operator: String): Expression
@@ -64,9 +71,10 @@ class FunctionOperatorParser : OperatorParser()
         val target = line.substring(0, operatorStartPosition - 1).trim()
         val parameters = line.substring(operatorEndPosition + 1).trim()
         val realIndex = parser.currentLine!!.realIndex
+        val codeLine = CodeLine(realIndex, parameters)
 
         val functionData = functionData.find { it.name == operator.trim() } ?: parser.throwError("nieznana funkcja $operator")
-        val parametersArray = Array(functionData.argumentsCount, { parser.parseLiteral(CodeLine(realIndex, parameters)) ?: parser.throwError("zbyt malo argumentow") })
+        val parametersArray = Array(functionData.argumentsCount, { codeLine.skipSpaces(); parser.parseLiteral(codeLine) ?: parser.throwError("zbyt malo argumentow") })
 
         return FunctionExpression(operator.trim(), parser.parseLiteral(CodeLine(realIndex, target))!!, parametersArray)
     }

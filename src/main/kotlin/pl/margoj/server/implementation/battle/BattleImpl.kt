@@ -405,15 +405,6 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
         this.currentEntity = null
 
         entity.battleData!!.turnAttackSpeed -= this.attackSpeedThreshold
-
-        this.iterateOverAlive { participant ->
-            if (participant.hp <= 0)
-            {
-                participant.hp = 0
-                participant.battleData!!.dead = true
-                participant.kill()
-            }
-        }
     }
 
     fun turnDone()

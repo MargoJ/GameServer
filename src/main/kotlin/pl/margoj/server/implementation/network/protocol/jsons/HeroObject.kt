@@ -49,6 +49,10 @@ data class HeroObject(
         var staminaTimestamp: Int? = null,
         @SerializedName("stamina_renew_sec")
         var staminaRenew: Int? = null,
+        @SerializedName("cur_skill_set")
+        var currentSkillSet: Int? = null,
+        @SerializedName("cur_battle_set")
+        var currentBattleSet: Int? = null,
         @SerializedName("warrior_stats")
         private var warriorStats_: WarriorStats? = null
 )

@@ -65,6 +65,7 @@ class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation
 
     override fun kill()
     {
+        super.kill()
         this.deadUntil = Date(System.currentTimeMillis() + this.killTime)
     }
 

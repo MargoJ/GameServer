@@ -1,5 +1,7 @@
 package pl.margoj.server.implementation.npc.parser.buildin
 
+import pl.margoj.server.api.battle.BattleUnableToStartException
+import pl.margoj.server.api.map.Location
 import pl.margoj.server.implementation.npc.parser.parsed.ScriptContext
 import pl.margoj.server.implementation.player.PlayerImpl
 
@@ -76,6 +78,57 @@ class PlayerBuildInVariable(val player: PlayerImpl) : BuildInVariable()
             "ustaw hp" ->
             {
                 player.hp = Math.max(0, Math.min((parameters[0] as Long).toInt(), player.data.maxHp))
+                return true
+            }
+            "rozpocznij walkę" ->
+            {
+                try
+                {
+                    this.player.server.startBattle(this.player.withGroup, context.npc!!.withGroup)
+                    return true
+                }
+                catch (e: BattleUnableToStartException)
+                {
+                    return false
+                }
+            }
+            "teleportuj na mape" ->
+            {
+                val map = this.player.server.getTownById(parameters[0] as String) ?: return false
+                this.player.teleport(map)
+                return true
+            }
+            "teleportuj na koordynaty" ->
+            {
+                val map = this.player.location.town!!
+                val x = (parameters[0] as Long).toInt()
+                val y = (parameters[1] as Long).toInt()
+
+                if (x !in 0 until map.width || y !in 0 until map.height)
+                {
+                    return false
+                }
+
+                this.player.teleport(Location(map, x, y))
+                return true
+            }
+            "teleportuj do" ->
+            {
+                val map = this.player.server.getTownById(parameters[0] as String) ?: return false
+                val x = (parameters[1] as Long).toInt()
+                val y = (parameters[2] as Long).toInt()
+
+                if (x !in 0 until map.width || y !in 0 until map.height)
+                {
+                    return false
+                }
+
+                this.player.teleport(Location(map, x, y))
+                return true
+            }
+            "zabij" ->
+            {
+                this.player.kill()
                 return true
             }
             else -> throw IllegalStateException("'$functionName' not found")

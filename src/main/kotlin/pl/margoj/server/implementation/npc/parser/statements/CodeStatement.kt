@@ -37,6 +37,7 @@ abstract class CodeStatement
             types.put("potwór", ::DelegatedFunctionStatement)
             types.put("typ", ::DelegatedFunctionStatement)
             types.put("płeć", ::DelegatedFunctionStatement)
+            types.put("zamknij", ::DelegatedFunctionStatement)
 
             types.put("profesja", ::DelegatedFunctionStatement)
             types.put("siła", ::DelegatedFunctionStatement)

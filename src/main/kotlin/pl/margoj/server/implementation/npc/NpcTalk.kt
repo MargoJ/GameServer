@@ -96,6 +96,10 @@ class NpcTalk(val player: Player, val npc: Npc?, val npcScript: NpcParsedScript)
 
                 this.options.add(Option(optionId++, label.type, parameters[0] as String, label, labelParameters))
             }
+            "zamknij" ->
+            {
+                this.finished = true
+            }
         }
     }
 

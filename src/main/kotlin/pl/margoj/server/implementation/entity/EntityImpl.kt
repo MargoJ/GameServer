@@ -43,6 +43,15 @@ abstract class EntityImpl : Entity
     {
         this.hp -= amount
         this.hp = Math.max(0, this.hp)
+        if(this.hp == 0)
+        {
+            this.kill()
+        }
+    }
+
+    override fun kill()
+    {
+        this.battleData?.dead = true
     }
 
     open val killTime: Long

@@ -320,6 +320,8 @@ class PlayerDataImpl(val id: Long, val accountId: Long, val characterName: Strin
             out.stamina = 50
             out.staminaTimestamp = 0
             out.staminaRenew = 0
+            out.currentSkillSet = 1
+            out.currentBattleSet = 1
         }
 
         return out
