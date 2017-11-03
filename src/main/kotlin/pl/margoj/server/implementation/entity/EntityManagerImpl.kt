@@ -1,7 +1,6 @@
 package pl.margoj.server.implementation.entity
 
 import pl.margoj.server.api.entity.EntityManager
-import pl.margoj.server.api.player.Player
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.npc.Npc
 import pl.margoj.server.implementation.player.PlayerImpl
@@ -25,6 +24,11 @@ class EntityManagerImpl(server: ServerImpl) : EntityManager
     {
         if (entity is PlayerImpl)
         {
+            if(this.players_.containsKey(entity.id))
+            {
+                throw IllegalArgumentException("This entity is already registered")
+            }
+
             this.players_.put(entity.id, entity)
         }
         else if(entity is Npc)

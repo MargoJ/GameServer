@@ -20,7 +20,7 @@ class BattleData(val entity: EntityImpl, val battle: BattleImpl, val team: Battl
     }
 
     /** in-battle id */
-    val id = (if (this.entity is Player) this.entity.id else (this.entity as Npc).id)
+    val id = if (this.entity is Player) this.entity.id else (-(this.entity as Npc).id)
 
     /** did player press the quit button? */
     var quitRequested: Boolean = false
@@ -124,7 +124,7 @@ class BattleData(val entity: EntityImpl, val battle: BattleImpl, val team: Battl
             obj.buffs = obj.buffs!! or buff.margoId
         }
 
-        if (target == this.entity)
+        if (target.battleData!!.team == this.team)
         {
             obj.energy = this.energy
             obj.mana = this.mana
