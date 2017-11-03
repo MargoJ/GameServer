@@ -49,6 +49,9 @@ abstract class CodeStatement
             types.put("hp", ::DelegatedFunctionStatement)
             types.put("sa", ::DelegatedFunctionStatement)
             types.put("atak", ::DelegatedFunctionStatement)
+            types.put("pancerz", ::DelegatedFunctionStatement)
+            types.put("blok", ::DelegatedFunctionStatement)
+            types.put("unik", ::DelegatedFunctionStatement)
 
             types.put(MathStatement.ADD, ::MathStatement)
             types.put(MathStatement.SUBTRACT, ::MathStatement)
