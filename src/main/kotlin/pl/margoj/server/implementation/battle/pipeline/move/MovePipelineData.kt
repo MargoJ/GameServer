@@ -1,10 +1,10 @@
 package pl.margoj.server.implementation.battle.pipeline.move
 
 import pl.margoj.server.implementation.battle.BattleData
-import pl.margoj.server.implementation.battle.pipeline.PipelineData
+import pl.margoj.server.implementation.battle.pipeline.BattlePipelineData
 import pl.margoj.server.implementation.entity.EntityImpl
 
-class MovePipelineData(val user: EntityImpl, val data: BattleData, val position: Position) : PipelineData(null)
+class MovePipelineData(val user: EntityImpl, val data: BattleData, val position: Position) : BattlePipelineData(null)
 {
     enum class Position
     {

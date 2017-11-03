@@ -1,4 +1,4 @@
-package pl.margoj.server.implementation.battle.pipeline
+package pl.margoj.server.implementation.pipeline
 
 interface PipelineFragment<T>
 {

@@ -12,7 +12,7 @@ abstract class EntityImpl : Entity
 
     override val isDead: Boolean get() = if (deadUntil == null) false else (deadUntil!!.time > System.currentTimeMillis())
 
-    var battleData: BattleData? = null
+    open var battleData: BattleData? = null
 
     val inActiveBattle: Boolean
         get()

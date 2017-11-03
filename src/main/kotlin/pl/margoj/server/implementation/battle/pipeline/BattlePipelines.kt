@@ -5,11 +5,12 @@ import pl.margoj.server.implementation.battle.pipeline.move.impl.BuffExpireFragm
 import pl.margoj.server.implementation.battle.pipeline.move.impl.CalculateSAFragment
 import pl.margoj.server.implementation.battle.pipeline.strike.StrikePipelineData
 import pl.margoj.server.implementation.battle.pipeline.strike.impl.*
+import pl.margoj.server.implementation.pipeline.Pipeline
 
 object BattlePipelines
 {
-    val MOVE_PIPELINE = BattlePipeline<MovePipelineData>()
-    val STRIKE_PIPELINE = BattlePipeline<StrikePipelineData>()
+    val MOVE_PIPELINE = Pipeline<MovePipelineData>()
+    val STRIKE_PIPELINE = Pipeline<StrikePipelineData>()
 
     init
     {

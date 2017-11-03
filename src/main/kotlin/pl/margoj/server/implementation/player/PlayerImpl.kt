@@ -11,6 +11,7 @@ import pl.margoj.server.api.player.Gender
 import pl.margoj.server.api.player.Player
 import pl.margoj.server.api.player.PlayerRank
 import pl.margoj.server.implementation.ServerImpl
+import pl.margoj.server.implementation.battle.BattleData
 import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.entity.EntityTracker
 import pl.margoj.server.implementation.inventory.AbstractInventoryImpl
@@ -99,6 +100,14 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
             }
 
             return true
+        }
+
+    override var battleData: BattleData?
+        get() = super.battleData
+        set(value)
+        {
+            this.currentNpcTalk = null
+            super.battleData = value
         }
 
     override fun addConfirmationTask(task: (CommandSender) -> Unit, message: String)

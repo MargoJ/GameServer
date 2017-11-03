@@ -45,6 +45,23 @@ class ItemStackImpl(itemManager: ItemManager, override val item: ItemImpl, overr
         this.requestUpdate()
     }
 
+    override fun destroyItem()
+    {
+        this.owner!!.set(this.ownerIndex!!, null)
+    }
+
+    override fun cloneFrom(other: ItemStack)
+    {
+        other as ItemStackImpl
+
+        this.additionalProperties.clear()
+
+        for ((property, value) in other.additionalProperties)
+        {
+            this.additionalProperties.put(property, value)
+        }
+    }
+
     @Suppress("UNCHECKED_CAST")
     operator fun <T> get(property: ItemProperty<T>): T
     {

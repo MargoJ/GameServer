@@ -77,7 +77,7 @@ class ItemManager(val server: ServerImpl)
 
         for (property in ItemProperty.properties)
         {
-            if (restricted && !property.showWhenRestricted)
+            if ((restricted && !property.showWhenRestricted) || !property.renderable)
             {
                 continue
             }

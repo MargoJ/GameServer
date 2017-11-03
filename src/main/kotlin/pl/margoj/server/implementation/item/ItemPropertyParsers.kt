@@ -1,11 +1,11 @@
 package pl.margoj.server.implementation.item
 
-import org.apache.commons.lang3.StringEscapeUtils
 import pl.margoj.mrf.MRFIcon
 import pl.margoj.mrf.item.ItemCategory
 import pl.margoj.mrf.item.ItemProperty
 import pl.margoj.mrf.item.ItemRarity
 import pl.margoj.mrf.item.properties.*
+import pl.margoj.mrf.item.properties.special.*
 import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.implementation.network.protocol.jsons.ItemObject
 
@@ -29,7 +29,8 @@ interface ItemPropertyParser<T, P : ItemProperty<T>>
                 RarityPropertyParser(),
                 IconPropertyParser(),
                 PricePropertyParser(),
-                ProfessionRequirementPropertyParser()
+                ProfessionRequirementPropertyParser(),
+                CooldownPropertyParser()
         )
     }
 }
@@ -69,7 +70,7 @@ class IntRangePropertyParser : ItemPropertyParser<IntRange, IntRangeProperty>
 
     override fun apply(property: IntRangeProperty, itemObject: ItemObject, value: IntRange, itemStack: ItemStack, item: ItemImpl)
     {
-        if(value == property.default)
+        if (value == property.default)
         {
             return
         }
@@ -126,7 +127,7 @@ class NamePropertyParser : ItemPropertyParser<String, NameProperty>
 
     override fun apply(property: NameProperty, itemObject: ItemObject, value: String, itemStack: ItemStack, item: ItemImpl)
     {
-        itemObject.name = StringEscapeUtils.escapeHtml4(value)
+        itemObject.name = value
     }
 }
 
@@ -184,7 +185,7 @@ class ProfessionRequirementPropertyParser : ItemPropertyParser<ProfessionRequire
 
     override fun apply(property: ProfessionRequirementProperty, itemObject: ItemObject, value: ProfessionRequirementProperty.ProfessionRequirement, itemStack: ItemStack, item: ItemImpl)
     {
-        if(!value.any)
+        if (!value.any)
         {
             return
         }
@@ -199,5 +200,27 @@ class ProfessionRequirementPropertyParser : ItemPropertyParser<ProfessionRequire
         builder.takeIf { value.tracker }?.append("t")
 
         itemObject.statistics += "${property.propertyName}=$builder;"
+    }
+}
+
+class CooldownPropertyParser : ItemPropertyParser<CooldownProperty.Cooldown, CooldownProperty>
+{
+    override val propertyType: Class<CooldownProperty> = CooldownProperty::class.java
+
+    override fun apply(property: CooldownProperty, itemObject: ItemObject, value: CooldownProperty.Cooldown, itemStack: ItemStack, item: ItemImpl)
+    {
+        if(value.cooldown == 0)
+        {
+            return
+        }
+
+        val out = StringBuffer(property.propertyName).append("=").append(value.cooldown)
+        if(value.nextUse != 0L)
+        {
+            out.append(",").append(value.nextUse / 1000L)
+        }
+        out.append(";")
+
+        itemObject.statistics += out.toString()
     }
 }

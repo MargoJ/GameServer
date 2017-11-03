@@ -4,8 +4,12 @@ import pl.margoj.mrf.item.ItemCategory
 import pl.margoj.mrf.item.ItemProperties
 import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.api.inventory.map.MAP_LAYERS
+import pl.margoj.server.api.inventory.player.ItemIsOnCooldownException
 import pl.margoj.server.api.inventory.player.ItemRequirementsNotMetException
+import pl.margoj.server.api.utils.TimeFormatUtils
 import pl.margoj.server.implementation.item.ItemStackImpl
+import pl.margoj.server.implementation.item.pipeline.ItemPipelines
+import pl.margoj.server.implementation.item.pipeline.drag.ItemDragPipelineData
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.player.PlayerConnection
@@ -39,7 +43,7 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
                 -2 ->
                 {
                     // destroy item
-                    if(item[ItemProperties.CATEGORY] == ItemCategory.QUEST)
+                    if (item[ItemProperties.CATEGORY] == ItemCategory.QUEST)
                     {
                         player.displayAlert("Tego przedmiotu nie można zniszczyć w tej chwili, jest on potrzebny do ukończenia trwającego questa.")
                         return true
@@ -47,17 +51,17 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
 
                     player.server.gameLogger.info("${player.name}: item zniszczony: ${item.item.toSimpleString()}")
 
-                    inventory[item.ownerIndex!!] = null
+                    item.destroyItem()
                 }
                 -1 ->
                 {
-                    if(item[ItemProperties.SOUL_BOUND] || item[ItemProperties.PERM_BOUND])
+                    if (item[ItemProperties.SOUL_BOUND] || item[ItemProperties.PERM_BOUND])
                     {
                         player.displayAlert("Nie można upuszczać przedmiotów związanych z graczem!")
                         return true
                     }
 
-                    if(item[ItemProperties.CATEGORY] == ItemCategory.QUEST)
+                    if (item[ItemProperties.CATEGORY] == ItemCategory.QUEST)
                     {
                         player.displayAlert("Tego przedmiotu nie można upuścić w tej chwili, jest on potrzebny do ukończenia trwającego questa.")
                         return true
@@ -106,14 +110,42 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
 
                     val bag = inventory.getBagInventory(bagId)
 
-                    if(item !in bag && bag.isFull())
+                    if (item !in bag && bag.isFull())
                     {
                         player.displayAlert("Brak wolnego miejsca w tej torbie!")
                         return true
                     }
 
-                    if (bag.getItemAt(x, y) == null)
+                    val targetItem = bag.getItemAt(x, y) as? ItemStackImpl
+                    if (targetItem != null)
                     {
+                        ItemPipelines.ITEM_DRAG_PIPELINE.process(ItemDragPipelineData(item, targetItem, player))
+                    }
+                    else
+                    {
+                        val split = query["split"]?.toIntOrNull()
+
+                        if (split != null)
+                        {
+                            val isSplittable = item[ItemProperties.MAX_AMOUNT] != 0
+                            if (!isSplittable)
+                            {
+                                return true
+                            }
+
+                            val amount = item[ItemProperties.AMOUNT]
+                            this.checkForMaliciousData(split >= amount, "split too big")
+
+                            item.setProperty(ItemProperties.AMOUNT, amount - split)
+
+                            val newItem = player.server.newItemStack(item.item)
+                            newItem.cloneFrom(item)
+                            newItem.setProperty(ItemProperties.AMOUNT, split)
+
+                            bag.setItemAt(x, y, newItem)
+                            return true
+                        }
+
                         bag.setItemAt(x, y, item)
                     }
                 }
@@ -127,9 +159,14 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
                     {
                         previousEquipment = inventory.equipment.use(item)
                     }
-                    catch(e: ItemRequirementsNotMetException)
+                    catch (e: ItemRequirementsNotMetException)
                     {
                         player.displayAlert("Nie spełniasz wymagań koniecznych do używania tego przedmiotu!")
+                        return true
+                    }
+                    catch (e: ItemIsOnCooldownException)
+                    {
+                        player.displayAlert("Zanim następny raz użyjesz przedmiotu, musisz poczekać jeszcze ${TimeFormatUtils.getReadableTime(e.left, true)}!")
                         return true
                     }
 
@@ -188,7 +225,7 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
                         val targetBag = inventory.getBag(realBagId)
                         if (targetBag != null)
                         {
-                            if(!inventory.getBagInventory(realBagId).tryToPut(item))
+                            if (!inventory.getBagInventory(realBagId).tryToPut(item))
                             {
                                 player.displayAlert("Brak wolnego miejsca w tej torbie!")
                                 return true

@@ -1,8 +1,8 @@
-package pl.margoj.server.implementation.battle.pipeline
+package pl.margoj.server.implementation.pipeline
 
 import java.util.LinkedList
 
-open class BattlePipeline<DataT>
+open class Pipeline<DataT>
 {
     private val elements = LinkedList<InternalPipelineData<DataT>>()
 
@@ -59,6 +59,11 @@ open class BattlePipeline<DataT>
         for (element in elements)
         {
             element.fragment.process(data)
+
+            if(data is CancelablePipelineElement && data.canceled)
+            {
+                break
+            }
         }
     }
 

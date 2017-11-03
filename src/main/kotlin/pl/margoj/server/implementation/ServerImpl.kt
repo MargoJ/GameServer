@@ -11,7 +11,6 @@ import pl.margoj.server.api.battle.BattleUnableToStartException
 import pl.margoj.server.api.entity.Entity
 import pl.margoj.server.api.events.ServerReadyEvent
 import pl.margoj.server.api.inventory.Item
-import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.api.player.Player
 import pl.margoj.server.implementation.auth.AuthConfig
 import pl.margoj.server.implementation.auth.Authenticator
@@ -27,6 +26,7 @@ import pl.margoj.server.implementation.entity.EntityManagerImpl
 import pl.margoj.server.implementation.event.EventManagerImpl
 import pl.margoj.server.implementation.item.ItemImpl
 import pl.margoj.server.implementation.item.ItemManager
+import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.map.TownImpl
 import pl.margoj.server.implementation.network.handlers.*
 import pl.margoj.server.implementation.network.http.HttpServer
@@ -314,7 +314,7 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
         return this.towns_[id]
     }
 
-    override fun newItemStack(item: Item): ItemStack
+    override fun newItemStack(item: Item): ItemStackImpl
     {
         return this.itemManager.newItemStack(item as ItemImpl)
     }
