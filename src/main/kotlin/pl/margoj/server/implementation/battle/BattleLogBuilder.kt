@@ -34,7 +34,7 @@ class BattleLogBuilder
         }
         else if (damager != null)
         {
-            builder.append(damager!!.id).append("=").append(damager!!.entity.healthPercent).append(";")
+            builder.append(damager!!.id).append("=").append(damager!!.healthPercent).append(";")
         }
         else
         {
@@ -47,7 +47,7 @@ class BattleLogBuilder
         }
         else if (damaged != null)
         {
-            builder.append(damaged!!.id).append("=").append(damaged!!.entity.healthPercent).append(";")
+            builder.append(damaged!!.id).append("=").append(damaged!!.healthPercent).append(";")
         }
         else
         {

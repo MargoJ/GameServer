@@ -80,6 +80,10 @@ class BattleData(val entity: EntityImpl, val battle: BattleImpl, val team: Battl
     /** turn attack speed, used to calculate whose turn is now */
     var turnAttackSpeed = 0.0
 
+    /** health to be shown in the battle */
+    val healthPercent: Int
+        get() = if (this.dead) 0 else this.entity.healthPercent
+
     private var buffs_: HashMap<Class<*>, Buff> = hashMapOf()
     val buffs: Collection<Buff> get() = this.buffs_.values
 
@@ -181,7 +185,7 @@ class BattleData(val entity: EntityImpl, val battle: BattleImpl, val team: Battl
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T: Buff> getBuff(`class`: Class<T>): T?
+    fun <T : Buff> getBuff(`class`: Class<T>): T?
     {
         return this.buffs_[`class`] as T?
     }
