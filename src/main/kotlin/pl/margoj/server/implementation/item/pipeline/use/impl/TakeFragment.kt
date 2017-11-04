@@ -8,7 +8,7 @@ class TakeFragment : ItemUsePipelineFragment
 {
     override fun process(fragment: ItemUsePipelineData)
     {
-        if (!fragment.take || !fragment.item[ItemProperties.USES])
+        if (!fragment.take || fragment.item[ItemProperties.AMOUNT] == 0)
         {
             return
         }

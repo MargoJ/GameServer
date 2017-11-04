@@ -46,7 +46,8 @@ class HealFragment : ItemUsePipelineFragment
 
                     if(left <= 0)
                     {
-                        fragment.take = true
+                        fragment.item.destroyItem()
+                        fragment.canceled = true
                     }
                 }
             }

@@ -1,6 +1,7 @@
 package pl.margoj.server.implementation.commands.defaults.admin
 
 import org.apache.commons.lang3.StringUtils
+import pl.margoj.mrf.item.ItemProperties
 import pl.margoj.server.api.Server
 import pl.margoj.server.api.commands.Arguments
 import pl.margoj.server.api.commands.CommandListener
@@ -8,6 +9,8 @@ import pl.margoj.server.api.commands.CommandSender
 import pl.margoj.server.api.inventory.Item
 import pl.margoj.server.api.player.Player
 import pl.margoj.server.api.utils.Paged
+import pl.margoj.server.implementation.item.ItemStackImpl
+import pl.margoj.server.implementation.player.PlayerImpl
 import java.util.LinkedList
 import java.util.stream.Collectors
 
@@ -140,6 +143,23 @@ class ItemCommand : CommandListener
 
                 }, "Czy na pewno chcesz WYMAZAĆ CAŁY EKWIPUNEK gracza ${target.name}? Wpisz .confirm aby potwierdzić")
             }
+            "removecd" ->
+            {
+                args.ensureTrue({ sender is PlayerImpl }, "Tylko gracz może wykonać tą komende")
+                sender as Player
+
+                val item = sender.inventory.equipment.purse
+                args.ensureNotNull(item, "Nie masz zadnego przedmiotu w sakwie")
+                item as ItemStackImpl
+
+                val cooldown = item[ItemProperties.COOLDOWN]
+                args.ensureTrue({ cooldown.cooldown != 0 }, "Ten przedmiot nie posiada cooldownu")
+
+                cooldown.nextUse = 0L
+                item.setProperty(ItemProperties.COOLDOWN, cooldown)
+
+                sender.sendMessage("OK!")
+            }
             else -> this.showHelp(sender)
         }
     }
@@ -151,6 +171,7 @@ class ItemCommand : CommandListener
         sender.sendMessage(".item find - Szuka podanego przedmiotu")
         sender.sendMessage(".item give - Dodaje przedmiot do ekwipunku")
         sender.sendMessage(".item clearinv - Czysci caly ekwipunek gracza")
+        sender.sendMessage(".item removecd - Usuwa cooldown z przedmiotu w sakwie")
     }
 
     private class PagedItems(val server: Server, val find: String? = null) : Paged<Item>()

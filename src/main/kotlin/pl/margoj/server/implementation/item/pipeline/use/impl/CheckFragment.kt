@@ -11,7 +11,7 @@ class CheckFragment : ItemUsePipelineFragment
 
         if(player.inActiveBattle || player.isDead)
         {
-            fragment.canceled = false
+            fragment.canceled = true
         }
     }
 }
