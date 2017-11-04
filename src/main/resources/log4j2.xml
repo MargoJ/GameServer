@@ -19,6 +19,13 @@
                 <TimeBasedTriggeringPolicy/>
             </Policies>
         </RollingRandomAccessFile>
+        <RollingRandomAccessFile name="ChatFile" fileName="logs/chat.log" filePattern="logs/chat-%d{yyyy-MM-dd}-%i.log">
+            <PatternLayout pattern="[%d{d MMM yyyy HH:mm:ss}]: %msg%n"/>
+            <Policies>
+                <OnStartupTriggeringPolicy/>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+        </RollingRandomAccessFile>
     </Appenders>
     <Loggers>
         <Root level="info">
@@ -32,6 +39,9 @@
         <Logger name="Cache" level="info"/>
         <Logger name="Game" level="info">
             <AppenderRef ref="GameFile"/>
+        </Logger>
+        <Logger name="Chat" level="info">
+            <AppenderRef ref="ChatFile"/>
         </Logger>
         <Logger name="Battle" level="trace"/>
     </Loggers>

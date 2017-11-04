@@ -11,6 +11,7 @@ import pl.margoj.mrf.map.objects.MapObject
 import pl.margoj.mrf.map.objects.npc.NpcMapObject
 import pl.margoj.mrf.map.objects.text.TextMapObject
 import pl.margoj.mrf.map.serialization.MapData
+import pl.margoj.server.api.chat.ChatMessage
 import pl.margoj.server.api.map.ImmutableLocation
 import pl.margoj.server.api.map.PvPStatus
 import pl.margoj.server.api.map.Town
@@ -20,6 +21,7 @@ import pl.margoj.server.implementation.inventory.map.MapInventoryImpl
 import pl.margoj.server.implementation.npc.Npc
 import pl.margoj.server.implementation.npc.NpcType
 import java.io.File
+import java.util.LinkedList
 
 data class TownImpl(
         val server: ServerImpl,
@@ -68,6 +70,8 @@ data class TownImpl(
 
     override val spawnPoint: ImmutableLocation
         get() = this.cachedMapData.spawnPoint
+
+    val chatHistory = LinkedList<ChatMessage>()
 
     @Suppress("UNCHECKED_CAST")
     fun <T : MetadataElement> getMetadata(clazz: Class<T>): T

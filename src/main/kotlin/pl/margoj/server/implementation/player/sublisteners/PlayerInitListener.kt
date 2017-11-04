@@ -76,6 +76,7 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
             }
             4 -> // finish
             {
+                server.chatManager.getPlayerInitMessages(this.player!!).forEach { out.addChatMessage(it) }
                 out.addEvent()
                 connection.initLevel = 4
             }

@@ -23,6 +23,7 @@ import pl.margoj.server.implementation.network.protocol.jsons.OtherObject
 import pl.margoj.server.implementation.npc.NpcTalk
 import java.util.Collections
 import java.util.Date
+import java.util.LinkedList
 
 class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerImpl, val connection: PlayerConnection) : LivingEntityImpl(), Player
 {
@@ -113,6 +114,8 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
     override val canAnnounce: Boolean
         get() = super.canAnnounce && this.online
 
+    val chatHistory = LinkedList<ChatMessage>()
+
     override fun addConfirmationTask(task: (CommandSender) -> Unit, message: String)
     {
         this.sendMessage(message)
@@ -133,6 +136,12 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
 
     override fun sendChatMessage(message: ChatMessage)
     {
+        this.chatHistory.add(message)
+        if(this.chatHistory.size > 100)
+        {
+            this.chatHistory.removeFirst()
+        }
+
         this.connection.addModifier { it.addChatMessage(message) }
     }
 
@@ -160,6 +169,7 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
             location.copyValuesTo(current)
             this.connection.addModifier { it.addEngineAction(OutgoingPacket.EngineAction.RELOAD) }
             this.updatePossibleInventories()
+            this.sendChatMessage(ChatMessage(text = location.town!!.name, style = "entertown"))
         }
         else
         {
