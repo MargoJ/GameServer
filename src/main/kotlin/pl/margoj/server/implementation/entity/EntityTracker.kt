@@ -1,13 +1,8 @@
 package pl.margoj.server.implementation.entity
 
 import pl.margoj.server.api.map.Town
-import pl.margoj.server.api.player.Player
-import pl.margoj.server.api.player.PlayerRank
 import pl.margoj.server.api.player.Profession
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
-import pl.margoj.server.implementation.network.protocol.jsons.NpcObject
-import pl.margoj.server.implementation.network.protocol.jsons.OtherObject
-import pl.margoj.server.implementation.npc.Npc
 import pl.margoj.server.implementation.player.PlayerImpl
 import java.util.LinkedList
 
@@ -31,35 +26,24 @@ class EntityTracker(val owner: PlayerImpl)
             return false
         }
 
-
         val town = this.owner.location.town!!
 
-        if (anotherEntity is Npc)
-        {
-            return this.canSee(this.owner, anotherEntity, town, WINDOW_SIZE * 3)
-        }
-
-        return this.canSee(this.owner, anotherEntity, town, WINDOW_SIZE)
+        return this.canSee(this.owner, anotherEntity, town, WINDOW_SIZE * anotherEntity.trackingRange)
     }
 
     private fun canSee(we: EntityImpl, they: EntityImpl, town: Town, size: Int): Boolean
     {
-        if (they.isDead)
+        if (!they.canAnnounce)
         {
             return false
         }
 
-        if (they is Npc)
+        if (they.neverDelete)
         {
             if (this.trackedEntities_.contains(they))
             {
                 return true
             }
-        }
-
-        if (they is Player && !they.online)
-        {
-            return false
         }
 
         val our = we.location
@@ -95,17 +79,17 @@ class EntityTracker(val owner: PlayerImpl)
             {
                 if (this.shouldTrack(entity))
                 {
-                    this.updateEntity(entity, out)
+                    entity.update(this, out)
                 }
                 else
                 {
-                    this.disposeEntity(entity, out)
+                    entity.dispose(this, out)
                     this.trackedEntities_.remove(entity)
                 }
             }
             else if (this.shouldTrack(entity))
             {
-                this.announceEntity(entity, out)
+                entity.announce(this ,out)
                 this.trackedEntities_.add(entity)
             }
         }
@@ -116,133 +100,16 @@ class EntityTracker(val owner: PlayerImpl)
             val trackedEntity = iterator.next()
             if (!entities.contains(trackedEntity))
             {
-                this.disposeEntity(trackedEntity, out)
+                trackedEntity.dispose(this, out)
                 iterator.remove()
             }
-        }
-    }
-
-    private fun announceEntity(entity: EntityImpl, out: OutgoingPacket)
-    {
-        if (entity is PlayerImpl)
-        {
-            val other = OtherObject()
-            other.id = entity.id
-            other.nick = entity.name
-            other.icon = entity.data.icon
-            other.clan = "" // TODO
-            other.x = entity.location.x
-            other.y = entity.location.y
-            other.direction = entity.movementManager.playerDirection
-            other.rights = when(entity.rank) {
-                PlayerRank.ADMINISTRATOR -> 1
-                PlayerRank.SUPER_GAME_MASTER -> 16
-                PlayerRank.GAME_MASTER -> 2
-                PlayerRank.USER -> 0
-            }
-            other.level = entity.data.level
-            other.profession = entity.data.profession
-            other.attributes = 0 // TODO
-            other.relation = "" // TODO
-
-            entity.setTrackingData(this, TrackingData(entity))
-
-            out.addOther(other)
-        }
-        else if (entity is Npc)
-        {
-            val npc = NpcObject()
-            npc.id = entity.id
-            npc.nick = entity.name
-            npc.questMark = 0 // TODO
-            npc.icon = entity.icon
-            npc.x = entity.location.x
-            npc.y = entity.location.y
-            npc.level = entity.level
-            npc.type = entity.type.margoId
-            npc.subType = entity.subType.margoId
-            npc.group = entity.group
-            out.addNpc(npc)
-        }
-    }
-
-    private fun disposeEntity(entity: EntityImpl, out: OutgoingPacket)
-    {
-        if (entity is PlayerImpl)
-        {
-            entity.setTrackingData(this, null)
-
-            val other = OtherObject()
-            other.id = entity.id
-            other.del = 1
-
-            out.addOther(other)
-        }
-        else if (entity is Npc)
-        {
-            val npc = NpcObject()
-            npc.id = entity.id
-            npc.del = 1
-
-            out.addNpc(npc)
-        }
-    }
-
-    private fun updateEntity(entity: EntityImpl, out: OutgoingPacket)
-    {
-        if (entity is Npc)
-        {
-            return
-        }
-        entity as PlayerImpl
-
-        val trackingData = entity.getTrackingData(this)
-        var updated = false
-        val other = OtherObject()
-        other.id = entity.id
-
-        val location = entity.location
-
-        if (trackingData.x != location.x || trackingData.y != location.y)
-        {
-            updated = true
-            other.x = location.x
-            other.y = location.y
-            trackingData.x = location.x
-            trackingData.y = location.y
-        }
-
-        if (trackingData.lastDirection != entity.direction)
-        {
-            updated = true
-            other.direction = entity.direction
-            trackingData.lastDirection = entity.direction
-        }
-
-        if (trackingData.lastProfession != entity.stats.profession)
-        {
-            updated = true
-            other.profession = entity.stats.profession
-            trackingData.lastProfession = entity.stats.profession
-        }
-
-        if (trackingData.lastLevel != entity.level)
-        {
-            updated = true
-            other.level = entity.level
-            trackingData.lastLevel = entity.level
-        }
-
-        if (updated)
-        {
-            out.addOther(other)
         }
     }
 }
 
 data class TrackingData(var x: Int, var y: Int, var lastDirection: Int, var lastProfession: Profession, var lastLevel: Int)
 {
-    constructor(entity: EntityImpl) : this(entity.location.x, entity.location.y, entity.direction, entity.stats.profession, entity.level)
+    constructor(entity: PlayerImpl) : this(entity.location.x, entity.location.y, entity.direction, entity.stats.profession, entity.level)
 }
 
 fun PlayerImpl.getTrackingData(tracker: EntityTracker): TrackingData

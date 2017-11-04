@@ -20,6 +20,7 @@ object ItemPipelines
         ITEM_USE_PIPELINE.addLast("MJ|Equipment", EquipmentFragment())
         ITEM_USE_PIPELINE.addLast("MJ|Heal", HealFragment())
         ITEM_USE_PIPELINE.addLast("MJ|RunScript", RunScriptFragment())
+        ITEM_USE_PIPELINE.addLast("MJ|Teleport", TeleportFragment())
 
         ITEM_USE_PIPELINE.addLast("MJ|Binding", BindingFragment())
         ITEM_USE_PIPELINE.addLast("MJ|PutOnCooldown", PutOnCooldownFragment())

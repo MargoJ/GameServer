@@ -30,7 +30,8 @@ interface ItemPropertyParser<T, P : ItemProperty<T>>
                 IconPropertyParser(),
                 PricePropertyParser(),
                 ProfessionRequirementPropertyParser(),
-                CooldownPropertyParser()
+                CooldownPropertyParser(),
+                TeleportPropertyParser()
         )
     }
 }
@@ -222,5 +223,20 @@ class CooldownPropertyParser : ItemPropertyParser<CooldownProperty.Cooldown, Coo
         out.append(";")
 
         itemObject.statistics += out.toString()
+    }
+}
+
+class TeleportPropertyParser : ItemPropertyParser<TeleportProperty.Teleport, TeleportProperty>
+{
+    override val propertyType: Class<TeleportProperty> = TeleportProperty::class.java
+
+    override fun apply(property: TeleportProperty, itemObject: ItemObject, value: TeleportProperty.Teleport, itemStack: ItemStack, item: ItemImpl)
+    {
+        if(value.map.isEmpty())
+        {
+            return
+        }
+
+        itemObject.statistics += "teleport=1,1,1;"
     }
 }

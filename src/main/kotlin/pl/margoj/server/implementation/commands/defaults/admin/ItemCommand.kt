@@ -2,6 +2,7 @@ package pl.margoj.server.implementation.commands.defaults.admin
 
 import org.apache.commons.lang3.StringUtils
 import pl.margoj.mrf.item.ItemProperties
+import pl.margoj.mrf.item.properties.special.CooldownProperty
 import pl.margoj.server.api.Server
 import pl.margoj.server.api.commands.Arguments
 import pl.margoj.server.api.commands.CommandListener
@@ -155,8 +156,7 @@ class ItemCommand : CommandListener
                 val cooldown = item[ItemProperties.COOLDOWN]
                 args.ensureTrue({ cooldown.cooldown != 0 }, "Ten przedmiot nie posiada cooldownu")
 
-                cooldown.nextUse = 0L
-                item.setProperty(ItemProperties.COOLDOWN, cooldown)
+                item.setProperty(ItemProperties.COOLDOWN, CooldownProperty.Cooldown(cooldown.cooldown, 0L))
 
                 sender.sendMessage("OK!")
             }

@@ -4,9 +4,9 @@ import pl.margoj.server.implementation.battle.BattleData
 import pl.margoj.server.implementation.battle.BattleImpl
 import pl.margoj.server.implementation.battle.pipeline.BattlePipelines
 import pl.margoj.server.implementation.battle.pipeline.move.MovePipelineData
-import pl.margoj.server.implementation.entity.EntityImpl
+import pl.margoj.server.implementation.entity.LivingEntityImpl
 
-abstract class BattleAbility(val battle: BattleImpl, val user: EntityImpl, val target: EntityImpl)
+abstract class BattleAbility(val battle: BattleImpl, val user: LivingEntityImpl, val target: LivingEntityImpl)
 {
     fun queue()
     {

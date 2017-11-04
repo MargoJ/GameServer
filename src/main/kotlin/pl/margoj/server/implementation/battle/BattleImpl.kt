@@ -15,7 +15,7 @@ import pl.margoj.server.implementation.battle.ability.Step
 import pl.margoj.server.implementation.battle.ability.fight.NormalStrikeAbility
 import pl.margoj.server.implementation.battle.pipeline.BattlePipelines
 import pl.margoj.server.implementation.battle.pipeline.move.MovePipelineData
-import pl.margoj.server.implementation.entity.EntityImpl
+import pl.margoj.server.implementation.entity.LivingEntityImpl
 import pl.margoj.server.implementation.npc.Npc
 import pl.margoj.server.implementation.npc.NpcSubtype
 import pl.margoj.server.implementation.player.PlayerImpl
@@ -23,7 +23,7 @@ import pl.margoj.server.implementation.utils.MargoMath
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicInteger
 
-class BattleImpl internal constructor(val server: ServerImpl, override val teamA: List<EntityImpl>, override val teamB: List<EntityImpl>) : Battle
+class BattleImpl internal constructor(val server: ServerImpl, override val teamA: List<LivingEntityImpl>, override val teamB: List<LivingEntityImpl>) : Battle
 {
     companion object
     {
@@ -31,8 +31,8 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
         val logger = LogManager.getLogger("Battle")
     }
 
-    internal val participants_ = hashMapOf<EntityImpl, BattleData>()
-    override val participants: Collection<EntityImpl>
+    internal val participants_ = hashMapOf<LivingEntityImpl, BattleData>()
+    override val participants: Collection<LivingEntityImpl>
         get() = this.participants_.keys
 
     val battleId = battleCounter.incrementAndGet()
@@ -58,9 +58,9 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
     /* data */
     private var queuedMove: BattleAbility? = null
     private var attackSpeedThreshold: Double = -1.0
-    private var currentTurnOrder = mutableListOf<EntityImpl>()
+    private var currentTurnOrder = mutableListOf<LivingEntityImpl>()
 
-    var currentEntity: EntityImpl? = null
+    var currentEntity: LivingEntityImpl? = null
         private set
 
     var currentTurn = 0
@@ -71,7 +71,7 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
         Validate.notEmpty(teamA, "Team A is empty")
         Validate.notEmpty(teamB, "Team B is empty")
 
-        val participants = ArrayList<EntityImpl>(this.teamA.size + this.teamB.size)
+        val participants = ArrayList<LivingEntityImpl>(this.teamA.size + this.teamB.size)
         participants.addAll(this.teamA)
         participants.addAll(this.teamB)
 
@@ -107,7 +107,7 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
         }
     }
 
-    fun findById(targetId: Int): EntityImpl?
+    fun findById(targetId: Int): LivingEntityImpl?
     {
         for (participant in this.participants)
         {
@@ -318,11 +318,11 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
         }
     }
 
-    fun processAuto(entity: EntityImpl)
+    fun processAuto(entity: LivingEntityImpl)
     {
         logger.trace("${this.battleId}: processAuto $entity")
 
-        var target: EntityImpl? = null
+        var target: LivingEntityImpl? = null
         this.iterateOverAlive { participant ->
             if (entity.battleData!!.team == participant.battleData!!.team || !entity.battleData!!.canReach(participant.battleData!!.row))
             {
@@ -396,7 +396,7 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
         return true
     }
 
-    fun moveDone(entity: EntityImpl)
+    fun moveDone(entity: LivingEntityImpl)
     {
         logger.trace("${this.battleId}: moveDone $entity")
 
@@ -475,7 +475,7 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
         return true
     }
 
-    override fun getTeamParticipants(team: BattleTeam): List<EntityImpl>
+    override fun getTeamParticipants(team: BattleTeam): List<LivingEntityImpl>
     {
         return when (team)
         {
@@ -484,7 +484,7 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
         }
     }
 
-    fun getDataOf(participant: EntityImpl): BattleData?
+    fun getDataOf(participant: LivingEntityImpl): BattleData?
     {
         return this.participants_[participant]
     }
@@ -612,7 +612,7 @@ class BattleImpl internal constructor(val server: ServerImpl, override val teamA
         }
     }
 
-    inline fun iterateOverAlive(consumer: (EntityImpl) -> Unit)
+    inline fun iterateOverAlive(consumer: (LivingEntityImpl) -> Unit)
     {
         for (participant in this.participants)
         {

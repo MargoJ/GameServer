@@ -7,12 +7,12 @@ import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.api.player.Player
 import pl.margoj.server.api.player.Profession
 import pl.margoj.server.implementation.battle.buff.Buff
-import pl.margoj.server.implementation.entity.EntityImpl
+import pl.margoj.server.implementation.entity.LivingEntityImpl
 import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.network.protocol.jsons.BattleParticipant
 import pl.margoj.server.implementation.npc.Npc
 
-class BattleData(val entity: EntityImpl, val battle: BattleImpl, val team: BattleTeam)
+class BattleData(val entity: LivingEntityImpl, val battle: BattleImpl, val team: BattleTeam)
 {
     init
     {
@@ -100,7 +100,7 @@ class BattleData(val entity: EntityImpl, val battle: BattleImpl, val team: Battl
         this.lastUpdatedTick = this.entity.server.ticker.currentTick
     }
 
-    fun createBattleParticipantObject(target: EntityImpl): BattleParticipant
+    fun createBattleParticipantObject(target: LivingEntityImpl): BattleParticipant
     {
         val obj = BattleParticipant(this.id.toLong())
 

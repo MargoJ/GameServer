@@ -35,10 +35,6 @@ class EntityManagerImpl(server: ServerImpl) : EntityManager
         {
             this.npcs_.put(entity.id, entity)
         }
-        else
-        {
-            throw IllegalArgumentException("invalid entity $entity")
-        }
 
         this.entities_.add(entity)
     }

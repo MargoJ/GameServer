@@ -3,7 +3,7 @@ package pl.margoj.server.implementation.player.sublisteners
 import pl.margoj.server.api.battle.BattleUnableToStartException
 import pl.margoj.server.implementation.battle.ability.Step
 import pl.margoj.server.implementation.battle.ability.fight.NormalStrikeAbility
-import pl.margoj.server.implementation.entity.EntityImpl
+import pl.margoj.server.implementation.entity.LivingEntityImpl
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.npc.Npc
@@ -22,7 +22,7 @@ class PlayerBattleListener(connection: PlayerConnection) : PlayerPacketSubListen
             this.checkForMaliciousData(id == null, "Invalid id")
             id!!
 
-            val targetEntity: EntityImpl?
+            val targetEntity: LivingEntityImpl?
             if (id < 0)
             {
                 targetEntity = this.server.entityManager.getNpcById(-id)

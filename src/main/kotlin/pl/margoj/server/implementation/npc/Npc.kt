@@ -6,15 +6,18 @@ import pl.margoj.server.api.map.ImmutableLocation
 import pl.margoj.server.api.player.Gender
 import pl.margoj.server.api.player.Profession
 import pl.margoj.server.api.utils.splitByChar
-import pl.margoj.server.implementation.entity.EntityImpl
+import pl.margoj.server.implementation.entity.EntityTracker
+import pl.margoj.server.implementation.entity.LivingEntityImpl
 import pl.margoj.server.implementation.map.TownImpl
+import pl.margoj.server.implementation.network.protocol.OutgoingPacket
+import pl.margoj.server.implementation.network.protocol.jsons.NpcObject
 import pl.margoj.server.implementation.npc.parser.parsed.NpcParsedScript
 import pl.margoj.server.implementation.npc.parser.parsed.ScriptContext
 import java.util.Collections
 import java.util.Date
 import java.util.concurrent.atomic.AtomicInteger
 
-class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation, override val server: Server) : EntityImpl()
+class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation, override val server: Server) : LivingEntityImpl()
 {
     var id: Int = npcIdCounter.incrementAndGet()
 
@@ -34,12 +37,15 @@ class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation
     override var hp: Int = 100
     override var deadUntil: Date? = null
 
+    override val trackingRange: Int = 3
+    override val neverDelete: Boolean = true
+
     var group: Int = 0
     var type: NpcType = NpcType.NPC
     var subType: NpcSubtype = NpcSubtype.NORMAL
     var customSpawnTime: Long? = null
 
-    override val withGroup: List<EntityImpl>
+    override val withGroup: List<LivingEntityImpl>
         get()
         {
             if (this.group <= 0)
@@ -47,7 +53,7 @@ class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation
                 return Collections.singletonList(this)
             }
 
-            val out = ImmutableList.builder<EntityImpl>()
+            val out = ImmutableList.builder<LivingEntityImpl>()
             out.add(this)
 
             val town = this.location.town!! as TownImpl
@@ -142,6 +148,35 @@ class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation
             "blok" -> this.stats.block = (parameters[0] as Long).toInt()
             "unik" -> this.stats.block = (parameters[0] as Long).toInt()
         }
+    }
+
+    override fun announce(tracker: EntityTracker, out: OutgoingPacket)
+    {
+        val npc = NpcObject()
+        npc.id = this.id
+        npc.nick = this.name
+        npc.questMark = 0 // TODO
+        npc.icon = this.icon
+        npc.x = this.location.x
+        npc.y = this.location.y
+        npc.level = this.level
+        npc.type = this.type.margoId
+        npc.subType = this.subType.margoId
+        npc.group = this.group
+        out.addNpc(npc)
+    }
+
+    override fun dispose(tracker: EntityTracker, out: OutgoingPacket)
+    {
+        val npc = NpcObject()
+        npc.id = this.id
+        npc.del = 1
+
+        out.addNpc(npc)
+    }
+
+    override fun update(tracker: EntityTracker, out: OutgoingPacket)
+    {
     }
 
     override fun toString(): String

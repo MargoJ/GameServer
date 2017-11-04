@@ -5,10 +5,10 @@ import pl.margoj.server.implementation.battle.BattleImpl
 import pl.margoj.server.implementation.battle.ability.BattleAbility
 import pl.margoj.server.implementation.battle.pipeline.BattlePipelines
 import pl.margoj.server.implementation.battle.pipeline.strike.StrikePipelineData
-import pl.margoj.server.implementation.entity.EntityImpl
+import pl.margoj.server.implementation.entity.LivingEntityImpl
 import pl.margoj.server.implementation.player.PlayerImpl
 
-abstract class StrikeAbility(battle: BattleImpl, user: EntityImpl, target: EntityImpl) : BattleAbility(battle, user, target)
+abstract class StrikeAbility(battle: BattleImpl, user: LivingEntityImpl, target: LivingEntityImpl) : BattleAbility(battle, user, target)
 {
     override fun check(userData: BattleData, targetData: BattleData): Boolean
     {

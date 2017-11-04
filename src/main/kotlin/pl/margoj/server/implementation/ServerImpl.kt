@@ -9,6 +9,7 @@ import pl.margoj.server.api.MargoJConfig
 import pl.margoj.server.api.Server
 import pl.margoj.server.api.battle.BattleUnableToStartException
 import pl.margoj.server.api.entity.Entity
+import pl.margoj.server.api.entity.LivingEntity
 import pl.margoj.server.api.events.ServerReadyEvent
 import pl.margoj.server.api.inventory.Item
 import pl.margoj.server.api.player.Player
@@ -21,8 +22,8 @@ import pl.margoj.server.implementation.commands.console.ConsoleCommandSenderImpl
 import pl.margoj.server.implementation.commands.defaults.DefaultCommands
 import pl.margoj.server.implementation.database.DatabaseManager
 import pl.margoj.server.implementation.database.DatabaseSaveThread
-import pl.margoj.server.implementation.entity.EntityImpl
 import pl.margoj.server.implementation.entity.EntityManagerImpl
+import pl.margoj.server.implementation.entity.LivingEntityImpl
 import pl.margoj.server.implementation.event.EventManagerImpl
 import pl.margoj.server.implementation.item.ItemImpl
 import pl.margoj.server.implementation.item.ItemManager
@@ -319,16 +320,16 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
         return this.itemManager.newItemStack(item as ItemImpl)
     }
 
-    override fun startBattle(teamA: List<Entity>, teamB: List<Entity>)
+    override fun startBattle(teamA: List<LivingEntity>, teamB: List<LivingEntity>)
     {
-        Validate.isTrue(teamA.all { it is EntityImpl }, "invalid entities")
-        Validate.isTrue(teamB.all { it is EntityImpl }, "invalid entities")
+        Validate.isTrue(teamA.all { it is LivingEntityImpl }, "invalid entities")
+        Validate.isTrue(teamB.all { it is LivingEntityImpl }, "invalid entities")
         @Suppress("UNCHECKED_CAST")
-        teamA as List<EntityImpl>
+        teamA as List<LivingEntityImpl>
         @Suppress("UNCHECKED_CAST")
-        teamB as List<EntityImpl>
+        teamB as List<LivingEntityImpl>
 
-        fun groupToString(group: Collection<EntityImpl>): String
+        fun groupToString(group: Collection<LivingEntityImpl>): String
         {
             val string = StringBuilder()
 

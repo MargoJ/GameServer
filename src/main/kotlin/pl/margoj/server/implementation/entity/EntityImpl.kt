@@ -1,71 +1,19 @@
 package pl.margoj.server.implementation.entity
 
-import pl.margoj.server.api.battle.BattleUnableToStartException
 import pl.margoj.server.api.entity.Entity
-import pl.margoj.server.api.utils.fastPow2
-import pl.margoj.server.implementation.battle.BattleData
-import pl.margoj.server.implementation.battle.BattleImpl
+import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 
 abstract class EntityImpl : Entity
 {
-    override var currentBattle: BattleImpl? = null
+    open val trackingRange: Int = 1
 
-    override val isDead: Boolean get() = if (deadUntil == null) false else (deadUntil!!.time > System.currentTimeMillis())
+    open val neverDelete: Boolean = false
 
-    open var battleData: BattleData? = null
+    abstract val canAnnounce: Boolean
 
-    val inActiveBattle: Boolean
-        get()
-        {
-            return this.currentBattle != null && !this.currentBattle!!.finished && this.battleData?.dead == false
-        }
+    abstract fun announce(tracker: EntityTracker, out: OutgoingPacket)
 
-    open val battleUnavailabilityCause: BattleUnableToStartException.Cause?
-        get()
-        {
-            return when
-            {
-                this.isDead -> BattleUnableToStartException.Cause.ENTITY_IS_DEAD
-                this.inActiveBattle -> BattleUnableToStartException.Cause.ENTITY_IN_BATTLE
-                else -> null
-            }
-        }
+    abstract fun dispose(tracker: EntityTracker, out: OutgoingPacket)
 
-    override val healthPercent: Int
-        get()
-        {
-            return Math.ceil((this.hp.toDouble() / this.stats.maxHp.toDouble()) * 100.0).toInt()
-        }
-
-    abstract val withGroup: List<EntityImpl>
-
-    override fun damage(amount: Int)
-    {
-        this.hp -= amount
-        this.hp = Math.max(0, this.hp)
-        if(this.hp == 0)
-        {
-            this.kill()
-        }
-    }
-
-    override fun kill()
-    {
-        this.battleData?.dead = true
-    }
-
-    open val killTime: Long
-        get()
-        {
-            if(this.level >= 200)
-            {
-                return 18L * 60_000L
-            }
-            var minutes = (0.7 + (0.18 * this.level) - (0.00045 * this.level.fastPow2()))
-            if (minutes > 18.0)
-            {
-                minutes = 18.0
-            }
-            return (minutes * 60_000.0).toLong()
-        }
+    abstract fun update(tracker: EntityTracker, out: OutgoingPacket)
 }

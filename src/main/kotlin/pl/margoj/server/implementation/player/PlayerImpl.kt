@@ -12,19 +12,19 @@ import pl.margoj.server.api.player.Player
 import pl.margoj.server.api.player.PlayerRank
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.battle.BattleData
-import pl.margoj.server.implementation.entity.EntityImpl
-import pl.margoj.server.implementation.entity.EntityTracker
+import pl.margoj.server.implementation.entity.*
 import pl.margoj.server.implementation.inventory.AbstractInventoryImpl
 import pl.margoj.server.implementation.inventory.map.MapInventoryImpl
 import pl.margoj.server.implementation.inventory.player.ItemTracker
 import pl.margoj.server.implementation.inventory.player.PlayerInventoryImpl
 import pl.margoj.server.implementation.map.TownImpl
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
+import pl.margoj.server.implementation.network.protocol.jsons.OtherObject
 import pl.margoj.server.implementation.npc.NpcTalk
 import java.util.Collections
 import java.util.Date
 
-class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerImpl, val connection: PlayerConnection) : EntityImpl(), Player
+class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerImpl, val connection: PlayerConnection) : LivingEntityImpl(), Player
 {
     override val id: Int = this.data.id.toInt()
 
@@ -83,7 +83,7 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
             return super.battleUnavailabilityCause
         }
 
-    override val withGroup: List<EntityImpl>
+    override val withGroup: List<LivingEntityImpl>
         get()
         {
             return Collections.singletonList(this) // TODO
@@ -109,6 +109,9 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
             this.currentNpcTalk = null
             super.battleData = value
         }
+
+    override val canAnnounce: Boolean
+        get() = super.canAnnounce && this.online
 
     override fun addConfirmationTask(task: (CommandSender) -> Unit, message: String)
     {
@@ -217,6 +220,88 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
         this.server.eventManager.call(PlayerQuitEvent(this))
 
         this.server.gameLogger.info("${this.name}: wylogowano się z gry. Pozycja: ${this.location.toSimpleString()}")
+    }
+
+    override fun announce(tracker: EntityTracker, out: OutgoingPacket)
+    {
+        val other = OtherObject()
+        other.id = this.id
+        other.nick = this.name
+        other.icon = this.data.icon
+        other.clan = "" // TODO
+        other.x = this.location.x
+        other.y = this.location.y
+        other.direction = this.movementManager.playerDirection
+        other.rights = when(this.rank) {
+            PlayerRank.ADMINISTRATOR -> 1
+            PlayerRank.SUPER_GAME_MASTER -> 16
+            PlayerRank.GAME_MASTER -> 2
+            PlayerRank.USER -> 0
+        }
+        other.level = this.data.level
+        other.profession = this.data.profession
+        other.attributes = 0 // TODO
+        other.relation = "" // TODO
+
+        this.setTrackingData(tracker, TrackingData(this))
+
+        out.addOther(other)
+    }
+
+    override fun dispose(tracker: EntityTracker, out: OutgoingPacket)
+    {
+        this.setTrackingData(tracker, null)
+
+        val other = OtherObject()
+        other.id = this.id
+        other.del = 1
+
+        out.addOther(other)
+    }
+
+    override fun update(tracker: EntityTracker, out: OutgoingPacket)
+    {
+        val trackingData = this.getTrackingData(tracker)
+        var updated = false
+        val other = OtherObject()
+        other.id = this.id
+
+        val location = this.location
+
+        if (trackingData.x != location.x || trackingData.y != location.y)
+        {
+            updated = true
+            other.x = location.x
+            other.y = location.y
+            trackingData.x = location.x
+            trackingData.y = location.y
+        }
+
+        if (trackingData.lastDirection != this.direction)
+        {
+            updated = true
+            other.direction = this.direction
+            trackingData.lastDirection = this.direction
+        }
+
+        if (trackingData.lastProfession != this.stats.profession)
+        {
+            updated = true
+            other.profession = this.stats.profession
+            trackingData.lastProfession = this.stats.profession
+        }
+
+        if (trackingData.lastLevel != this.level)
+        {
+            updated = true
+            other.level = this.level
+            trackingData.lastLevel = this.level
+        }
+
+        if (updated)
+        {
+            out.addOther(other)
+        }
     }
 
     override fun toString(): String
