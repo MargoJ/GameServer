@@ -1,5 +1,6 @@
 package pl.margoj.server.implementation.item
 
+import pl.margoj.mrf.item.ItemProperties
 import pl.margoj.mrf.item.ItemProperty
 import pl.margoj.mrf.item.serialization.ItemDeserializer
 import pl.margoj.mrf.item.serialization.ItemSerializer
@@ -61,6 +62,9 @@ class ItemStackImpl(itemManager: ItemManager, override val item: ItemImpl, overr
             this.additionalProperties.put(property, value)
         }
     }
+
+    override val damageSourceName: String
+        get() = this[ItemProperties.NAME]
 
     @Suppress("UNCHECKED_CAST")
     operator fun <T> get(property: ItemProperty<T>): T

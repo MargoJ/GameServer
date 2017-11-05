@@ -17,7 +17,7 @@ class HealFragment : ItemUsePipelineFragment
             val heal = item[ItemProperties.HEAL]
             if (heal != 0)
             {
-                player.damage(-heal)
+                player.damage(-heal, item)
                 fragment.putOnCooldown = true
                 fragment.take = true
             }
@@ -26,7 +26,7 @@ class HealFragment : ItemUsePipelineFragment
             if (healPercent != 0)
             {
                 val healAmount = (player.stats.maxHp * (healPercent.toDouble() / 100.0)).toInt()
-                player.damage(-healAmount)
+                player.damage(-healAmount, item)
                 fragment.putOnCooldown = true
                 fragment.take = true
             }
@@ -39,7 +39,7 @@ class HealFragment : ItemUsePipelineFragment
                 if(healAmount != 0)
                 {
                     fragment.putOnCooldown = true
-                    player.damage(-healAmount)
+                    player.damage(-healAmount, item)
 
                     val left = fullHeal - healAmount
                     fragment.item.setProperty(ItemProperties.FULL_HEAL, left)

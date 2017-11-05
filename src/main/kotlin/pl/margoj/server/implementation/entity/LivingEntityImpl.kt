@@ -1,6 +1,7 @@
 package pl.margoj.server.implementation.entity
 
 import pl.margoj.server.api.battle.BattleUnableToStartException
+import pl.margoj.server.api.battle.DamageSource
 import pl.margoj.server.api.entity.LivingEntity
 import pl.margoj.server.api.utils.fastPow2
 import pl.margoj.server.implementation.battle.BattleData
@@ -39,20 +40,27 @@ abstract class LivingEntityImpl : EntityImpl(), LivingEntity
             return Math.ceil((this.hp.toDouble() / this.stats.maxHp.toDouble()) * 100.0).toInt()
         }
 
+    override val damageSourceName: String
+        get() = "${this.name}(${this.level}${this.stats.profession.id})"
+
     abstract val withGroup: List<LivingEntityImpl>
 
-    override fun damage(amount: Int)
+    open var lastDamageSource: DamageSource? = null
+
+    override fun damage(amount: Int, damageSource: DamageSource?)
     {
+        this.lastDamageSource = damageSource
         this.hp -= amount
         this.hp = Math.max(0, this.hp)
         if (this.hp == 0)
         {
-            this.kill()
+            this.kill(damageSource)
         }
     }
 
-    override fun kill()
+    override fun kill(damageSource: DamageSource?)
     {
+        this.lastDamageSource = damageSource
         this.battleData?.dead = true
     }
 
@@ -73,6 +81,6 @@ abstract class LivingEntityImpl : EntityImpl(), LivingEntity
 
     override fun destroy()
     {
-        this.kill()
+        this.kill(null)
     }
 }

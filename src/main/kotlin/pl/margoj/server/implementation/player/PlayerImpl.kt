@@ -2,6 +2,7 @@ package pl.margoj.server.implementation.player
 
 import pl.margoj.server.api.battle.BattleStats
 import pl.margoj.server.api.battle.BattleUnableToStartException
+import pl.margoj.server.api.battle.DamageSource
 import pl.margoj.server.api.chat.ChatMessage
 import pl.margoj.server.api.commands.CommandSender
 import pl.margoj.server.api.events.player.PlayerQuitEvent
@@ -13,6 +14,7 @@ import pl.margoj.server.api.player.PlayerRank
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.battle.BattleData
 import pl.margoj.server.implementation.entity.*
+import pl.margoj.server.implementation.entity.simple.GravestoneEntity
 import pl.margoj.server.implementation.inventory.AbstractInventoryImpl
 import pl.margoj.server.implementation.inventory.map.MapInventoryImpl
 import pl.margoj.server.implementation.inventory.player.ItemTracker
@@ -137,7 +139,7 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
     override fun sendChatMessage(message: ChatMessage)
     {
         this.chatHistory.add(message)
-        if(this.chatHistory.size > 100)
+        if (this.chatHistory.size > 100)
         {
             this.chatHistory.removeFirst()
         }
@@ -184,11 +186,14 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
         this.teleport(map.spawnPoint)
     }
 
-    override fun kill()
+    override fun kill(damageSource: DamageSource?)
     {
-        super.kill()
+        super.kill(damageSource)
         this.data.deadUntil = Date(System.currentTimeMillis() + this.killTime)
         this.data.hp = 1
+
+        val gravestone = GravestoneEntity(this.server, this.location.copyImmutable(), this, "Zabity przez: ${damageSource?.damageSourceName ?: "???"}", System.currentTimeMillis(), "")
+        this.server.entityManager.registerEntity(gravestone)
 
         val respawnLocation = this.location.town?.respawnMap as? TownImpl ?: return
         val spawnPoint = respawnLocation.cachedMapData.spawnPoint
@@ -242,7 +247,8 @@ class PlayerImpl(override val data: PlayerDataImpl, override val server: ServerI
         other.x = this.location.x
         other.y = this.location.y
         other.direction = this.movementManager.playerDirection
-        other.rights = when(this.rank) {
+        other.rights = when (this.rank)
+        {
             PlayerRank.ADMINISTRATOR -> 1
             PlayerRank.SUPER_GAME_MASTER -> 16
             PlayerRank.GAME_MASTER -> 2

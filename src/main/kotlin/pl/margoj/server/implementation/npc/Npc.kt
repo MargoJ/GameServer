@@ -2,6 +2,7 @@ package pl.margoj.server.implementation.npc
 
 import com.google.common.collect.ImmutableList
 import pl.margoj.server.api.Server
+import pl.margoj.server.api.battle.DamageSource
 import pl.margoj.server.api.map.ImmutableLocation
 import pl.margoj.server.api.player.Gender
 import pl.margoj.server.api.player.Profession
@@ -69,9 +70,9 @@ class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation
             return out.build()
         }
 
-    override fun kill()
+    override fun kill(damageSource: DamageSource?)
     {
-        super.kill()
+        super.kill(damageSource)
         this.deadUntil = Date(System.currentTimeMillis() + this.killTime)
     }
 

@@ -128,7 +128,7 @@ class PlayerBuildInVariable(val player: PlayerImpl) : BuildInVariable()
             }
             "zabij" ->
             {
-                this.player.kill()
+                this.player.kill(context.npc)
                 return true
             }
             else -> throw IllegalStateException("'$functionName' not found")
