@@ -1,6 +1,5 @@
 package pl.margoj.server.implementation.item
 
-import pl.margoj.mrf.MRFIcon
 import pl.margoj.mrf.item.ItemCategory
 import pl.margoj.mrf.item.ItemProperty
 import pl.margoj.mrf.item.ItemRarity
@@ -155,18 +154,18 @@ class RarityPropertyParser : ItemPropertyParser<ItemRarity, RarityProperty>
     }
 }
 
-class IconPropertyParser : ItemPropertyParser<MRFIcon?, IconProperty>
+class IconPropertyParser : ItemPropertyParser<String, IconProperty>
 {
     override val propertyType: Class<IconProperty> = IconProperty::class.java
 
-    override fun apply(property: IconProperty, itemObject: ItemObject, value: MRFIcon?, itemStack: ItemStack, item: ItemImpl)
+    override fun apply(property: IconProperty, itemObject: ItemObject, value: String, itemStack: ItemStack, item: ItemImpl)
     {
-        if (value == null)
+        if (value.isEmpty())
         {
             return
         }
 
-        itemObject.icon = item.imgFileName
+        itemObject.icon = value
     }
 }
 

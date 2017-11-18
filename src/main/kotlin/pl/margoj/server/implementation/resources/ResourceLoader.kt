@@ -3,7 +3,7 @@ package pl.margoj.server.implementation.resources
 import org.apache.commons.io.IOUtils
 import pl.margoj.mrf.MargoResource
 import pl.margoj.mrf.graphics.GraphicDeserializer
-import pl.margoj.mrf.item.ItemProperties
+import pl.margoj.mrf.graphics.GraphicResource
 import pl.margoj.mrf.item.serialization.ItemDeserializer
 import pl.margoj.mrf.map.MargoMap
 import pl.margoj.mrf.map.Point
@@ -34,9 +34,8 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
 
     private var numericId: Int = 1
     val mapCacheDirectory = File(this.cacheDirectory, "maps")
-    val itemCacheDirectory = File(this.cacheDirectory, "items")
     val graphicsCacheDirectory = File(this.cacheDirectory, "graphics")
-    val partsGraphicsCacheDirectory = File(this.graphicsCacheDirectory, "parts")
+    val partsGraphicsCacheDirectory = File(File(this.graphicsCacheDirectory, GraphicResource.GraphicCategory.NPC.id.toString()), "parts")
     val mapIndexFile = File(mapCacheDirectory, "index.json")
 
     init
@@ -44,7 +43,6 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
         this.reloadTilesets()
 
         MD5CacheUtils.ensureDirectoryExists(this.mapCacheDirectory)
-        MD5CacheUtils.ensureDirectoryExists(this.itemCacheDirectory)
         MD5CacheUtils.ensureDirectoryExists(this.graphicsCacheDirectory)
         MD5CacheUtils.ensureDirectoryExists(this.partsGraphicsCacheDirectory)
 
@@ -179,23 +177,7 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
         val resource = bundle.loadResource(view)
         val margoItem = this.itemDeserializer.deserialize(resource!!)
 
-        val itemIcon = margoItem[ItemProperties.ICON]
-
-        var itemIconName = ""
-        var itemIconFile: File? = null
-
-        if (itemIcon != null)
-        {
-            itemIconName = "${margoItem.id}.${itemIcon.format.extension}"
-            itemIconFile = File(this.itemCacheDirectory, itemIconName)
-            itemIconFile.delete()
-
-            FileOutputStream(itemIconFile).use {
-                IOUtils.write(itemIcon.image, it)
-            }
-        }
-
-        return ItemImpl(margoItem, itemIconFile, itemIconName)
+        return ItemImpl(margoItem)
     }
 
     fun loadGraphic(id: String)
@@ -209,14 +191,19 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
         val inputStream = bundle.loadResource(view)!!
         val graphic = this.graphicDeserializer.deserialize(inputStream)
 
-        val file = File(this.graphicsCacheDirectory, view.name)
+        val parentDirectory = File(this.graphicsCacheDirectory, graphic.graphicCategory.id.toString())
+
+        if(!parentDirectory.exists())
+        {
+            parentDirectory.mkdirs()
+        }
+
+        val file = File(parentDirectory, view.name)
         file.delete()
 
         FileOutputStream(file).use {
             IOUtils.copy(ByteArrayInputStream(graphic.icon.image), it)
         }
-
-        logger.info("Załadowano grafike: $id")
     }
 
     fun loadScript(id: String): NpcScript?

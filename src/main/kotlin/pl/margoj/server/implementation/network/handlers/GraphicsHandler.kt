@@ -1,28 +1,26 @@
 package pl.margoj.server.implementation.network.handlers
 
 import io.netty.handler.codec.http.HttpResponseStatus
+import pl.margoj.mrf.graphics.GraphicResource
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.network.http.HttpHandler
 import pl.margoj.server.implementation.network.http.HttpRequest
 import pl.margoj.server.implementation.network.http.HttpResponse
-import java.awt.image.BufferedImage
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.URLConnection
 import java.nio.file.Files
-import javax.imageio.ImageIO
 
-class GraphicsHandler(private val server: ServerImpl, private val directory: File) : HttpHandler
+class GraphicsHandler(private val server: ServerImpl, directory: File, val category: GraphicResource.GraphicCategory, val path: String) : HttpHandler
 {
-    private val custom = HashMap<String, ByteArray>()
-    private val path = "/obrazki/npc/"
+    val directory = File(directory, category.id.toString())
+    val custom = HashMap<String, ByteArray>()
 
     init
     {
-        val transparent = BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB)
-        val bytes = ByteArrayOutputStream()
-        ImageIO.write(transparent, "png", bytes)
-        this.custom.put("reserved/transparent.png", bytes.toByteArray())
+        if (!directory.exists())
+        {
+            directory.mkdir()
+        }
     }
 
     override fun shouldHandle(path: String): Boolean

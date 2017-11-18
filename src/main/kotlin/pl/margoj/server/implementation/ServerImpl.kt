@@ -5,6 +5,7 @@ import org.apache.commons.lang3.Validate
 import org.apache.logging.log4j.Logger
 import org.yaml.snakeyaml.Yaml
 import pl.margoj.mrf.MargoResource
+import pl.margoj.mrf.graphics.GraphicResource
 import pl.margoj.server.api.MargoJConfig
 import pl.margoj.server.api.Server
 import pl.margoj.server.api.battle.BattleUnableToStartException
@@ -43,10 +44,13 @@ import pl.margoj.server.implementation.tasks.BattleProcessTask
 import pl.margoj.server.implementation.tasks.GravestoneCleanupTask
 import pl.margoj.server.implementation.tasks.PlayerKeepAliveTask
 import pl.margoj.server.implementation.tasks.TTLTakeTask
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileReader
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import javax.imageio.ImageIO
 
 class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, override val logger: Logger, override val gameLogger: Logger) : Server
 {
@@ -181,7 +185,6 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
         val engineHandler = EngineHandler(this)
         httpServer.registerHandler(engineHandler)
         httpServer.registerHandler(TownHandler(this))
-        httpServer.registerHandler(ItemsHandler(this))
         httpServer.registerHandler(JoinHandler(this))
 
         if (standalone)
@@ -240,7 +243,15 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
         resourceLoader = null
 
         // late network handlers
-        httpServer.registerHandler(GraphicsHandler(this, graphicsCacheDirectory))
+        val npcHandler = GraphicsHandler(this, graphicsCacheDirectory, GraphicResource.GraphicCategory.NPC, "/obrazki/npc/")
+        val transparent = BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB)
+        val bytes = ByteArrayOutputStream()
+        ImageIO.write(transparent, "png", bytes)
+        npcHandler.custom.put("reserved/transparent.png", bytes.toByteArray())
+
+        httpServer.registerHandler(npcHandler)
+        httpServer.registerHandler( GraphicsHandler(this, graphicsCacheDirectory, GraphicResource.GraphicCategory.ITEM, "/obrazki/itemy"))
+
 
         // initialize towns
         this.towns.forEach {

@@ -29,6 +29,10 @@ internal object MD5CacheUtils
 
     fun ensureDirectoryExists(directory: File)
     {
+        if(directory.parentFile != null && !directory.parentFile.exists())
+        {
+            directory.parentFile.mkdirs()
+        }
         if (!directory.exists())
         {
             directory.mkdirs()
