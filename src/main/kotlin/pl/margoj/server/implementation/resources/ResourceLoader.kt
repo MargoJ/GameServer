@@ -212,7 +212,7 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
         logger.trace("Ładuje skrypt: $id")
 
         val bundle = this.resourceBundleManager.currentBundle
-        val view = bundle!!.getResource(MargoResource.Category.NPC_SCRIPTS, id) ?: return null
+        val view = bundle!!.getResource(MargoResource.Category.SCRIPTS, id) ?: return null
         val resource = bundle.loadResource(view)
         scriptDeserializer.fileName = id
 
@@ -228,9 +228,7 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
         val tilesets = ArrayList<Tileset>(resources.size)
 
         resources.forEach { resource ->
-            bundle.loadResource(resource) // make sure it will unpack and be avaialbe using getLocalFile
-
-            tilesetFiles.add(TilesetFile(bundle.getLocalFile(resource), resource.id, resource.id.startsWith("auto-")))
+            tilesetFiles.add(TilesetFile(bundle.loadResource(resource)!!, resource.id, resource.id.startsWith("auto-")))
         }
 
         val autoTileset = AutoTileset(AutoTileset.AUTO, tilesetFiles.filter(TilesetFile::auto))

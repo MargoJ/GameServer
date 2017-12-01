@@ -228,7 +228,7 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
                 {
                     logger.trace("Załadowano tileset: ${view.fileName}")
                 }
-                MargoResource.Category.NPC_SCRIPTS ->
+                MargoResource.Category.SCRIPTS ->
                 {
                     npcScriptParser.parse(view.id, resourceLoader.loadScript(view.id)!!.content)
                 }
@@ -240,6 +240,7 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
         }
 
         val graphicsCacheDirectory = resourceLoader.graphicsCacheDirectory
+        @Suppress("UNUSED_VALUE")
         resourceLoader = null
 
         // late network handlers
