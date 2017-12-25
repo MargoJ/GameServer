@@ -6,7 +6,7 @@ import pl.margoj.server.api.inventory.ItemStack
 import pl.margoj.server.api.inventory.map.MAP_LAYERS
 import pl.margoj.server.api.inventory.player.ItemIsOnCooldownException
 import pl.margoj.server.api.inventory.player.ItemRequirementsNotMetException
-import pl.margoj.server.api.utils.TimeFormatUtils
+import pl.margoj.utils.commons.time.TimeFormatUtils
 import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.item.pipeline.ItemPipelines
 import pl.margoj.server.implementation.item.pipeline.drag.ItemDragPipelineData
@@ -127,6 +127,11 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
 
                         if (split != null)
                         {
+                            if(bag.getItemAt(x, y) != null)
+                            {
+                                return true
+                            }
+
                             val isSplittable = item[ItemProperties.MAX_AMOUNT] != 0
                             if (!isSplittable)
                             {
@@ -134,6 +139,7 @@ class PlayerInventoryPacketListener(connection: PlayerConnection) : PlayerPacket
                             }
 
                             val amount = item[ItemProperties.AMOUNT]
+                            this.checkForMaliciousData(split <= 0, "split <= 0")
                             this.checkForMaliciousData(split >= amount, "split too big")
 
                             item.setProperty(ItemProperties.AMOUNT, amount - split)

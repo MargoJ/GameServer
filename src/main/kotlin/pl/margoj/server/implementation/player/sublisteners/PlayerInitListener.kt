@@ -1,8 +1,8 @@
 package pl.margoj.server.implementation.player.sublisteners
 
 import pl.margoj.server.api.events.player.PlayerJoinEvent
-import pl.margoj.server.api.utils.Parse
-import pl.margoj.server.api.utils.TimeUtils
+import pl.margoj.utils.commons.numbers.Parse
+import pl.margoj.utils.commons.time.TimeUtils
 import pl.margoj.server.implementation.database.TableNames
 import pl.margoj.server.implementation.map.TownImpl
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
@@ -37,7 +37,7 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
                 {
                     var data = server.databaseManager.playerDataCache.loadOne(connection.aid)
 
-                    if(data == null)
+                    if (data == null)
                     {
                         this.server.gameLogger.info("Rejestruje nową postać: ${this.connection.authSession.charName}")
 
@@ -96,15 +96,34 @@ class PlayerInitListener(connection: PlayerConnection) : PlayerPacketSubListener
 
         this.server.entityManager.registerEntity(this.connection.player!!)
 
+        // spawn if its a fresh registered player
         val location = player.location
         if (location.town == null)
         {
-            location.town = this.server.getTownById("pierwsza_mapa") // TODO
+            location.town = this.server.parsedGameData.professionRespawnMap[data.profession]
             val town = location.town as TownImpl
             location.x = town.cachedMapData.spawnPoint.x
             location.y = town.cachedMapData.spawnPoint.y
         }
 
+        // give default bag if the player doesn't have any
+        val inventory = data.inventory!!
+        var hasAnyBag = false
+        for (i in 0..3)
+        {
+            if (inventory.getBag(i) != null)
+            {
+                hasAnyBag = true
+            }
+        }
+
+        if (!hasAnyBag)
+        {
+            val defaultBag = this.server.itemManager.newItemStack(this.server.parsedGameData.defaultBag)
+            inventory.setBag(0, defaultBag)
+        }
+
+        // call events and internal stuff
         player.server.eventManager.call(PlayerJoinEvent(player))
         player.connected()
     }

@@ -2,6 +2,9 @@ package pl.margoj.server.implementation.resources
 
 import org.apache.commons.io.IOUtils
 import pl.margoj.mrf.MargoResource
+import pl.margoj.mrf.data.DataConstants
+import pl.margoj.mrf.data.DataDeserializer
+import pl.margoj.mrf.data.GameData
 import pl.margoj.mrf.graphics.GraphicDeserializer
 import pl.margoj.mrf.graphics.GraphicResource
 import pl.margoj.mrf.item.serialization.ItemDeserializer
@@ -12,8 +15,10 @@ import pl.margoj.mrf.map.serialization.MapDeserializer
 import pl.margoj.mrf.map.tileset.AutoTileset
 import pl.margoj.mrf.map.tileset.Tileset
 import pl.margoj.mrf.map.tileset.TilesetFile
-import pl.margoj.mrf.npc.NpcScript
-import pl.margoj.mrf.npc.serialization.NpcScriptDeserializer
+import pl.margoj.mrf.npc.MargoNpc
+import pl.margoj.mrf.npc.NpcDeserializer
+import pl.margoj.mrf.script.NpcScript
+import pl.margoj.mrf.script.serialization.NpcScriptDeserializer
 import pl.margoj.server.implementation.item.ItemImpl
 import pl.margoj.server.implementation.map.TownImpl
 import java.awt.Color
@@ -24,6 +29,9 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.Collections
 import javax.imageio.ImageIO
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
+import kotlin.collections.HashSet
 
 class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cacheDirectory: File)
 {
@@ -31,6 +39,7 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
     private var itemDeserializer = ItemDeserializer()
     private var scriptDeserializer = NpcScriptDeserializer()
     private var graphicDeserializer = GraphicDeserializer()
+    private var npcDeserializer = NpcDeserializer()
 
     private var numericId: Int = 1
     val mapCacheDirectory = File(this.cacheDirectory, "maps")
@@ -180,6 +189,18 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
         return ItemImpl(margoItem)
     }
 
+    fun loadNpc(id: String): MargoNpc?
+    {
+        val logger = this.resourceBundleManager.server.logger
+        logger.trace("Ładuje npc: $id")
+
+        val bundle = this.resourceBundleManager.currentBundle
+        val view = bundle!!.getResource(MargoResource.Category.NPC, id) ?: return null
+        val resource = bundle.loadResource(view)
+
+        return this.npcDeserializer.deserialize(resource!!)
+    }
+
     fun loadGraphic(id: String)
     {
         val logger = this.resourceBundleManager.server.logger
@@ -191,9 +212,14 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
         val inputStream = bundle.loadResource(view)!!
         val graphic = this.graphicDeserializer.deserialize(inputStream)
 
-        val parentDirectory = File(this.graphicsCacheDirectory, graphic.graphicCategory.id.toString())
+        var parentDirectory = File(this.graphicsCacheDirectory, graphic.graphicCategory.id.toString())
 
-        if(!parentDirectory.exists())
+        if (graphic.catalog != null && graphic.catalog!!.isNotEmpty())
+        {
+            parentDirectory = File(parentDirectory, graphic.catalog)
+        }
+
+        if (!parentDirectory.exists())
         {
             parentDirectory.mkdirs()
         }
@@ -217,6 +243,13 @@ class ResourceLoader(val resourceBundleManager: ResourceBundleManager, val cache
         scriptDeserializer.fileName = id
 
         return scriptDeserializer.deserialize(resource!!)
+    }
+
+    fun loadGameData(): GameData
+    {
+        val view = this.resourceBundleManager.currentBundle!!.getResource(MargoResource.Category.DATA, DataConstants.GAME_DATA)!!
+        val stream = this.resourceBundleManager.currentBundle!!.loadResource(view)!!
+        return DataDeserializer(DataConstants.GAME_DATA, GameData::class.java).deserialize(stream).content
     }
 
     fun reloadTilesets()

@@ -113,9 +113,9 @@
 
         <!-- Network -->
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-            <version>4.1.0.Final</version>
+            <groupId>pl.margoj.game</groupId>
+            <artifactId>margoj-utils-netty</artifactId>
+            <version>${margoj.version}</version>
         </dependency>
         <dependency>
             <groupId>com.mashape.unirest</groupId>

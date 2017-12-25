@@ -2,7 +2,6 @@ package pl.margoj.server.implementation.network.handlers
 
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder
 import org.apache.commons.lang3.exception.ExceptionUtils
-import pl.margoj.server.api.utils.Parse
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.network.http.HttpHandler
 import pl.margoj.server.implementation.network.http.HttpRequest

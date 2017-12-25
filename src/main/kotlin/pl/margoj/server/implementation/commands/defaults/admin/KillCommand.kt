@@ -3,7 +3,7 @@ package pl.margoj.server.implementation.commands.defaults.admin
 import pl.margoj.server.api.commands.Arguments
 import pl.margoj.server.api.commands.CommandListener
 import pl.margoj.server.api.commands.CommandSender
-import pl.margoj.server.api.utils.TimeFormatUtils
+import pl.margoj.utils.commons.time.TimeFormatUtils
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.database.TableNames
 import pl.margoj.server.implementation.player.PlayerImpl

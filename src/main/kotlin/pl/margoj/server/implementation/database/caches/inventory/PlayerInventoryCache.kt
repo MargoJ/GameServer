@@ -1,6 +1,6 @@
 package pl.margoj.server.implementation.database.caches.inventory
 
-import pl.margoj.server.api.utils.Parse
+import pl.margoj.utils.commons.numbers.Parse
 import pl.margoj.server.implementation.database.DatabaseManager
 import pl.margoj.server.implementation.database.TableNames
 import pl.margoj.server.implementation.inventory.player.PlayerInventoryImpl

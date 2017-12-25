@@ -3,7 +3,7 @@ package pl.margoj.server.implementation.entity
 import pl.margoj.server.api.battle.BattleUnableToStartException
 import pl.margoj.server.api.battle.DamageSource
 import pl.margoj.server.api.entity.LivingEntity
-import pl.margoj.server.api.utils.fastPow2
+import pl.margoj.utils.commons.numbers.fastPow2
 import pl.margoj.server.implementation.battle.BattleData
 import pl.margoj.server.implementation.battle.BattleImpl
 

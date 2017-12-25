@@ -3,7 +3,7 @@ package pl.margoj.server.implementation.database.caches
 import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.player.Gender
 import pl.margoj.server.api.player.Profession
-import pl.margoj.server.api.utils.Parse
+import pl.margoj.utils.commons.numbers.Parse
 import pl.margoj.server.implementation.database.DatabaseManager
 import pl.margoj.server.implementation.database.DatabaseObjectCache
 import pl.margoj.server.implementation.database.TableNames
@@ -70,7 +70,7 @@ class PlayerDataCache(databaseManager: DatabaseManager) : DatabaseObjectCache<Lo
 
     override fun saveToDatabase(connection: Connection, data: Collection<PlayerDataImpl?>)
     {
-        this.trySave(connection, data, { d, statement, i, last ->
+        this.trySave(connection, data, { d, statement, i, _ ->
             statement.setLong(i(), d.id)
             statement.setLong(i(), d.accountId)
             statement.setString(i(), d.characterName)

@@ -4,7 +4,7 @@ import pl.margoj.mrf.map.Point
 import pl.margoj.server.api.events.player.PlayerMoveEvent
 import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.player.MovementManager
-import pl.margoj.server.api.utils.TimeUtils
+import pl.margoj.utils.commons.time.TimeUtils
 import pl.margoj.server.implementation.map.TownImpl
 import pl.margoj.server.implementation.npc.NpcType
 import java.util.concurrent.ConcurrentLinkedQueue

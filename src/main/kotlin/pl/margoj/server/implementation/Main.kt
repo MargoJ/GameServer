@@ -7,8 +7,8 @@ import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.core.Logger
 import org.yaml.snakeyaml.Yaml
-import pl.margoj.server.implementation.utils.Log4j2OutputStream
-import pl.margoj.server.implementation.utils.NettyLoggerFactory
+import pl.margoj.utils.commons.logging.Log4j2OutputStream
+import pl.margoj.utils.netty.NettyLoggerFactory
 import java.io.File
 import java.io.FileReader
 import java.io.IOException

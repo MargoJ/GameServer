@@ -1,6 +1,6 @@
 package pl.margoj.server.implementation.npc.parser.constants
 
-import pl.margoj.server.api.utils.Parse
+import pl.margoj.utils.commons.numbers.Parse
 import pl.margoj.server.implementation.npc.parser.CodeLine
 import pl.margoj.server.implementation.npc.parser.CodeParser
 import pl.margoj.server.implementation.npc.parser.ConstantParser

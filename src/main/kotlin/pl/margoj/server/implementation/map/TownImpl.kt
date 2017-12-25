@@ -15,13 +15,15 @@ import pl.margoj.server.api.chat.ChatMessage
 import pl.margoj.server.api.map.ImmutableLocation
 import pl.margoj.server.api.map.PvPStatus
 import pl.margoj.server.api.map.Town
-import pl.margoj.server.api.utils.toTime
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.inventory.map.MapInventoryImpl
 import pl.margoj.server.implementation.npc.Npc
 import pl.margoj.server.implementation.npc.NpcType
 import java.io.File
 import java.util.LinkedList
+import kotlin.collections.ArrayList
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 data class TownImpl(
         val server: ServerImpl,
@@ -99,22 +101,20 @@ data class TownImpl(
         {
             if (mapObject is NpcMapObject)
             {
-                val script = if (mapObject.script == null) null else this.server.npcScriptParser.getNpcScript(mapObject.script!!)
-                val npc = Npc(script, ImmutableLocation(this, mapObject.position.x, mapObject.position.y), this.server)
+                val margoNpc = this.server.npcs[mapObject.id] ?: throw IllegalArgumentException("no npc with id ${mapObject.id} found")
+
+                val script = if (margoNpc.script.isEmpty()) null else this.server.npcScriptParser.getNpcScript(margoNpc.script)
+                val npc = Npc(margoNpc, script, ImmutableLocation(this, mapObject.position.x, mapObject.position.y), this.server)
                 npc.loadData()
 
-                npc.takeIf { mapObject.graphics != null }?.icon = mapObject.graphics!!
-                npc.takeIf { mapObject.name != null }?.name = mapObject.name!!
-                npc.takeIf { mapObject.level != null }?.level = mapObject.level!!
-                npc.takeIf { mapObject.group != null }?.group = mapObject.group!!
-                npc.takeIf { mapObject.spawnTime != null }?.customSpawnTime = mapObject.spawnTime!!.toTime()
+                npc.takeIf { mapObject.group.toInt() != 0 }?.group = mapObject.group.toInt()
 
                 this.server.entityManager.registerEntity(npc)
                 this.npcs_.add(npc)
             }
             else if (mapObject is TextMapObject)
             {
-                val npc = Npc(null, ImmutableLocation(this, mapObject.position.x, mapObject.position.y), this.server)
+                val npc = Npc(null, null, ImmutableLocation(this, mapObject.position.x, mapObject.position.y), this.server)
                 npc.type = NpcType.INTERACTIVE
                 npc.name = mapObject.text
                 npc.icon = "reserved/transparent.png"
@@ -126,7 +126,7 @@ data class TownImpl(
 
         for ((point, id) in this.partList)
         {
-            val npc = Npc(null, ImmutableLocation(this, point.x, point.y), this.server)
+            val npc = Npc(null, null, ImmutableLocation(this, point.x, point.y), this.server)
             npc.type = NpcType.TRANSPARENT
             npc.icon = "parts/${this.id}_$id.png"
             npc.level = 0
@@ -165,8 +165,8 @@ data class TownImpl(
 
         if (possibleRespawnMap == null)
         {
-            // TODO: DEFAULT MAP
-            throw IllegalArgumentException("couldn't find respawn map for '${this.id}', respawn id: '${this.getMetadata(RespawnMap::class.java).value}'")
+            this.server.logger.warn("couldn't find respawn map for '${this.id}', respawn id: '${this.getMetadata(RespawnMap::class.java).value}'")
+            this.respawnMap = this.server.parsedGameData.respawnMap
         }
         else
         {

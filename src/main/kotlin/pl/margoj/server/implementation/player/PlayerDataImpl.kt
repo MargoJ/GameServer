@@ -7,10 +7,10 @@ import pl.margoj.server.api.map.Location
 import pl.margoj.server.api.player.Gender
 import pl.margoj.server.api.player.PlayerData
 import pl.margoj.server.api.player.Profession
-import pl.margoj.server.api.utils.fastPow4
-import pl.margoj.server.api.utils.floor
-import pl.margoj.server.api.utils.pow
-import pl.margoj.server.api.utils.toBigDecimal
+import pl.margoj.utils.commons.numbers.fastPow4
+import pl.margoj.utils.commons.numbers.floor
+import pl.margoj.utils.commons.numbers.pow
+import pl.margoj.utils.commons.numbers.toBigDecimal
 import pl.margoj.server.implementation.inventory.player.PlayerInventoryImpl
 import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.network.protocol.jsons.HeroObject

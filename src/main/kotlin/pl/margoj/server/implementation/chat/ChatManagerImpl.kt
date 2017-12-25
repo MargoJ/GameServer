@@ -6,7 +6,7 @@ import org.apache.logging.log4j.LogManager
 import pl.margoj.server.api.chat.ChatManager
 import pl.margoj.server.api.chat.ChatMessage
 import pl.margoj.server.api.events.player.PlayerChatEvent
-import pl.margoj.server.api.utils.TimeUtils
+import pl.margoj.utils.commons.time.TimeUtils
 import pl.margoj.server.implementation.ServerImpl
 import pl.margoj.server.implementation.map.TownImpl
 import pl.margoj.server.implementation.player.PlayerImpl

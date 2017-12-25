@@ -2,7 +2,7 @@ package pl.margoj.server.implementation.inventory
 
 import pl.margoj.server.api.inventory.Inventory
 import pl.margoj.server.api.inventory.ItemStack
-import pl.margoj.server.api.utils.ListFromMap
+import pl.margoj.utils.commons.collections.ListFromMap
 import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.network.protocol.jsons.ItemObject
 

@@ -1,24 +1,25 @@
 package pl.margoj.server.implementation.npc
 
 import com.google.common.collect.ImmutableList
+import pl.margoj.mrf.npc.MargoNpc
+import pl.margoj.mrf.npc.NpcGender
+import pl.margoj.mrf.npc.NpcProfession
+import pl.margoj.mrf.npc.NpcRank
 import pl.margoj.server.api.Server
 import pl.margoj.server.api.battle.DamageSource
 import pl.margoj.server.api.map.ImmutableLocation
 import pl.margoj.server.api.player.Gender
 import pl.margoj.server.api.player.Profession
-import pl.margoj.server.api.utils.splitByChar
 import pl.margoj.server.implementation.entity.EntityTracker
 import pl.margoj.server.implementation.entity.LivingEntityImpl
 import pl.margoj.server.implementation.map.TownImpl
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket
 import pl.margoj.server.implementation.network.protocol.jsons.NpcObject
 import pl.margoj.server.implementation.npc.parser.parsed.NpcParsedScript
-import pl.margoj.server.implementation.npc.parser.parsed.ScriptContext
-import java.util.Collections
-import java.util.Date
+import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
-class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation, override val server: Server) : LivingEntityImpl()
+class Npc(val data: MargoNpc?, val script: NpcParsedScript?, override val location: ImmutableLocation, override val server: Server) : LivingEntityImpl()
 {
     var id: Int = npcIdCounter.incrementAndGet()
 
@@ -84,70 +85,60 @@ class Npc(val script: NpcParsedScript?, override val location: ImmutableLocation
 
     fun loadData()
     {
-        val dataBlock = script?.getNpcCodeBlock("dane") ?: return
-        val context = ScriptContext(null, this)
-        context.delegate = this::delegateData
-        dataBlock.execute(context)
-    }
+        val data = this.data
 
-    private fun delegateData(function: String, parameters: Array<Any>, context: ScriptContext)
-    {
-        when (function)
+        if (data != null)
         {
-            "grafika" -> this.icon = parameters[0] as String
-            "nazwa" -> this.name = parameters[0] as String
-            "poziom", "level" -> this.stats.level = (parameters[0] as Long).toInt()
-            "npc" -> this.type = NpcType.NPC
-            "potwór" -> this.type = NpcType.MONSTER
-            "typ" ->
+            this.icon = data.graphics
+            this.name = data.name
+            this.level = data.level
+
+            this.type = when (data.type)
             {
-                this.subType = when (parameters[0] as String)
-                {
-                    "normalny", "zwykły" -> NpcSubtype.NORMAL
-                    "elita", "elitaI", "elita1", "e1", "eI" -> NpcSubtype.ELITE1
-                    "elitaII", "elita2", "e2", "eII" -> NpcSubtype.ELITE2
-                    "elitaIII", "elita3", "e3", "eIII" -> NpcSubtype.ELITE3
-                    "hero", "heros" -> NpcSubtype.HERO
-                    "titan", "tytan" -> NpcSubtype.TITAN
-                    else -> NpcSubtype.NORMAL
-                }
+                pl.margoj.mrf.npc.NpcType.NPC -> NpcType.NPC
+                pl.margoj.mrf.npc.NpcType.MONSTER -> NpcType.MONSTER
             }
-            "płeć" ->
+            this.subType = when (data.rank)
             {
-                this.gender = when (parameters[0] as String)
-                {
-                    "m", "mężczyzna" -> Gender.MALE
-                    "k", "kobieta" -> Gender.FEMALE
-                    "x", "nieokreślona", "nieznana" -> Gender.UNKNOWN
-                    else -> Gender.UNKNOWN
-                }
+                NpcRank.NORMAL -> NpcSubtype.NORMAL
+                NpcRank.ELITE -> NpcSubtype.ELITE1
+                NpcRank.ELITE_II -> NpcSubtype.ELITE2
+                NpcRank.ELITE_III -> NpcSubtype.ELITE3
+                NpcRank.HERO -> NpcSubtype.HERO
+                NpcRank.TITAN -> NpcSubtype.TITAN
+                else -> NpcSubtype.NORMAL
             }
-            "profesja" ->
+            this.gender = when (data.gender)
             {
-                this.stats.profession = when (parameters[0] as String)
-                {
-                    "w", "wojownik" -> Profession.WARRIOR
-                    "p", "paladyn" -> Profession.PALADIN
-                    "b", "tancerz ostrzy" -> Profession.BLADE_DANCER
-                    "m", "mag" -> Profession.MAGE
-                    "h", "łowca" -> Profession.HUNTER
-                    "t", "tropiciel" -> Profession.TRACKER
-                    else -> Profession.WARRIOR
-                }
+                NpcGender.MALE -> Gender.MALE
+                NpcGender.FEMALE -> Gender.FEMALE
+                NpcGender.UNKNOWN -> Gender.UNKNOWN
+                else -> Gender.UNKNOWN
             }
-            "siła", "str" -> this.stats.strength = (parameters[0] as Long).toInt()
-            "zręczność", "agi" -> this.stats.agility = (parameters[0] as Long).toInt()
-            "intelekt", "int" -> this.stats.intellect = (parameters[0] as Long).toInt()
-            "sa" -> this.stats.attackSpeed = (parameters[0] as Long).toDouble() / 100.0
-            "hp" -> this.stats.maxHp = (parameters[0] as Long).toInt()
-            "atak" ->
+            this.stats.profession = when (data.profession)
             {
-                val values = (parameters[0] as String).splitByChar('-')
-                this.stats.damage = values[0].toInt()..values[1].toInt()
+                NpcProfession.WARRIOR -> Profession.WARRIOR
+                NpcProfession.PALADIN -> Profession.PALADIN
+                NpcProfession.BLADE_DANCER -> Profession.BLADE_DANCER
+                NpcProfession.MAGE -> Profession.MAGE
+                NpcProfession.HUNTER -> Profession.HUNTER
+                NpcProfession.TRACKER -> Profession.TRACKER
             }
-            "pancerz" -> this.stats.armor = (parameters[0] as Long).toInt()
-            "blok" -> this.stats.block = (parameters[0] as Long).toInt()
-            "unik" -> this.stats.block = (parameters[0] as Long).toInt()
+
+            this.stats.strength = data.strength
+            this.stats.agility = data.agility
+            this.stats.intellect = data.intellect
+            this.stats.attackSpeed = data.attackSpeed / 100.0
+            this.stats.maxHp = data.maxHp
+            this.stats.damage = data.attack
+            this.stats.armor = data.armor
+            this.stats.block = data.block
+            this.stats.evade = data.evade
+
+            if (data.spawnTime != 0L)
+            {
+                this.customSpawnTime = data.spawnTime
+            }
         }
     }
 

@@ -9,7 +9,7 @@ import pl.margoj.server.api.commands.CommandListener
 import pl.margoj.server.api.commands.CommandSender
 import pl.margoj.server.api.inventory.Item
 import pl.margoj.server.api.player.Player
-import pl.margoj.server.api.utils.Paged
+import pl.margoj.utils.commons.collections.Paged
 import pl.margoj.server.implementation.item.ItemStackImpl
 import pl.margoj.server.implementation.player.PlayerImpl
 import java.util.LinkedList

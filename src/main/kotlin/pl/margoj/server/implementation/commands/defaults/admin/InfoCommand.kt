@@ -4,7 +4,7 @@ import pl.margoj.server.api.commands.Arguments
 import pl.margoj.server.api.commands.CommandListener
 import pl.margoj.server.api.commands.CommandSender
 import pl.margoj.server.api.player.Player
-import pl.margoj.server.api.utils.TimeFormatUtils
+import pl.margoj.utils.commons.time.TimeFormatUtils
 
 class InfoCommand : CommandListener
 {

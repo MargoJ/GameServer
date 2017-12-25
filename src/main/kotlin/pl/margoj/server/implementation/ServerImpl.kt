@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger
 import org.yaml.snakeyaml.Yaml
 import pl.margoj.mrf.MargoResource
 import pl.margoj.mrf.graphics.GraphicResource
+import pl.margoj.mrf.npc.MargoNpc
 import pl.margoj.server.api.MargoJConfig
 import pl.margoj.server.api.Server
 import pl.margoj.server.api.battle.BattleUnableToStartException
@@ -36,6 +37,7 @@ import pl.margoj.server.implementation.network.protocol.NetworkManager
 import pl.margoj.server.implementation.npc.parser.NpcScriptParser
 import pl.margoj.server.implementation.player.PlayerImpl
 import pl.margoj.server.implementation.plugin.PluginManagerImpl
+import pl.margoj.server.implementation.resources.ParsedGameData
 import pl.margoj.server.implementation.resources.ResourceBundleManager
 import pl.margoj.server.implementation.resources.ResourceLoader
 import pl.margoj.server.implementation.sync.SchedulerImpl
@@ -80,6 +82,7 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
     val itemManager = ItemManager(this)
     val databaseManager = DatabaseManager(this)
     val npcScriptParser = NpcScriptParser()
+    val npcs = HashMap<String, MargoNpc>()
 
     lateinit var authenticator: Authenticator
         private set
@@ -88,6 +91,9 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
         private set
 
     lateinit var resourceBundleManager: ResourceBundleManager
+        private set
+
+    lateinit var parsedGameData: ParsedGameData
         private set
 
     fun start()
@@ -214,6 +220,7 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
 
         for (view in this.resourceBundleManager.currentBundle!!.resources)
         {
+            @Suppress("NON_EXHAUSTIVE_WHEN")
             when (view.category)
             {
                 MargoResource.Category.MAPS ->
@@ -223,6 +230,10 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
                 MargoResource.Category.ITEMS ->
                 {
                     this.items_.put(view.id, resourceLoader.loadItem(view.id)!!)
+                }
+                MargoResource.Category.NPC ->
+                {
+                    this.npcs.put(view.id, resourceLoader.loadNpc(view.id)!!)
                 }
                 MargoResource.Category.TILESETS ->
                 {
@@ -239,6 +250,9 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
             }
         }
 
+        // load game data
+        val gameData = resourceLoader.loadGameData()
+
         val graphicsCacheDirectory = resourceLoader.graphicsCacheDirectory
         @Suppress("UNUSED_VALUE")
         resourceLoader = null
@@ -251,8 +265,10 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
         npcHandler.custom.put("reserved/transparent.png", bytes.toByteArray())
 
         httpServer.registerHandler(npcHandler)
-        httpServer.registerHandler( GraphicsHandler(this, graphicsCacheDirectory, GraphicResource.GraphicCategory.ITEM, "/obrazki/itemy"))
+        httpServer.registerHandler(GraphicsHandler(this, graphicsCacheDirectory, GraphicResource.GraphicCategory.ITEM, "/obrazki/itemy"))
 
+        // parse game data
+        this.parsedGameData = ParsedGameData.create(this, gameData)
 
         // initialize towns
         this.towns.forEach {
@@ -349,14 +365,14 @@ class ServerImpl(override val config: MargoJConfig, val standalone: Boolean, ove
 
             for (entityImpl in group)
             {
-                if(entityImpl !is Player)
+                if (entityImpl !is Player)
                 {
                     string.append("[NPC]")
                 }
                 string.append(entityImpl.name).append("(").append(entityImpl.level).append(entityImpl.stats.profession.id).append(")").append(", ")
             }
 
-            if(string.isNotEmpty())
+            if (string.isNotEmpty())
             {
                 string.setLength(string.length - 2)
             }

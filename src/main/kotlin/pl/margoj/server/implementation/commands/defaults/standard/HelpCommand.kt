@@ -3,7 +3,7 @@ package pl.margoj.server.implementation.commands.defaults.standard
 import pl.margoj.server.api.commands.Arguments
 import pl.margoj.server.api.commands.CommandListener
 import pl.margoj.server.api.commands.CommandSender
-import pl.margoj.server.api.utils.Paged
+import pl.margoj.utils.commons.collections.Paged
 
 class HelpCommand : CommandListener
 {

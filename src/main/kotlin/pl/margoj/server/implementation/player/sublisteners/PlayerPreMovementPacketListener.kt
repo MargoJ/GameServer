@@ -3,8 +3,8 @@ package pl.margoj.server.implementation.player.sublisteners
 import pl.margoj.mrf.map.Point
 import pl.margoj.mrf.map.objects.gateway.GatewayObject
 import pl.margoj.server.api.map.Location
-import pl.margoj.server.api.utils.Parse
-import pl.margoj.server.api.utils.splitByChar
+import pl.margoj.utils.commons.numbers.Parse
+import pl.margoj.utils.commons.string.splitByChar
 import pl.margoj.server.implementation.map.TownImpl
 import pl.margoj.server.implementation.network.protocol.IncomingPacket
 import pl.margoj.server.implementation.network.protocol.OutgoingPacket

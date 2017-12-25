@@ -3,7 +3,7 @@ package pl.margoj.server.implementation.commands
 import pl.margoj.server.api.commands.Arguments
 import pl.margoj.server.api.commands.CommandException
 import pl.margoj.server.api.player.Player
-import pl.margoj.server.api.utils.Parse
+import pl.margoj.utils.commons.numbers.Parse
 import pl.margoj.server.implementation.ServerImpl
 
 class StringArrayArguments(val server: ServerImpl, val array: Array<String>) : Arguments

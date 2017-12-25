@@ -5,7 +5,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import pl.margoj.server.api.chat.ChatMessage
 import pl.margoj.server.api.commands.CommandSender
-import pl.margoj.server.api.utils.TimeUtils
+import pl.margoj.utils.commons.time.TimeUtils
 import pl.margoj.server.implementation.network.protocol.jsons.ItemObject
 import pl.margoj.server.implementation.network.protocol.jsons.NpcObject
 import pl.margoj.server.implementation.network.protocol.jsons.OtherObject

@@ -8,7 +8,7 @@ class BlockFragment : StrikePipelineFragment
     override fun process(fragment: StrikePipelineData)
     {
         val damager = fragment.ability!!.user
-        val damaged = fragment.ability!!.target
+        val damaged = fragment.ability.target
         val chance = (20.0 * damaged.stats.block.toDouble() / damager.level.toDouble()) / 100.0f
 
         if (Math.random() < chance)
